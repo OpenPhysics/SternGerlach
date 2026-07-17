@@ -14,10 +14,10 @@ import { ExperimentGraph } from "../../src/stern-gerlach-screen/model/Experiment
 import { InitialStateSetting } from "../../src/stern-gerlach-screen/model/InitialStateSetting.js";
 import { addAnalyzer, addCounter, addSource, seededRng, wire } from "./testUtilities.js";
 
-const { SPIN_HALF, SPIN_ONE, SU3 } = SpinSystem;
-const PLUS_Z = InitialStateSetting.UNKNOWN_1; // spin-½ unknown #1 is |+z⟩
-const MINUS_Y = InitialStateSetting.UNKNOWN_2; // spin-½ unknown #2 is |−y⟩
-const RANDOM = InitialStateSetting.RANDOM;
+const { SPIN_HALF, SPIN_ONE, SU3 }: typeof SpinSystem = SpinSystem;
+const PLUS_Z: InitialStateSetting = InitialStateSetting.UNKNOWN_1; // spin-½ unknown #1 is |+z⟩
+const MINUS_Y: InitialStateSetting = InitialStateSetting.UNKNOWN_2; // spin-½ unknown #2 is |−y⟩
+const RANDOM: InitialStateSetting = InitialStateSetting.RANDOM;
 
 function probOf(map: Map<Counter, number>, counter: Counter): number {
   return map.get(counter) ?? Number.NaN;

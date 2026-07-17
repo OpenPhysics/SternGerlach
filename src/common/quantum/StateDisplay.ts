@@ -45,11 +45,7 @@ export function blochVectorFromSpinHalf(state: ComplexVector): BlochVector {
 
 /** Born probabilities |cᵢ|² of the state in the computational (Z) basis. */
 export function computationalProbabilities(state: ComplexVector, stateCount: number): number[] {
-  const probs: number[] = [];
-  for (let i = 0; i < stateCount; i++) {
-    probs.push(state.components[i]!.magnitudeSquared());
-  }
-  return probs;
+  return state.components.slice(0, stateCount).map((c) => c.magnitudeSquared());
 }
 
 /**

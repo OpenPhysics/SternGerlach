@@ -11,7 +11,7 @@ import { OperatorTable } from "../../src/common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 import { Magnet } from "../../src/stern-gerlach-screen/model/devices/Magnet.js";
 
-const { SPIN_HALF, SPIN_ONE, SU3 } = SpinSystem;
+const { SPIN_HALF, SPIN_ONE, SU3 }: typeof SpinSystem = SpinSystem;
 
 describe("Magnet.computeU", () => {
   const table = new OperatorTable();
