@@ -21,6 +21,7 @@ import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 import { ExperimentDefinition } from "../model/ExperimentDefinition.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
+import { AnglesDialog } from "./dialogs/AnglesDialog.js";
 
 /** The batch sizes offered by the Do-N buttons (Spins.doAction). */
 const DO_N_SIZES = [10, 100, 1000] as const;
@@ -61,6 +62,22 @@ export class ExperimentControlPanel extends SimPanel {
       },
     );
 
+    const checkboxOptions = {
+      checkboxColor: SternGerlachColors.textColorProperty,
+      checkboxColorBackground: SternGerlachColors.panelBackgroundColorProperty,
+      spacing: 8,
+    };
+
+    const watchCheckbox = new Checkbox(
+      model.watchProperty,
+      new Text(controls.watchStringProperty, {
+        font: new PhetFont(14),
+        fill: SternGerlachColors.textColorProperty,
+        maxWidth: 180,
+      }),
+      { ...checkboxOptions, accessibleName: a11y.controls.watchCheckboxStringProperty },
+    );
+
     const expectedValuesCheckbox = new Checkbox(
       model.expectedValuesVisibleProperty,
       new Text(controls.expectedValuesStringProperty, {
@@ -68,13 +85,17 @@ export class ExperimentControlPanel extends SimPanel {
         fill: SternGerlachColors.textColorProperty,
         maxWidth: 180,
       }),
-      {
-        checkboxColor: SternGerlachColors.textColorProperty,
-        checkboxColorBackground: SternGerlachColors.panelBackgroundColorProperty,
-        spacing: 8,
-        accessibleName: a11y.controls.expectedValuesCheckboxStringProperty,
-      },
+      { ...checkboxOptions, accessibleName: a11y.controls.expectedValuesCheckboxStringProperty },
     );
+
+    const anglesDialog = new AnglesDialog(model.thetaProperty, model.phiProperty);
+    const anglesButton = new RectangularPushButton({
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+      baseColor: SternGerlachColors.controlSurfaceColorProperty,
+      content: new Text(controls.anglesStringProperty, { font: new PhetFont(13), fill: LIGHT_SURFACE_TEXT_FILL }),
+      listener: () => anglesDialog.show(),
+      accessibleName: a11y.controls.anglesButtonStringProperty,
+    });
 
     const doNButtons = DO_N_SIZES.map((count) => {
       const labelProperty = new PatternStringProperty(controls.doNPatternStringProperty, { count });
@@ -99,7 +120,17 @@ export class ExperimentControlPanel extends SimPanel {
 
     super(
       new VBox({
-        children: [title, comboBox, new HSeparator(), expectedValuesCheckbox, doNRow, resetCountsButton],
+        children: [
+          title,
+          comboBox,
+          new HSeparator(),
+          watchCheckbox,
+          expectedValuesCheckbox,
+          anglesButton,
+          new HSeparator(),
+          doNRow,
+          resetCountsButton,
+        ],
         align: "left",
         spacing: 10,
       }),

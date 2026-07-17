@@ -6,11 +6,14 @@
  * the input to each output hole (the middle "0" output runs straight), dark
  * exit holes, and a white RichText label (SG_Z, SG_n, λ₄ …).
  *
+ * When Watch is on, a which-path light flashes at the output port each atom
+ * leaves through (driven by analyzerExitEmitter, ~0.5 s fade).
+ *
  * Local origin: the device's center. The curve/hole count follows the active
  * system (2 or 3 outputs); the label follows typeProperty.
  */
 
-import type { TReadOnlyProperty } from "scenerystack/axon";
+import type { Emitter, TReadOnlyProperty } from "scenerystack/axon";
 import { Shape } from "scenerystack/kite";
 import { Circle, Node, Path, Rectangle, RichText } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
@@ -22,6 +25,9 @@ import type { Analyzer } from "../../model/devices/Analyzer.js";
 
 const HOLE_RADIUS = 6;
 const CURVE_LINE_WIDTH = 4;
+const FLASH_RADIUS = 10;
+/** How long a which-path flash takes to fade out, seconds. */
+const FLASH_DURATION = 0.5;
 
 /** The display label for an analyzer/magnet type: SG with a subscript, or λ with one. */
 export function analyzerLabelMarkup(type: AnalyzerType): string {
@@ -34,7 +40,21 @@ export function analyzerLabelMarkup(type: AnalyzerType): string {
 export class AnalyzerNode extends Node {
   private readonly disposeAnalyzerNode: () => void;
 
-  public constructor(analyzer: Analyzer, systemProperty: TReadOnlyProperty<SpinSystem>) {
+  // Which-path flash lights, indexed by output port; rebuilt when the system changes.
+  private flashes: Circle[] = [];
+
+  /**
+   * @param analyzer - the analyzer device
+   * @param systemProperty - the active quantum system (drives output count)
+   * @param watchProperty - whether which-path lights are on
+   * @param analyzerExitEmitter - fires (analyzer, outputIndex) as atoms leave analyzers
+   */
+  public constructor(
+    analyzer: Analyzer,
+    systemProperty: TReadOnlyProperty<SpinSystem>,
+    watchProperty: TReadOnlyProperty<boolean>,
+    analyzerExitEmitter: Emitter<[Analyzer, number]>,
+  ) {
     super();
 
     const halfWidth = analyzer.halfWidth * MODEL_VIEW_SCALE;
@@ -58,6 +78,7 @@ export class AnalyzerNode extends Node {
 
     const rebuildCurves = (system: SpinSystem) => {
       curvesLayer.removeAllChildren();
+      this.flashes = [];
 
       const inputPoint = { x: -halfWidth, y: 0 };
       for (let outputIndex = 0; outputIndex < analyzer.outputCount(system); outputIndex++) {
@@ -77,15 +98,26 @@ export class AnalyzerNode extends Node {
             lineWidth: CURVE_LINE_WIDTH,
           }),
         );
+        const holeCenterX = halfWidth - HOLE_RADIUS + 2;
         curvesLayer.addChild(
           new Circle(HOLE_RADIUS, {
             fill: SternGerlachColors.analyzerHoleFillProperty,
             stroke: SternGerlachColors.analyzerLabelFillProperty,
             lineWidth: 1,
-            centerX: halfWidth - HOLE_RADIUS + 2,
+            centerX: holeCenterX,
             centerY: outY,
           }),
         );
+        // Which-path flash light just outside the output hole; starts invisible.
+        const flash = new Circle(FLASH_RADIUS, {
+          fill: SternGerlachColors.watchLightOnProperty,
+          centerX: halfWidth + FLASH_RADIUS,
+          centerY: outY,
+          opacity: 0,
+          pickable: false,
+        });
+        this.flashes[outputIndex] = flash;
+        curvesLayer.addChild(flash);
       }
 
       // Entry hole on the input edge.
@@ -111,10 +143,31 @@ export class AnalyzerNode extends Node {
     systemProperty.link(systemListener);
     analyzer.typeProperty.link(typeListener);
 
+    // Light up the exiting output port when Watch is on.
+    const exitListener = (source: Analyzer, outputIndex: number) => {
+      if (source === analyzer && watchProperty.value) {
+        const flash = this.flashes[outputIndex];
+        if (flash) {
+          flash.opacity = 1;
+        }
+      }
+    };
+    analyzerExitEmitter.addListener(exitListener);
+
     this.disposeAnalyzerNode = () => {
       systemProperty.unlink(systemListener);
       analyzer.typeProperty.unlink(typeListener);
+      analyzerExitEmitter.removeListener(exitListener);
     };
+  }
+
+  /** Fades the which-path flashes; call once per frame with the elapsed seconds. */
+  public stepFlashes(dt: number): void {
+    for (const flash of this.flashes) {
+      if (flash && flash.opacity > 0) {
+        flash.opacity = Math.max(0, flash.opacity - dt / FLASH_DURATION);
+      }
+    }
   }
 
   public override dispose(): void {

@@ -24,11 +24,13 @@ import SternGerlachColors from "../../SternGerlachColors.js";
 import { Analyzer } from "../model/devices/Analyzer.js";
 import { Counter } from "../model/devices/Counter.js";
 import type { ExperimentDevice } from "../model/devices/ExperimentDevice.js";
+import { Magnet } from "../model/devices/Magnet.js";
 import { ParticleSource, SourceMode } from "../model/devices/ParticleSource.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
 import { BeamCanvasNode } from "./BeamCanvasNode.js";
 import { AnalyzerNode } from "./nodes/AnalyzerNode.js";
 import { CounterNode } from "./nodes/CounterNode.js";
+import { MagnetNode } from "./nodes/MagnetNode.js";
 import { SourceNode } from "./nodes/SourceNode.js";
 import { WireNode } from "./nodes/WireNode.js";
 import { ParticleLayerNode } from "./ParticleLayerNode.js";
@@ -42,6 +44,9 @@ export class ExperimentAreaNode extends Node {
   private readonly deviceLayer: Node;
   private readonly particleLayer: ParticleLayerNode;
   private readonly beamLayer: BeamCanvasNode;
+
+  // Analyzer nodes currently on the board, so their which-path flashes can be faded each frame.
+  private analyzerNodes: AnalyzerNode[] = [];
 
   public constructor(model: SternGerlachModel) {
     super();
@@ -76,8 +81,8 @@ export class ExperimentAreaNode extends Node {
     this.rebuild();
   }
 
-  /** Call once per frame so particles track their model positions. */
-  public step(): void {
+  /** Call once per frame so particles track their model positions and flashes fade. */
+  public step(dt: number): void {
     // Continuous beams paint on the lightweight canvas; single fires use crisp circles.
     const source = this.model.graph.getSource();
     const continuous = source !== null && source.sourceModeProperty.value === SourceMode.CONTINUOUS;
@@ -87,6 +92,9 @@ export class ExperimentAreaNode extends Node {
       this.beamLayer.update();
     } else {
       this.particleLayer.update();
+    }
+    for (const analyzerNode of this.analyzerNodes) {
+      analyzerNode.stepFlashes(dt);
     }
   }
 
@@ -98,6 +106,7 @@ export class ExperimentAreaNode extends Node {
     for (const child of this.deviceLayer.children.slice()) {
       child.dispose();
     }
+    this.analyzerNodes = [];
 
     for (const device of this.model.graph.devices) {
       const node = this.createDeviceNode(device);
@@ -114,7 +123,17 @@ export class ExperimentAreaNode extends Node {
       return new SourceNode(device, () => this.model.fireSingleParticle());
     }
     if (device instanceof Analyzer) {
-      return new AnalyzerNode(device, this.model.systemProperty);
+      const analyzerNode = new AnalyzerNode(
+        device,
+        this.model.systemProperty,
+        this.model.watchProperty,
+        this.model.particleSystem.analyzerExitEmitter,
+      );
+      this.analyzerNodes.push(analyzerNode);
+      return analyzerNode;
+    }
+    if (device instanceof Magnet) {
+      return new MagnetNode(device, this.model.systemProperty);
     }
     if (device instanceof Counter) {
       // UP-ish ports get black bars, DOWN-ish magenta — decided by the feeding port.

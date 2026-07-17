@@ -74,7 +74,7 @@ export class SternGerlachScreenView extends ScreenView {
    * Steps the view forward for animation: keeps particle circles in sync.
    * @param _dt - elapsed seconds (positions live in the model; only sync here)
    */
-  public override step(_dt: number): void {
-    this.experimentAreaNode.step();
+  public override step(dt: number): void {
+    this.experimentAreaNode.step(dt);
   }
 }

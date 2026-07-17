@@ -120,4 +120,11 @@ export class StringManager {
   public getControls() {
     return stringProperties.controls;
   }
+
+  /**
+   * Titles and labels for the sim's dialogs (direction angles, user state, …).
+   */
+  public getDialogs() {
+    return stringProperties.dialogs;
+  }
 }

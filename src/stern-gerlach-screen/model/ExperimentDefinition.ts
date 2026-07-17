@@ -19,6 +19,7 @@ import { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
 import type { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import { Analyzer } from "./devices/Analyzer.js";
 import { Counter } from "./devices/Counter.js";
+import { Magnet } from "./devices/Magnet.js";
 import { ParticleSource } from "./devices/ParticleSource.js";
 import type { ExperimentGraph } from "./ExperimentGraph.js";
 import { Wire } from "./Wire.js";
@@ -135,6 +136,29 @@ export class ExperimentDefinition {
     });
   }
 
+  /**
+   * Magnet precession: a Z analyzer polarizes the beam; its UP output passes through a magnet
+   * (dial the field to precess the spin) and into an X analyzer whose counts sweep with the
+   * field. The Z analyzer's other outputs are counted directly.
+   */
+  private static magnetPrecession(): ExperimentDefinition {
+    return new ExperimentDefinition("magnet", (graph, system) => {
+      const source = new ParticleSource(new Vector2(0.35, 0.3));
+      const first = new Analyzer(new Vector2(1.05, 0.3), typeFor(AnalyzerType.Z, system));
+      const magnet = new Magnet(new Vector2(1.8, 0.6), typeFor(AnalyzerType.Y, system));
+      const last = new Analyzer(new Vector2(2.6, 0.6), typeFor(AnalyzerType.X, system));
+      graph.addDevice(source);
+      graph.addDevice(first);
+      graph.addDevice(magnet);
+      graph.addDevice(last);
+      graph.addWire(new Wire(source, 0, first));
+      graph.addWire(new Wire(first, 0, magnet));
+      graph.addWire(new Wire(magnet, 0, last));
+      addCountersForAnalyzer(graph, system, last, 3.4);
+      addCountersForAnalyzer(graph, system, first, 3.4, -0.45);
+    });
+  }
+
   /** The preset list offered in the experiment combo box, in display order. */
   public static readonly PRESETS: readonly ExperimentDefinition[] = [
     ExperimentDefinition.singleAnalyzer("singleZ", AnalyzerType.Z),
@@ -142,6 +166,7 @@ export class ExperimentDefinition {
     ExperimentDefinition.chained("zThenX", AnalyzerType.Z, AnalyzerType.X),
     ExperimentDefinition.chained("zThenZ", AnalyzerType.Z, AnalyzerType.Z),
     ExperimentDefinition.interferometer(),
+    ExperimentDefinition.magnetPrecession(),
   ];
 
   /** The default preset selected on startup and after Reset All. */

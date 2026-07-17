@@ -8,7 +8,8 @@
     "singleX": "Single Analyzer (X)",
     "zThenX": "Z then X Analyzers",
     "zThenZ": "Repeated Z Analyzers",
-    "interferometer": "Interferometer"
+    "interferometer": "Interferometer",
+    "magnet": "Magnet Precession"
   },
   "controls": {
     "experiment": "Experiment",
@@ -19,7 +20,12 @@
     "lots": "Lots",
     "expectedValues": "Expected Values",
     "resetCounts": "Reset Counts",
-    "doNPattern": "Do {{count}}"
+    "doNPattern": "Do {{count}}",
+    "watch": "Watch",
+    "fieldStrength": "Field",
+    "angles": "Angles…",
+    "theta": "θ",
+    "phi": "φ"
   },
   "a11y": {
     "screenSummary": {
@@ -35,8 +41,16 @@
       "emissionRateSlider": "Beam intensity",
       "expectedValuesCheckbox": "Show expected-value lines on the counters",
       "resetCountsButton": "Reset all counters to zero",
-      "doNButtonPattern": "Fire {{count}} atoms at once"
+      "doNButtonPattern": "Fire {{count}} atoms at once",
+      "watchCheckbox": "Watch which path each atom takes",
+      "magnetFieldSpinner": "Magnet field strength",
+      "anglesButton": "Open direction-angle controls",
+      "thetaControl": "Polar angle theta",
+      "phiControl": "Azimuthal angle phi"
     }
+  },
+  "dialogs": {
+    "anglesTitle": "Direction Angles"
   },
   "preferences": {
     "title": "Simulation",

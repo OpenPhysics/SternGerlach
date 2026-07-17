@@ -8,7 +8,8 @@
     "singleX": "Analizador único (X)",
     "zThenX": "Analizadores Z luego X",
     "zThenZ": "Analizadores Z repetidos",
-    "interferometer": "Interferómetro"
+    "interferometer": "Interferómetro",
+    "magnet": "Precesión con imán"
   },
   "controls": {
     "experiment": "Experimento",
@@ -19,7 +20,12 @@
     "lots": "Mucho",
     "expectedValues": "Valores esperados",
     "resetCounts": "Restablecer conteos",
-    "doNPattern": "Hacer {{count}}"
+    "doNPattern": "Hacer {{count}}",
+    "watch": "Observar",
+    "fieldStrength": "Campo",
+    "angles": "Ángulos…",
+    "theta": "θ",
+    "phi": "φ"
   },
   "a11y": {
     "screenSummary": {
@@ -35,8 +41,16 @@
       "emissionRateSlider": "Intensidad del haz",
       "expectedValuesCheckbox": "Mostrar líneas de valor esperado en los contadores",
       "resetCountsButton": "Restablecer todos los contadores a cero",
-      "doNButtonPattern": "Disparar {{count}} átomos a la vez"
+      "doNButtonPattern": "Disparar {{count}} átomos a la vez",
+      "watchCheckbox": "Observar qué camino toma cada átomo",
+      "magnetFieldSpinner": "Intensidad del campo del imán",
+      "anglesButton": "Abrir los controles de ángulo de dirección",
+      "thetaControl": "Ángulo polar theta",
+      "phiControl": "Ángulo azimutal phi"
     }
+  },
+  "dialogs": {
+    "anglesTitle": "Ángulos de dirección"
   },
   "preferences": {
     "title": "Simulación",

@@ -8,7 +8,8 @@
     "singleX": "Analyseur unique (X)",
     "zThenX": "Analyseurs Z puis X",
     "zThenZ": "Analyseurs Z répétés",
-    "interferometer": "Interféromètre"
+    "interferometer": "Interféromètre",
+    "magnet": "Précession magnétique"
   },
   "controls": {
     "experiment": "Expérience",
@@ -19,7 +20,12 @@
     "lots": "Beaucoup",
     "expectedValues": "Valeurs attendues",
     "resetCounts": "Réinitialiser les compteurs",
-    "doNPattern": "Faire {{count}}"
+    "doNPattern": "Faire {{count}}",
+    "watch": "Observer",
+    "fieldStrength": "Champ",
+    "angles": "Angles…",
+    "theta": "θ",
+    "phi": "φ"
   },
   "a11y": {
     "screenSummary": {
@@ -35,8 +41,16 @@
       "emissionRateSlider": "Intensité du faisceau",
       "expectedValuesCheckbox": "Afficher les lignes de valeur attendue sur les compteurs",
       "resetCountsButton": "Remettre tous les compteurs à zéro",
-      "doNButtonPattern": "Tirer {{count}} atomes à la fois"
+      "doNButtonPattern": "Tirer {{count}} atomes à la fois",
+      "watchCheckbox": "Observer le chemin pris par chaque atome",
+      "magnetFieldSpinner": "Intensité du champ de l'aimant",
+      "anglesButton": "Ouvrir les commandes d'angle de direction",
+      "thetaControl": "Angle polaire thêta",
+      "phiControl": "Angle azimutal phi"
     }
+  },
+  "dialogs": {
+    "anglesTitle": "Angles de direction"
   },
   "preferences": {
     "title": "Simulation",
