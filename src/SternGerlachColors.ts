@@ -121,6 +121,24 @@ const SternGerlachColors = {
     projector: "#000000",
   }),
 
+  /** Lighter entrance band on the analyzer's input edge (PhET Spin look). */
+  analyzerEntranceFillProperty: new ProfileColorProperty(SternGerlachNamespace, "analyzerEntranceFill", {
+    default: "#3d5568",
+    projector: "#333333",
+  }),
+
+  /** Physical wall drawn over a blocked analyzer exit. */
+  blockerFillProperty: new ProfileColorProperty(SternGerlachNamespace, "blockerFill", {
+    default: "#c45c26",
+    projector: "#aa4400",
+  }),
+
+  /** Brief camera/detection flash fill on a counter. */
+  measurementFlashFillProperty: new ProfileColorProperty(SternGerlachNamespace, "measurementFlashFill", {
+    default: "#fff176",
+    projector: "#ffdd00",
+  }),
+
   /** Analyzer label text (SG_Z, λ₄, …). */
   analyzerLabelFillProperty: new ProfileColorProperty(SternGerlachNamespace, "analyzerLabelFill", {
     default: "#e8f7ff",

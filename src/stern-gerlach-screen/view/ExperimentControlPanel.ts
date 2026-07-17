@@ -1,13 +1,13 @@
 /**
  * ExperimentControlPanel.ts
  *
- * The right-hand control panel: the preset-experiment combo box, the initial-state
- * chooser (Random, Unknown #1-#4, User State), the expected-value toggle, the
- * analytic Do-N batch buttons, and Reset Counts. Also hosts watch, system, and
- * direction-angle controls.
+ * The right-hand control panel: the preset-experiment combo box with apparatus
+ * notation and guidance, the initial-state chooser (Random, Unknown #1-#4, User
+ * State), the expected-value toggle, analytic Do-N batch buttons, Reset Counts,
+ * plus watch, system, direction-angle, and dead-end probability readouts.
  */
 
-import { PatternStringProperty } from "scenerystack/axon";
+import { DerivedProperty, PatternStringProperty } from "scenerystack/axon";
 import type { Node } from "scenerystack/scenery";
 import { HBox, HSeparator, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
@@ -73,6 +73,40 @@ export class ExperimentControlPanel extends SimPanel {
         xMargin: 10,
         yMargin: 7,
         accessibleName: a11y.controls.experimentComboBoxStringProperty,
+      },
+    );
+
+    const notationProperty = new DerivedProperty(
+      [model.experimentProperty],
+      (experiment) => strings.getExperimentNotationProperty(experiment.notationKey).value,
+    );
+    const notationText = new Text(notationProperty, {
+      font: new PhetFont({ size: 13, weight: "bold" }),
+      fill: SternGerlachColors.accentColorProperty,
+      maxWidth: 190,
+    });
+
+    const guidanceProperty = new DerivedProperty(
+      [model.experimentProperty],
+      (experiment) => strings.getExperimentGuidanceProperty(experiment.guidanceKey).value,
+    );
+    const guidanceLabel = new Text(controls.guidanceStringProperty, {
+      font: new PhetFont({ size: 12, weight: "bold" }),
+      fill: SternGerlachColors.textColorProperty,
+    });
+    const guidanceText = new Text(guidanceProperty, {
+      font: new PhetFont(11),
+      fill: SternGerlachColors.textColorProperty,
+      maxWidth: 190,
+    });
+
+    const deadEndPercent = new DerivedProperty([model.deadEndProbabilityProperty], (p) => Math.round(100 * p));
+    const deadEndText = new Text(
+      new PatternStringProperty(controls.deadEndPatternStringProperty, { percent: deadEndPercent }),
+      {
+        font: new PhetFont(11),
+        fill: SternGerlachColors.textColorProperty,
+        maxWidth: 190,
       },
     );
 
@@ -216,6 +250,9 @@ export class ExperimentControlPanel extends SimPanel {
         children: [
           title,
           comboBox,
+          notationText,
+          guidanceLabel,
+          guidanceText,
           systemRadioGroup,
           initialStateLabel,
           initialStateComboBox,
@@ -224,12 +261,13 @@ export class ExperimentControlPanel extends SimPanel {
           watchCheckbox,
           expectedValuesCheckbox,
           anglesButton,
+          deadEndText,
           new HSeparator(),
           doNRow,
           resetCountsButton,
         ],
         align: "left",
-        spacing: 10,
+        spacing: 8,
       }),
       { minWidth: 210 },
     );

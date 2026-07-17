@@ -13,6 +13,32 @@
     "recombination": "Recombinación",
     "custom": "Personalizado"
   },
+  "experimentNotation": {
+    "singleZ": "[SGz]",
+    "singleX": "[SGx]",
+    "zThenX": "[SGz → SGx]",
+    "zThenZ": "[SGz → SGz]",
+    "interferometer": "[SGz → SGx → SGz]",
+    "magnet": "[SGz → Imán → SGx]",
+    "recombination": "[SGz ⇉ SGx]",
+    "custom": "[Personalizado]"
+  },
+  "experimentGuidance": {
+    "singleZ": "Predice: para un estado preparado |+z⟩, ¿qué contador debería activarse? Dispara átomos y compara con los valores esperados.",
+    "singleX": "Un estado preparado en Z medido en X es 50/50. Observa la convergencia de los contadores con Valores esperados.",
+    "zThenX": "Después de SGz, el haz UP es |+z⟩. Medirlo con SGx debería ser de nuevo 50/50.",
+    "zThenZ": "Repetir la misma base deja el estado sin cambios. El segundo SGz nunca debe convertir un átomo UP en DOWN.",
+    "interferometer": "Con Observar desactivado, recombinar ambos caminos SGx restaura el estado original en el SGz final. Con Observar activado, la interferencia desaparece.",
+    "magnet": "Ajusta el campo del imán para hacer precesar el espín. Los conteos del analizador X oscilan con el campo.",
+    "recombination": "Fusionar caminos seleccionados antes del siguiente analizador puede restaurar la coherencia. Compara Observar activado y desactivado.",
+    "custom": "Construye tu propio aparato: arrastra dispositivos, conecta puertos y prueba bloquear una salida para filtrar un componente de espín."
+  },
+  "statePreparation": {
+    "title": "Estado preparado",
+    "unknownHidden": "Estado misterioso: dispara átomos para inferirlo a partir de los contadores.",
+    "randomMixture": "Mezcla aleatoria: cada estado de la base es igualmente probable.",
+    "probabilityPattern": "P({{label}})={{percent}}%"
+  },
   "toolbox": {
     "title": "Herramientas",
     "analyzer": "Analizador",
@@ -37,15 +63,22 @@
     "initialState": "Estado inicial",
     "random": "Aleatorio",
     "unknownPattern": "Desconocido #{{number}}",
-    "userState": "Estado del usuario…"
+    "userState": "Estado del usuario…",
+    "apparatus": "Aparato",
+    "guidance": "Prueba esto",
+    "deadEndPattern": "Perdido (filtros/callejones): {{percent}}%",
+    "blockNone": "Abierto",
+    "blockUp": "Bloquear +",
+    "blockDown": "Bloquear −",
+    "blockZero": "Bloquear 0"
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "El área de juego muestra una fuente de partículas conectada a través de analizadores de Stern–Gerlach e imanes a contadores de partículas sobre un tablero de experimento claro. Los puntos magenta animados representan átomos en vuelo. En el modo Personalizado puede añadir dispositivos, arrastrarlos y conectar puertos de salida a puertos de entrada.",
-      "controlArea": "El área de control tiene un selector de experimentos predefinidos, un selector de sistema cuántico, un selector de estado inicial, casillas de observación y valores esperados, controles de ángulos de dirección, botones analíticos Hacer N y Restablecer conteos. Restablecer todo devuelve la simulación a su estado inicial.",
-      "interactionHint": "Elige un experimento y un sistema, selecciona un estado inicial, luego dispara átomos a través de los analizadores y compara las estadísticas de los contadores con los valores esperados."
+      "playArea": "El área de juego muestra una lectura del estado preparado, una fuente de partículas conectada a través de analizadores de Stern–Gerlach e imanes a contadores, con bloqueadores de salida opcionales. Los puntos magenta animados representan átomos en vuelo. En el modo Personalizado puede añadir dispositivos, arrastrarlos y conectar puertos.",
+      "controlArea": "El área de control tiene un selector de experimentos con notación y guía, un selector de sistema cuántico, un selector de estado inicial, casillas de observación y valores esperados, controles de ángulos, botones Hacer N y Restablecer conteos. Restablecer todo devuelve la simulación a su estado inicial.",
+      "interactionHint": "Elige un experimento y un sistema, selecciona un estado inicial, opcionalmente bloquea una salida del analizador, luego dispara átomos y compara las estadísticas con los valores esperados."
     },
-    "currentDetailsPattern": "{{experiment}}, sistema {{system}}. Estado inicial: {{initialState}}. Átomos detectados: {{total}}. Observación {{watchStatus}}.",
+    "currentDetailsPattern": "{{experiment}}, sistema {{system}}. Estado inicial: {{initialState}}. Átomos detectados: {{total}}. Observación {{watchStatus}}. Probabilidad perdida: {{deadEnd}}%.",
     "currentDetailsBuilderSuffix": " El modo Personalizado está activo.",
     "watchOn": "activada",
     "watchOff": "desactivada",
@@ -70,11 +103,18 @@
       "editUserStateButton": "Editar el estado inicial definido por el usuario",
       "userStateBasisRadioGroup": "Base de entrada para el estado definido por el usuario",
       "userStateRealPattern": "Parte real del componente {{index}}",
-      "userStateImagPattern": "Parte imaginaria del componente {{index}}"
+      "userStateImagPattern": "Parte imaginaria del componente {{index}}",
+      "statePreparationRegion": "Lectura del estado preparado",
+      "blockerRadioGroup": "Bloquear una salida del analizador"
     },
     "builder": {
       "analyzerTypeComboBox": "Dirección de medición del analizador",
-      "deleteDeviceButton": "Eliminar este dispositivo"
+      "deleteDeviceButton": "Eliminar este dispositivo",
+      "sourceDevice": "Fuente de partículas",
+      "analyzerDevice": "Analizador de Stern–Gerlach",
+      "magnetDevice": "Imán",
+      "counterDevice": "Contador de partículas",
+      "outputPortPattern": "Puerto de salida {{index}}, arrastrar para conectar"
     },
     "keyboardHelp": {
       "fireHeading": "Disparar átomos",
@@ -84,6 +124,8 @@
       "deleteDevice": "Eliminar el dispositivo enfocado",
       "wireHeading": "Conectar dispositivos",
       "dragWire": "Arrastrar de un puerto de salida a uno de entrada",
+      "blockerHeading": "Bloqueadores de salida",
+      "blockerHelp": "Elige Abierto o Bloquear en un analizador para filtrar un componente de espín",
       "comboHeading": "Cuadros combinados",
       "sliderHeading": "Ajustar valores"
     }

@@ -20,7 +20,7 @@ import type { ComplexVector } from "../../common/quantum/ComplexVector.js";
 import { OperatorTable } from "../../common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import { TimeModel } from "../../common/TimeModel.js";
-import { Analyzer } from "./devices/Analyzer.js";
+import { Analyzer, NO_BLOCKED_OUTPUT } from "./devices/Analyzer.js";
 import { Counter } from "./devices/Counter.js";
 import type { ExperimentDevice } from "./devices/ExperimentDevice.js";
 import { Magnet } from "./devices/Magnet.js";
@@ -36,7 +36,7 @@ import { Wire } from "./Wire.js";
 /** A serializable snapshot of one device, used to retain the custom build across preset switches. */
 type DeviceSnapshot =
   | { kind: "source"; position: Vector2 }
-  | { kind: "analyzer"; position: Vector2; type: AnalyzerType }
+  | { kind: "analyzer"; position: Vector2; type: AnalyzerType; blockedOutput: number }
   | { kind: "magnet"; position: Vector2; type: AnalyzerType; field: number }
   | { kind: "counter"; position: Vector2 };
 
@@ -79,6 +79,12 @@ export class SternGerlachModel implements TModel {
 
   /** Sum of all counter counts — the denominator for histogram bars and percents. */
   public readonly totalDetectedProperty: NumberProperty;
+
+  /**
+   * Probability mass that never reaches any counter (blocked exits + unwired dead ends).
+   * Equals 1 − Σ counter probabilities for a definite prepared state / RANDOM average.
+   */
+  public readonly deadEndProbabilityProperty: NumberProperty;
 
   /** The device graph currently on the board. */
   public readonly graph: ExperimentGraph;
@@ -131,6 +137,7 @@ export class SternGerlachModel implements TModel {
     this.thetaProperty = new NumberProperty(Math.PI / 2);
     this.phiProperty = new NumberProperty(Math.PI / 4);
     this.totalDetectedProperty = new NumberProperty(0);
+    this.deadEndProbabilityProperty = new NumberProperty(0);
 
     this.operatorTable = new OperatorTable(this.thetaProperty.value, this.phiProperty.value);
     this.graph = new ExperimentGraph();
@@ -294,9 +301,28 @@ export class SternGerlachModel implements TModel {
       },
       this.currentUserState(),
     );
+    let detected = 0;
     for (const [counter, probability] of probabilities) {
       counter.probabilityProperty.value = probability;
+      detected += probability;
     }
+    this.deadEndProbabilityProperty.value = Math.max(0, 1 - detected);
+  }
+
+  /**
+   * A definite prepared state for visualization, or null when the source emits a mixture
+   * (Random) or a hidden mystery state (Unknown).
+   */
+  public preparedStateForDisplay(): ComplexVector | null {
+    const setting = this.initialStateProperty.value;
+    if (setting.isUser) {
+      return this.currentUserState();
+    }
+    if (setting.unknownIndex !== null) {
+      // Mystery states stay hidden — revealing them would spoil the guessing game.
+      return null;
+    }
+    return null;
   }
 
   /** Rebuilds the board from the selected preset, or restores the retained custom build. */
@@ -347,7 +373,12 @@ export class SternGerlachModel implements TModel {
         return { kind: "source", position: device.positionProperty.value.copy() };
       }
       if (device instanceof Analyzer) {
-        return { kind: "analyzer", position: device.positionProperty.value.copy(), type: device.typeProperty.value };
+        return {
+          kind: "analyzer",
+          position: device.positionProperty.value.copy(),
+          type: device.typeProperty.value,
+          blockedOutput: device.blockedOutputProperty.value,
+        };
       }
       if (device instanceof Magnet) {
         return {
@@ -389,7 +420,9 @@ export class SternGerlachModel implements TModel {
       return new ParticleSource(snap.position.copy());
     }
     if (snap.kind === "analyzer") {
-      return new Analyzer(snap.position.copy(), snap.type);
+      const analyzer = new Analyzer(snap.position.copy(), snap.type);
+      analyzer.blockedOutputProperty.value = snap.blockedOutput ?? NO_BLOCKED_OUTPUT;
+      return analyzer;
     }
     if (snap.kind === "magnet") {
       const magnet = new Magnet(snap.position.copy(), snap.type);
@@ -414,7 +447,11 @@ export class SternGerlachModel implements TModel {
     const onChange = () => this.handleConfigurationChange();
     if (device instanceof Analyzer) {
       device.typeProperty.lazyLink(onChange);
-      this.deviceListeners.set(device, () => device.typeProperty.unlink(onChange));
+      device.blockedOutputProperty.lazyLink(onChange);
+      this.deviceListeners.set(device, () => {
+        device.typeProperty.unlink(onChange);
+        device.blockedOutputProperty.unlink(onChange);
+      });
     } else if (device instanceof Magnet) {
       device.typeProperty.lazyLink(onChange);
       device.fieldNumberProperty.lazyLink(onChange);

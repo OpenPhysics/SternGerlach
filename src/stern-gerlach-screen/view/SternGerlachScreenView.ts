@@ -21,6 +21,7 @@ import type { SternGerlachModel } from "../model/SternGerlachModel.js";
 import { DeviceToolboxNode } from "./DeviceToolboxNode.js";
 import { ExperimentAreaNode } from "./ExperimentAreaNode.js";
 import { ExperimentControlPanel } from "./ExperimentControlPanel.js";
+import { StatePreparationAreaNode } from "./StatePreparationAreaNode.js";
 import { SternGerlachScreenSummaryContent } from "./SternGerlachScreenSummaryContent.js";
 
 export class SternGerlachScreenView extends ScreenView {
@@ -44,22 +45,39 @@ export class SternGerlachScreenView extends ScreenView {
     this.experimentAreaNode.top = SCREEN_VIEW_MARGIN;
     this.addChild(this.experimentAreaNode);
 
+    // ── Prepared-state readout (Bloch / ket / probabilities) ──────────────────
+    const statePrep = new StatePreparationAreaNode(model);
+    statePrep.left = this.experimentAreaNode.left + 14;
+    statePrep.top = this.experimentAreaNode.top + 14;
+    this.addChild(statePrep);
+
     // ── Control panel (combo box list drops into this view, above everything) ──
     const controlPanel = new ExperimentControlPanel(model, this);
     controlPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
     controlPanel.top = SCREEN_VIEW_MARGIN;
     this.addChild(controlPanel);
 
-    // ── Builder toolbox (visible only in Custom mode) ─────────────────────────
+    // ── Builder toolbox (right column, below the control panel, visible only in Custom mode) ──
+    const newAnalyzer = (position: Vector2) => new Analyzer(position, model.systemProperty.value.defaultType);
+    const newMagnet = (position: Vector2) => new Magnet(position, model.systemProperty.value.defaultType);
+    const newCounter = (position: Vector2) => new Counter(position);
     const toolbox = new DeviceToolboxNode(model.isCustomProperty, {
-      addAnalyzer: () =>
-        model.graph.addDevice(new Analyzer(this.spawnPosition(model), model.systemProperty.value.defaultType)),
-      addMagnet: () =>
-        model.graph.addDevice(new Magnet(this.spawnPosition(model), model.systemProperty.value.defaultType)),
-      addCounter: () => model.graph.addDevice(new Counter(this.spawnPosition(model))),
+      analyzer: {
+        dragCreate: (event) => this.experimentAreaNode.createAndDragDevice(newAnalyzer, event),
+        clickCreate: () => model.graph.addDevice(newAnalyzer(this.spawnPosition(model))),
+      },
+      magnet: {
+        dragCreate: (event) => this.experimentAreaNode.createAndDragDevice(newMagnet, event),
+        clickCreate: () => model.graph.addDevice(newMagnet(this.spawnPosition(model))),
+      },
+      counter: {
+        dragCreate: (event) => this.experimentAreaNode.createAndDragDevice(newCounter, event),
+        clickCreate: () => model.graph.addDevice(newCounter(this.spawnPosition(model))),
+      },
     });
-    toolbox.left = SCREEN_VIEW_MARGIN;
-    toolbox.bottom = this.layoutBounds.maxY - SCREEN_VIEW_MARGIN;
+    // Sits clear of the board in the right column, in the gap between the control panel and Reset All.
+    toolbox.right = controlPanel.right;
+    toolbox.top = controlPanel.bottom + 6;
     this.addChild(toolbox);
 
     // ── Reset All button ──────────────────────────────────────────────────────
@@ -77,7 +95,7 @@ export class SternGerlachScreenView extends ScreenView {
     // ── Accessibility: keyboard / reading traversal order ─────────────────────
     this.addChild(
       new Node({
-        pdomOrder: [this.experimentAreaNode, controlPanel, toolbox, resetAllButton],
+        pdomOrder: [statePrep, this.experimentAreaNode, controlPanel, toolbox, resetAllButton],
       }),
     );
   }

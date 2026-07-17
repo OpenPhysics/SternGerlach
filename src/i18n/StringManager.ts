@@ -31,6 +31,10 @@ import stringsFr from "./strings_fr.json";
 void (stringsEn satisfies typeof stringsFr);
 // biome-ignore lint/complexity/noVoid: intentional compile-time type assertion
 void (stringsFr satisfies typeof stringsEn);
+// biome-ignore lint/complexity/noVoid: intentional compile-time type assertion
+void (stringsEn satisfies typeof stringsEs);
+// biome-ignore lint/complexity/noVoid: intentional compile-time type assertion
+void (stringsEs satisfies typeof stringsEn);
 
 // ── Build the reactive string property tree ───────────────────────────────────
 const stringProperties = LocalizedString.getNestedStringProperties({
@@ -112,6 +116,37 @@ export class StringManager {
       throw new Error(`no experiment name string for key "${nameKey}"`);
     }
     return property;
+  }
+
+  /**
+   * Compact apparatus notation for a preset, e.g. "[SGz → SGx]".
+   */
+  public getExperimentNotationProperty(nameKey: string): ReadOnlyProperty<string> {
+    const notations = stringProperties.experimentNotation as unknown as Record<string, ReadOnlyProperty<string>>;
+    const property = notations[`${nameKey}StringProperty`];
+    if (!property) {
+      throw new Error(`no experiment notation string for key "${nameKey}"`);
+    }
+    return property;
+  }
+
+  /**
+   * Prediction / observation guidance for a preset.
+   */
+  public getExperimentGuidanceProperty(nameKey: string): ReadOnlyProperty<string> {
+    const guidance = stringProperties.experimentGuidance as unknown as Record<string, ReadOnlyProperty<string>>;
+    const property = guidance[`${nameKey}StringProperty`];
+    if (!property) {
+      throw new Error(`no experiment guidance string for key "${nameKey}"`);
+    }
+    return property;
+  }
+
+  /**
+   * Labels for the prepared-state readout (Bloch / ket / probabilities).
+   */
+  public getStatePreparation() {
+    return stringProperties.statePreparation;
   }
 
   /**

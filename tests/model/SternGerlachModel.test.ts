@@ -82,6 +82,19 @@ describe("SternGerlachModel", () => {
     expect(model.totalDetectedProperty.value).toBe(0);
   });
 
+  it("tracks dead-end probability when an analyzer exit is blocked", () => {
+    const model = new SternGerlachModel(seededRng(9));
+    model.initialStateProperty.value = InitialStateSetting.UNKNOWN_1; // |+z⟩
+    expect(model.deadEndProbabilityProperty.value).toBeCloseTo(0, 10);
+
+    const analyzer = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer;
+    analyzer.blockedOutputProperty.value = 0; // block UP — |+z⟩ is entirely lost
+    expect(model.deadEndProbabilityProperty.value).toBeCloseTo(1, 10);
+
+    analyzer.blockedOutputProperty.value = 1; // block DOWN — |+z⟩ still detected
+    expect(model.deadEndProbabilityProperty.value).toBeCloseTo(0, 10);
+  });
+
   it("single-fire particles fly the graph and land in counters (seeded, |+z⟩ → Z)", () => {
     const model = new SternGerlachModel(seededRng(5));
     model.initialStateProperty.value = InitialStateSetting.UNKNOWN_1;

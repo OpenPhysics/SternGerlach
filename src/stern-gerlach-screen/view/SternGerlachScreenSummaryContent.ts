@@ -3,8 +3,9 @@
  *
  * The accessible screen summary read by screen readers (SceneryStack's
  * Interactive Description). `currentDetailsContent` is a live DerivedProperty
- * over experiment, system, initial state, detection count, watch, and builder
- * mode so screen-reader users can re-read the simulation's current state.
+ * over experiment, system, initial state, detection count, watch, dead-end
+ * probability, and builder mode so screen-reader users can re-read the
+ * simulation's current state.
  */
 
 import { DerivedProperty, PatternStringProperty } from "scenerystack/axon";
@@ -63,12 +64,15 @@ export class SternGerlachScreenSummaryContent extends ScreenSummaryContent {
       (watch, on, off) => (watch ? on : off),
     );
 
+    const deadEndPercent = new DerivedProperty([model.deadEndProbabilityProperty], (p) => Math.round(100 * p));
+
     const currentDetailsBase = new PatternStringProperty(a11y.currentDetailsPatternStringProperty, {
       experiment: experimentName,
       system: systemName,
       initialState: initialStateName,
       total: model.totalDetectedProperty,
       watchStatus,
+      deadEnd: deadEndPercent,
     });
 
     const currentDetailsContent = new DerivedProperty(

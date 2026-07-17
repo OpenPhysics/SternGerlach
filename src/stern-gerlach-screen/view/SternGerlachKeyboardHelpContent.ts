@@ -42,6 +42,16 @@ function wireSection(): KeyboardHelpSection {
   ]);
 }
 
+function blockerSection(): KeyboardHelpSection {
+  const a11y = StringManager.getInstance().getA11yStrings().keyboardHelp;
+  return new KeyboardHelpSection(a11y.blockerHeadingStringProperty, [
+    KeyboardHelpSectionRow.labelWithIcon(
+      a11y.blockerHelpStringProperty,
+      KeyboardHelpIconFactory.iconOrIcon(TextKeyNode.enter(), TextKeyNode.space()),
+    ),
+  ]);
+}
+
 export class SternGerlachKeyboardHelpContent extends TwoColumnKeyboardHelpContent {
   public constructor() {
     const a11y = StringManager.getInstance().getA11yStrings().keyboardHelp;
@@ -50,7 +60,7 @@ export class SternGerlachKeyboardHelpContent extends TwoColumnKeyboardHelpConten
       new ComboBoxKeyboardHelpSection({ headingString: a11y.comboHeadingStringProperty }),
       new SliderControlsKeyboardHelpSection({ headingStringProperty: a11y.sliderHeadingStringProperty }),
     ];
-    const right = [fireAtomsSection(), builderSection(), wireSection()];
+    const right = [fireAtomsSection(), builderSection(), wireSection(), blockerSection()];
     super(left, right);
     KeyboardHelpSection.alignHelpSectionIcons([...left, ...right]);
   }

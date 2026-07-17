@@ -1,28 +1,48 @@
 /**
  * DeviceToolboxNode.ts
  *
- * The builder-mode palette, shown as an iconic carousel: the user flips through
- * one device at a time (analyzer, magnet, counter), each drawn as a mini-icon
- * echoing how it looks on the board, and presses it to add a fresh copy to the
- * board to drag into place and wire up. Visible only while the Custom experiment
- * is selected.
+ * The builder-mode palette: a compact horizontal strip of the three device
+ * kinds (analyzer, magnet, counter), tucked under the control panel clear of
+ * the board. Each item is a mini-icon echoing how the device looks on the
+ * board: drag it out onto the board to create a device under the pointer, or
+ * activate it by keyboard/click to drop one at a default spot. Visible only
+ * while the Custom experiment is selected.
  */
 
 import type { TReadOnlyProperty } from "scenerystack/axon";
 import { Shape } from "scenerystack/kite";
-import { Circle, Node, Path, Rectangle, RichText, Text, type TPaint, VBox } from "scenerystack/scenery";
+import {
+  Circle,
+  DragListener,
+  HBox,
+  Node,
+  Path,
+  type PressListenerEvent,
+  Rectangle,
+  RichText,
+  Text,
+  type TPaint,
+  VBox,
+} from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { Carousel, type CarouselItem, RectangularPushButton } from "scenerystack/sun";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS, LIGHT_SURFACE_TEXT_FILL } from "../../common/SimButtonOptions.js";
+import { LIGHT_SURFACE_TEXT_FILL } from "../../common/SimButtonOptions.js";
 import { SimPanel } from "../../common/SimPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 
-/** Callbacks the toolbox invokes to add each device kind to the board. */
+/** How the toolbox creates a device: by drag-out (pointer) or activation (keyboard/click). */
+export type ToolboxItemHandlers = {
+  /** Pointer drag-out: create the device under the pointer and hand off the drag. */
+  dragCreate: (event: PressListenerEvent) => void;
+  /** Keyboard/click activation: drop the device at a default spot on the board. */
+  clickCreate: () => void;
+};
+
+/** The drag-out/activate handlers for each device kind the toolbox offers. */
 export type ToolboxCallbacks = {
-  addAnalyzer: () => void;
-  addMagnet: () => void;
-  addCounter: () => void;
+  analyzer: ToolboxItemHandlers;
+  magnet: ToolboxItemHandlers;
+  counter: ToolboxItemHandlers;
 };
 
 /** Footprint of each device mini-icon, view px. */
@@ -90,71 +110,67 @@ export class DeviceToolboxNode extends SimPanel {
     const toolbox = strings.getToolbox();
     const a11y = strings.getA11yStrings();
 
-    const title = new Text(toolbox.titleStringProperty, {
-      font: new PhetFont({ size: 14, weight: "bold" }),
-      fill: SternGerlachColors.textColorProperty,
-    });
-
-    // Each carousel item is a full-icon push button that adds one device to the board.
+    // Each item is a full-icon creator node: drag it out to spawn a device under the pointer
+    // (a real board device takes over the drag), or activate it by keyboard/click.
     const makeItem = (
       icon: Node,
       label: TReadOnlyProperty<string>,
       accessibleName: TReadOnlyProperty<string>,
-      listener: () => void,
-    ): CarouselItem => ({
-      createNode: () =>
-        new RectangularPushButton({
-          ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
-          baseColor: SternGerlachColors.controlSurfaceColorProperty,
-          content: new VBox({
-            spacing: 6,
-            children: [icon, new Text(label, { font: new PhetFont(12), fill: LIGHT_SURFACE_TEXT_FILL, maxWidth: 90 })],
-          }),
-          listener,
-          accessibleName,
-          xMargin: 12,
-          yMargin: 8,
-        }),
-    });
+      handlers: ToolboxItemHandlers,
+    ): Node => {
+      const content = new VBox({
+        spacing: 4,
+        children: [icon, new Text(label, { font: new PhetFont(11), fill: LIGHT_SURFACE_TEXT_FILL, maxWidth: 74 })],
+      });
 
-    const carousel = new Carousel(
-      [
+      // A rounded control-surface background that tracks the content bounds (localized labels vary).
+      const background = new Rectangle(0, 0, 0, 0, {
+        cornerRadius: 6,
+        fill: SternGerlachColors.controlSurfaceColorProperty,
+      });
+      content.boundsProperty.link(() => {
+        const b = content.bounds.dilatedXY(7, 5);
+        background.setRect(b.minX, b.minY, b.width, b.height);
+      });
+
+      const item = new Node({
+        children: [background, content],
+        cursor: "pointer",
+        // Accessible: a focusable button that drops a device on keyboard/click activation.
+        tagName: "button",
+        accessibleName,
+      });
+      // Pointer: forward the press so the created board device follows the pointer.
+      item.addInputListener(DragListener.createForwardingListener((event) => handlers.dragCreate(event)));
+      item.addInputListener({ click: () => handlers.clickCreate() });
+      return item;
+    };
+
+    // A compact horizontal strip of the three device icons, sized to sit clear of the board.
+    const row = new HBox({
+      spacing: 6,
+      children: [
         makeItem(
           analyzerIcon(),
           toolbox.analyzerStringProperty,
           a11y.controls.analyzerToolboxItemStringProperty,
-          callbacks.addAnalyzer,
+          callbacks.analyzer,
         ),
         makeItem(
           magnetIcon(),
           toolbox.magnetStringProperty,
           a11y.controls.magnetToolboxItemStringProperty,
-          callbacks.addMagnet,
+          callbacks.magnet,
         ),
         makeItem(
           counterIcon(),
           toolbox.counterStringProperty,
           a11y.controls.counterToolboxItemStringProperty,
-          callbacks.addCounter,
+          callbacks.counter,
         ),
       ],
-      {
-        orientation: "horizontal",
-        itemsPerPage: 1,
-        margin: 8,
-        fill: SternGerlachColors.controlSurfaceColorProperty,
-        stroke: SternGerlachColors.experimentAreaStrokeProperty,
-        cornerRadius: 8,
-      },
-    );
+    });
 
-    super(
-      new VBox({
-        align: "center",
-        spacing: 8,
-        children: [title, carousel],
-      }),
-      { visibleProperty: isCustomProperty },
-    );
+    super(row, { visibleProperty: isCustomProperty, xMargin: 8, yMargin: 6 });
   }
 }

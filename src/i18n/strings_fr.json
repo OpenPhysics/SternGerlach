@@ -13,6 +13,32 @@
     "recombination": "Recombinaison",
     "custom": "Personnalisé"
   },
+  "experimentNotation": {
+    "singleZ": "[SGz]",
+    "singleX": "[SGx]",
+    "zThenX": "[SGz → SGx]",
+    "zThenZ": "[SGz → SGz]",
+    "interferometer": "[SGz → SGx → SGz]",
+    "magnet": "[SGz → Aimant → SGx]",
+    "recombination": "[SGz ⇉ SGx]",
+    "custom": "[Personnalisé]"
+  },
+  "experimentGuidance": {
+    "singleZ": "Prédisez : pour un état préparé |+z⟩, quel compteur doit s'activer ? Tirez des atomes et comparez aux valeurs attendues.",
+    "singleX": "Un état préparé en Z mesuré selon X est 50/50. Observez la convergence des compteurs avec les valeurs attendues.",
+    "zThenX": "Après SGz, le faisceau UP est |+z⟩. Le mesurer avec SGx doit à nouveau donner 50/50.",
+    "zThenZ": "Répéter la même base laisse l'état inchangé. Le second SGz ne doit jamais faire basculer un atome UP vers DOWN.",
+    "interferometer": "Sans Observer, recombiner les deux chemins SGx restaure l'état d'origine au SGz final. Avec Observer, l'interférence disparaît.",
+    "magnet": "Réglez le champ de l'aimant pour faire précesser le spin. Les comptes de l'analyseur X oscillent avec le champ.",
+    "recombination": "Fusionner certains chemins avant l'analyseur suivant peut restaurer la cohérence. Comparez Observer activé et désactivé.",
+    "custom": "Construisez votre appareil : glissez des dispositifs, reliez les ports, et essayez de bloquer une sortie pour filtrer une composante de spin."
+  },
+  "statePreparation": {
+    "title": "État préparé",
+    "unknownHidden": "État mystère — tirez des atomes pour l'inférer à partir des compteurs.",
+    "randomMixture": "Mélange aléatoire : chaque état de base est équiprobable.",
+    "probabilityPattern": "P({{label}})={{percent}}%"
+  },
   "toolbox": {
     "title": "Boîte à outils",
     "analyzer": "Analyseur",
@@ -37,15 +63,22 @@
     "initialState": "État initial",
     "random": "Aléatoire",
     "unknownPattern": "Inconnu n°{{number}}",
-    "userState": "État de l'utilisateur…"
+    "userState": "État de l'utilisateur…",
+    "apparatus": "Appareil",
+    "guidance": "À essayer",
+    "deadEndPattern": "Perdu (filtres/impasses) : {{percent}}%",
+    "blockNone": "Ouvert",
+    "blockUp": "Bloquer +",
+    "blockDown": "Bloquer −",
+    "blockZero": "Bloquer 0"
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "L'aire de jeu montre une source de particules reliée, à travers des analyseurs de Stern–Gerlach et des aimants, à des compteurs de particules sur un tableau d'expérience clair. Les points magenta animés représentent les atomes en vol. En mode Personnalisé, vous pouvez ajouter des appareils, les déplacer et relier les ports de sortie aux ports d'entrée.",
-      "controlArea": "La zone de contrôle comporte un sélecteur d'expériences prédéfinies, un sélecteur de système quantique, un sélecteur d'état initial, des cases Observer et Valeurs attendues, des commandes d'angle de direction, des boutons analytiques Faire N et Réinitialiser les compteurs. Tout réinitialiser ramène la simulation à son état initial.",
-      "interactionHint": "Choisissez une expérience et un système, sélectionnez un état initial, puis tirez des atomes à travers les analyseurs et comparez les statistiques des compteurs aux valeurs attendues."
+      "playArea": "L'aire de jeu montre un affichage de l'état préparé, une source de particules reliée, à travers des analyseurs de Stern–Gerlach et des aimants, à des compteurs, avec des bloqueurs de sortie optionnels. Les points magenta animés représentent les atomes en vol. En mode Personnalisé, vous pouvez ajouter des appareils, les déplacer et relier les ports.",
+      "controlArea": "La zone de contrôle comporte un sélecteur d'expériences avec notation et conseils, un sélecteur de système quantique, un sélecteur d'état initial, des cases Observer et Valeurs attendues, des commandes d'angle, des boutons Faire N et Réinitialiser les compteurs. Tout réinitialiser ramène la simulation à son état initial.",
+      "interactionHint": "Choisissez une expérience et un système, sélectionnez un état initial, bloquez éventuellement une sortie d'analyseur, puis tirez des atomes et comparez les statistiques aux valeurs attendues."
     },
-    "currentDetailsPattern": "{{experiment}}, système {{system}}. État initial : {{initialState}}. Atomes détectés : {{total}}. Observation {{watchStatus}}.",
+    "currentDetailsPattern": "{{experiment}}, système {{system}}. État initial : {{initialState}}. Atomes détectés : {{total}}. Observation {{watchStatus}}. Probabilité perdue : {{deadEnd}}%.",
     "currentDetailsBuilderSuffix": " Le mode Personnalisé est actif.",
     "watchOn": "activée",
     "watchOff": "désactivée",
@@ -70,11 +103,18 @@
       "editUserStateButton": "Modifier l'état initial défini par l'utilisateur",
       "userStateBasisRadioGroup": "Base d'entrée pour l'état défini par l'utilisateur",
       "userStateRealPattern": "Partie réelle du composant {{index}}",
-      "userStateImagPattern": "Partie imaginaire du composant {{index}}"
+      "userStateImagPattern": "Partie imaginaire du composant {{index}}",
+      "statePreparationRegion": "Affichage de l'état préparé",
+      "blockerRadioGroup": "Bloquer une sortie d'analyseur"
     },
     "builder": {
       "analyzerTypeComboBox": "Direction de mesure de l'analyseur",
-      "deleteDeviceButton": "Supprimer cet appareil"
+      "deleteDeviceButton": "Supprimer cet appareil",
+      "sourceDevice": "Source de particules",
+      "analyzerDevice": "Analyseur de Stern–Gerlach",
+      "magnetDevice": "Aimant",
+      "counterDevice": "Compteur de particules",
+      "outputPortPattern": "Port de sortie {{index}}, glisser pour connecter"
     },
     "keyboardHelp": {
       "fireHeading": "Tirer des atomes",
@@ -84,6 +124,8 @@
       "deleteDevice": "Supprimer l'appareil sélectionné",
       "wireHeading": "Relier les appareils",
       "dragWire": "Glisser d'un port de sortie vers un port d'entrée",
+      "blockerHeading": "Bloqueurs de sortie",
+      "blockerHelp": "Choisir Ouvert ou Bloquer sur un analyseur pour filtrer une composante de spin",
       "comboHeading": "Listes déroulantes",
       "sliderHeading": "Ajuster les valeurs"
     }

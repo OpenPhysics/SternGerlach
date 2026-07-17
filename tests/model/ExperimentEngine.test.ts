@@ -300,4 +300,48 @@ describe("ExperimentEngine Monte-Carlo vs analytic", () => {
     expect(result.newState.magnitudeSquared()).toBeCloseTo(1, 12);
     expect(result.next).toBe(target);
   });
+
+  it("blocking the UP exit discards that probability even when the port is wired", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    const source = addSource(graph);
+    const analyzer = addAnalyzer(graph, AnalyzerType.Z);
+    const up = addCounter(graph);
+    const down = addCounter(graph);
+    wire(graph, source, 0, analyzer);
+    wire(graph, analyzer, 0, up);
+    wire(graph, analyzer, 1, down);
+    analyzer.blockedOutputProperty.value = 0;
+
+    const probs = engine.computeCounterProbabilities(PLUS_Z, { system: SPIN_HALF, watch: false });
+    expect(probOf(probs, up)).toBeCloseTo(0, 10);
+    expect(probOf(probs, down)).toBeCloseTo(0, 10);
+
+    // |+z⟩ always chooses UP, which is blocked → dead end.
+    const result = engine.transitDevice(
+      analyzer,
+      new OperatorTable().getUnknownState(SPIN_HALF, 0),
+      { system: SPIN_HALF, watch: false },
+      () => 0.1,
+    );
+    expect(result.outputIndex).toBe(0);
+    expect(result.next).toBeNull();
+  });
+
+  it("blocking the DOWN exit leaves UP probability intact for |+z⟩", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    const source = addSource(graph);
+    const analyzer = addAnalyzer(graph, AnalyzerType.Z);
+    const up = addCounter(graph);
+    const down = addCounter(graph);
+    wire(graph, source, 0, analyzer);
+    wire(graph, analyzer, 0, up);
+    wire(graph, analyzer, 1, down);
+    analyzer.blockedOutputProperty.value = 1;
+
+    const probs = engine.computeCounterProbabilities(PLUS_Z, { system: SPIN_HALF, watch: false });
+    expect(probOf(probs, up)).toBeCloseTo(1, 10);
+    expect(probOf(probs, down)).toBeCloseTo(0, 10);
+  });
 });

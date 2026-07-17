@@ -117,6 +117,14 @@ export class ExperimentEngine {
     return this.transitThreeState(analyzer, op, state, options, rng);
   }
 
+  /** Effective next device for an analyzer output, treating blocked exits as dead ends. */
+  private nextOf(analyzer: Analyzer, outputIndex: number): ExperimentDevice | null {
+    if (analyzer.isOutputBlocked(outputIndex)) {
+      return null;
+    }
+    return this.graph.getNext(analyzer, outputIndex);
+  }
+
   /** 2-state analyzer hop (NextComp lines 485-515). */
   private transitTwoState(
     analyzer: Analyzer,
@@ -125,8 +133,8 @@ export class ExperimentEngine {
     options: EngineOptions,
     rng: Rng,
   ): TransitResult {
-    const nextAt0 = this.graph.getNext(analyzer, 0);
-    const nextAt1 = this.graph.getNext(analyzer, 1);
+    const nextAt0 = this.nextOf(analyzer, 0);
+    const nextAt1 = this.nextOf(analyzer, 1);
 
     // Both outputs feed the same device and nobody is watching: coherent pass-through.
     if (nextAt0 === nextAt1 && !options.watch) {
@@ -148,7 +156,7 @@ export class ExperimentEngine {
     options: EngineOptions,
     rng: Rng,
   ): TransitResult {
-    const nexts = [this.graph.getNext(analyzer, 0), this.graph.getNext(analyzer, 1), this.graph.getNext(analyzer, 2)];
+    const nexts = [this.nextOf(analyzer, 0), this.nextOf(analyzer, 1), this.nextOf(analyzer, 2)];
     const grouping = groupOutputs(nexts, options.watch);
     if (grouping === "all-merged") {
       // All 3 outputs go to the same place: full coherent pass-through.
@@ -248,8 +256,8 @@ export class ExperimentEngine {
     const op = options.system.opFor(analyzer.typeProperty.value);
 
     if (options.system.stateCount === 2) {
-      const nextAt0 = this.graph.getNext(analyzer, 0);
-      const nextAt1 = this.graph.getNext(analyzer, 1);
+      const nextAt0 = this.nextOf(analyzer, 0);
+      const nextAt1 = this.nextOf(analyzer, 1);
       if (nextAt0 === nextAt1 && !options.watch) {
         // Coherent pass-through: branch probability 1, state unchanged (BranchProb line 883).
         this.visit(nextAt0, state, probability, options, result);
@@ -257,12 +265,12 @@ export class ExperimentEngine {
       }
       for (const k of [0, 1]) {
         const eigen = this.operatorTable.getEigenvector(op, k);
-        this.visit(this.graph.getNext(analyzer, k), eigen, probability * eigen.dotProdSquared(state), options, result);
+        this.visit(this.nextOf(analyzer, k), eigen, probability * eigen.dotProdSquared(state), options, result);
       }
       return;
     }
 
-    const nexts = [this.graph.getNext(analyzer, 0), this.graph.getNext(analyzer, 1), this.graph.getNext(analyzer, 2)];
+    const nexts = [this.nextOf(analyzer, 0), this.nextOf(analyzer, 1), this.nextOf(analyzer, 2)];
     const grouping = groupOutputs(nexts, options.watch);
     if (grouping === "all-merged") {
       this.visit(nexts[0] as ExperimentDevice | null, state, probability, options, result);

@@ -17,6 +17,7 @@ import type { Property } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
+import type { PressListenerEvent } from "scenerystack/scenery";
 import { DragListener, KeyboardDragListener, Node, Path, Rectangle, RichText, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { RectangularRadioButtonGroup } from "scenerystack/sun";
@@ -30,7 +31,7 @@ import {
   MODEL_VIEW_SCALE,
 } from "../../SimConstants.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
-import { Analyzer } from "../model/devices/Analyzer.js";
+import { Analyzer, NO_BLOCKED_OUTPUT } from "../model/devices/Analyzer.js";
 import { Counter } from "../model/devices/Counter.js";
 import type { ExperimentDevice } from "../model/devices/ExperimentDevice.js";
 import { Magnet } from "../model/devices/Magnet.js";
@@ -52,6 +53,8 @@ const GRID = 0.1;
 const CONNECT_THRESHOLD = 26;
 /** Keyboard nudge per arrow press, model units. */
 const KEYBOARD_STEP = 0.1;
+/** Extra padding (model units) keeping device bodies inside the board. */
+const BOARD_MARGIN = 0.05;
 
 export class ExperimentAreaNode extends Node {
   /** Maps between experiment model coordinates and this node's local view frame. */
@@ -67,8 +70,14 @@ export class ExperimentAreaNode extends Node {
   // Analyzer nodes currently on the board, so their which-path flashes can be faded each frame.
   private analyzerNodes: AnalyzerNode[] = [];
 
+  // Counter nodes currently on the board, so their detection flashes can be faded each frame.
+  private counterNodes: CounterNode[] = [];
+
   // Input port handles for the current devices, for highlighting legal wiring targets.
   private inputPorts: Map<ExperimentDevice, PortNode> = new Map();
+
+  // Body-move drag listeners for the current devices, so a toolbox drag-out can hand off to one.
+  private deviceDragListeners: Map<ExperimentDevice, { listener: DragListener; visual: Node }> = new Map();
 
   public constructor(model: SternGerlachModel) {
     super();
@@ -130,6 +139,25 @@ export class ExperimentAreaNode extends Node {
     for (const analyzerNode of this.analyzerNodes) {
       analyzerNode.stepFlashes(dt);
     }
+    for (const counterNode of this.counterNodes) {
+      counterNode.stepFlash(dt);
+    }
+  }
+
+  /**
+   * Creates a device under the pointer (from a toolbox drag-out) and hands the in-progress press
+   * off to that device's own body-move drag listener, so it follows the pointer onto the board.
+   * @param factory - builds the device given its initial model position
+   * @param event - the press event forwarded from the toolbox icon
+   */
+  public createAndDragDevice(factory: (position: Vector2) => ExperimentDevice, event: PressListenerEvent): void {
+    const modelPosition = this.mvt.viewToModelPosition(this.globalToLocalPoint(event.pointer.point));
+    const device = factory(modelPosition);
+    this.clampToBoard(device);
+    // Adding the device rebuilds the device layer synchronously, populating deviceDragListeners.
+    this.model.graph.addDevice(device);
+    const entry = this.deviceDragListeners.get(device);
+    entry?.listener.press(event, entry.visual);
   }
 
   /** Recreates all device nodes from the current graph. */
@@ -138,7 +166,9 @@ export class ExperimentAreaNode extends Node {
       child.dispose();
     }
     this.analyzerNodes = [];
+    this.counterNodes = [];
     this.inputPorts = new Map();
+    this.deviceDragListeners = new Map();
 
     const editable = this.model.isCustomProperty.value;
     for (const device of this.model.graph.devices) {
@@ -168,6 +198,13 @@ export class ExperimentAreaNode extends Node {
       visual.dispose();
     });
 
+    // Exit-blocker radios sit on every analyzer (presets and Custom).
+    if (device instanceof Analyzer) {
+      const blockerSelector = this.createBlockerSelector(device, visual, editable);
+      container.addChild(blockerSelector);
+      container.disposeEmitter.addListener(() => blockerSelector.dispose());
+    }
+
     if (editable) {
       this.makeEditable(device, container, visual);
     }
@@ -192,18 +229,21 @@ export class ExperimentAreaNode extends Node {
       return new MagnetNode(device, this.model.systemProperty);
     }
     if (device instanceof Counter) {
-      // UP-ish ports get black bars, DOWN-ish magenta — decided by the feeding port.
+      // UP-ish ports get cyan bars, DOWN-ish magenta — decided by the feeding port.
       const feed = this.model.graph.getWiresInto(device)[0];
       const barFill =
         feed && feed.outputIndex === 1
           ? SternGerlachColors.counterBarDownFillProperty
           : SternGerlachColors.counterBarUpFillProperty;
-      return new CounterNode(
+      const counterNode = new CounterNode(
         device,
         this.model.totalDetectedProperty,
         this.model.expectedValuesVisibleProperty,
         barFill,
+        this.model.particleSystem.particleDetectedEmitter,
       );
+      this.counterNodes.push(counterNode);
+      return counterNode;
     }
     throw new Error(`no view for device ${device.id}`);
   }
@@ -223,21 +263,26 @@ export class ExperimentAreaNode extends Node {
       drag: (event) => {
         const here = this.globalToLocalPoint(event.pointer.point);
         device.positionProperty.value = modelStart.plus(this.mvt.viewToModelDelta(here.minus(pointerStart)));
+        this.clampToBoard(device);
       },
       end: () => this.snapToGrid(device),
     });
     visual.addInputListener(moveListener);
     visual.cursor = "pointer";
+    // Remember this listener so a device dragged out of the toolbox can hand its press off to it.
+    this.deviceDragListeners.set(device, { listener: moveListener, visual });
 
     // Keyboard: focusable, arrow-drag to move, Delete/Backspace to remove.
     container.tagName = "div";
     container.focusable = true;
+    container.accessibleName = this.deviceAccessibleName(device);
     const keyboardDrag = new KeyboardDragListener({
       dragSpeed: 0,
       dragDelta: KEYBOARD_STEP * MODEL_VIEW_SCALE,
       drag: (_event, listener) => {
         const modelDelta = this.mvt.viewToModelDelta(listener.modelDelta);
         device.positionProperty.value = device.positionProperty.value.plus(modelDelta);
+        this.clampToBoard(device);
       },
       end: () => this.snapToGrid(device),
     });
@@ -274,6 +319,65 @@ export class ExperimentAreaNode extends Node {
       container.addChild(selector);
       container.disposeEmitter.addListener(() => selector.dispose());
     }
+  }
+
+  /** Compact radio group that blocks one analyzer exit (or none). */
+  private createBlockerSelector(analyzer: Analyzer, visual: Node, editable: boolean): Node {
+    const a11y = StringManager.getInstance().getA11yStrings();
+    const controls = StringManager.getInstance().getControls();
+    const system = this.model.systemProperty.value;
+
+    const items: { value: number; createNode: () => Node }[] = [
+      {
+        value: NO_BLOCKED_OUTPUT,
+        createNode: () =>
+          new Text(controls.blockNoneStringProperty, {
+            font: new PhetFont(10),
+            fill: SternGerlachColors.controlSurfaceTextColorProperty,
+          }),
+      },
+      {
+        value: 0,
+        createNode: () =>
+          new Text(controls.blockUpStringProperty, {
+            font: new PhetFont(10),
+            fill: SternGerlachColors.controlSurfaceTextColorProperty,
+          }),
+      },
+      {
+        value: 1,
+        createNode: () =>
+          new Text(controls.blockDownStringProperty, {
+            font: new PhetFont(10),
+            fill: SternGerlachColors.controlSurfaceTextColorProperty,
+          }),
+      },
+    ];
+    if (system.stateCount === 3) {
+      items.push({
+        value: 2,
+        createNode: () =>
+          new Text(controls.blockZeroStringProperty, {
+            font: new PhetFont(10),
+            fill: SternGerlachColors.controlSurfaceTextColorProperty,
+          }),
+      });
+    }
+
+    const group = new RectangularRadioButtonGroup(analyzer.blockedOutputProperty, items, {
+      orientation: "horizontal",
+      spacing: 2,
+      radioButtonOptions: {
+        baseColor: SternGerlachColors.controlSurfaceColorProperty,
+        xMargin: 4,
+        yMargin: 2,
+      },
+      accessibleName: a11y.controls.blockerRadioGroupStringProperty,
+    });
+    group.centerX = 0;
+    // Sit above the type selector in builder mode, otherwise just below the body.
+    group.top = visual.bottom + (editable ? 28 : 4);
+    return group;
   }
 
   /** A flat radio group letting the user pick an analyzer/magnet type (builder mode). */
@@ -335,8 +439,12 @@ export class ExperimentAreaNode extends Node {
 
   /** An output port handle whose drag rubber-bands a wire to a legal input port. */
   private createOutputPort(device: ExperimentDevice, outputIndex: number): PortNode {
+    const a11y = StringManager.getInstance().getA11yStrings();
     const offset = device.getOutputPortOffset(outputIndex, this.model.systemProperty.value);
     const port = new PortNode(offset.x * MODEL_VIEW_SCALE, -offset.y * MODEL_VIEW_SCALE, true);
+    port.tagName = "div";
+    port.focusable = true;
+    port.accessibleName = a11y.builder.outputPortPatternStringProperty.value.replace("{{index}}", `${outputIndex + 1}`);
 
     let rubberBand: Path | null = null;
     const listener = new DragListener({
@@ -417,9 +525,37 @@ export class ExperimentAreaNode extends Node {
     }
   }
 
-  /** Snaps a device to the coarse builder grid. */
+  /** Snaps a device to the coarse builder grid, then keeps it on the board. */
   private snapToGrid(device: ExperimentDevice): void {
     const p = device.positionProperty.value;
     device.positionProperty.value = new Vector2(Math.round(p.x / GRID) * GRID, Math.round(p.y / GRID) * GRID);
+    this.clampToBoard(device);
+  }
+
+  /** Keeps a device's body inside the experiment board. */
+  private clampToBoard(device: ExperimentDevice): void {
+    const minViewX = (device.halfWidth + BOARD_MARGIN) * MODEL_VIEW_SCALE;
+    const maxViewX = EXPERIMENT_AREA_WIDTH - (device.halfWidth + BOARD_MARGIN) * MODEL_VIEW_SCALE;
+    const minViewY = (device.halfHeight + BOARD_MARGIN) * MODEL_VIEW_SCALE;
+    const maxViewY = EXPERIMENT_AREA_HEIGHT - (device.halfHeight + BOARD_MARGIN) * MODEL_VIEW_SCALE;
+    const view = this.mvt.modelToViewPosition(device.positionProperty.value);
+    device.positionProperty.value = this.mvt.viewToModelPosition(
+      new Vector2(Math.min(maxViewX, Math.max(minViewX, view.x)), Math.min(maxViewY, Math.max(minViewY, view.y))),
+    );
+  }
+
+  /** Accessible name for a builder-mode device container. */
+  private deviceAccessibleName(device: ExperimentDevice): string {
+    const a11y = StringManager.getInstance().getA11yStrings().builder;
+    if (device instanceof ParticleSource) {
+      return a11y.sourceDeviceStringProperty.value;
+    }
+    if (device instanceof Analyzer) {
+      return a11y.analyzerDeviceStringProperty.value;
+    }
+    if (device instanceof Magnet) {
+      return a11y.magnetDeviceStringProperty.value;
+    }
+    return a11y.counterDeviceStringProperty.value;
   }
 }

@@ -13,6 +13,32 @@
     "recombination": "Recombination",
     "custom": "Custom"
   },
+  "experimentNotation": {
+    "singleZ": "[SGz]",
+    "singleX": "[SGx]",
+    "zThenX": "[SGz → SGx]",
+    "zThenZ": "[SGz → SGz]",
+    "interferometer": "[SGz → SGx → SGz]",
+    "magnet": "[SGz → Magnet → SGx]",
+    "recombination": "[SGz ⇉ SGx]",
+    "custom": "[Custom]"
+  },
+  "experimentGuidance": {
+    "singleZ": "Predict: for a prepared |+z⟩ state, which counter should fire? Fire atoms and compare with Expected Values.",
+    "singleX": "A Z-prepared state measured along X is 50/50. Watch the counters converge when Expected Values is on.",
+    "zThenX": "After SGz, the UP beam is |+z⟩. Measuring that beam with SGx should again be 50/50.",
+    "zThenZ": "Repeating the same basis leaves the state unchanged. The second SGz should never flip an UP atom to DOWN.",
+    "interferometer": "With Watch off, recombining both SGx paths restores the original state at the final SGz. Turn Watch on and the interference vanishes.",
+    "magnet": "Dial the magnet field to precess the spin. The X-analyzer counts should oscillate with field strength.",
+    "recombination": "Merging selected paths before the next analyzer can restore coherence. Compare Watch on versus off.",
+    "custom": "Build your own apparatus: drag devices from the toolbox, wire ports, and try blocking an exit to filter a spin component."
+  },
+  "statePreparation": {
+    "title": "Prepared State",
+    "unknownHidden": "Mystery state — fire atoms to infer it from the counters.",
+    "randomMixture": "Random mixture: each basis state is equally likely.",
+    "probabilityPattern": "P({{label}})={{percent}}%"
+  },
   "toolbox": {
     "title": "Toolbox",
     "analyzer": "Analyzer",
@@ -37,15 +63,22 @@
     "initialState": "Initial State",
     "random": "Random",
     "unknownPattern": "Unknown #{{number}}",
-    "userState": "User State…"
+    "userState": "User State…",
+    "apparatus": "Apparatus",
+    "guidance": "Try this",
+    "deadEndPattern": "Lost to filters/dead ends: {{percent}}%",
+    "blockNone": "Open",
+    "blockUp": "Block +",
+    "blockDown": "Block −",
+    "blockZero": "Block 0"
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "The play area shows a particle source wired through Stern–Gerlach analyzers and magnets to particle counters on a light experiment board. Animated magenta dots represent atoms in flight. In Custom mode you can add devices, drag them into place, and wire output ports to input ports.",
-      "controlArea": "The control area has an experiment preset chooser, a quantum-system selector, an initial-state chooser, watch and expected-value toggles, direction-angle controls, analytic Do-N batch buttons, and Reset Counts. Reset All returns the simulation to its starting state.",
-      "interactionHint": "Choose an experiment and system, pick an initial state, then fire atoms through the analyzers and compare counter statistics with the expected values."
+      "playArea": "The play area shows a prepared-state readout, a particle source wired through Stern–Gerlach analyzers and magnets to particle counters on a light experiment board, and optional exit blockers. Animated magenta dots represent atoms in flight. In Custom mode you can add devices, drag them into place, and wire output ports to input ports.",
+      "controlArea": "The control area has an experiment preset chooser with apparatus notation and guidance, a quantum-system selector, an initial-state chooser, watch and expected-value toggles, direction-angle controls, analytic Do-N batch buttons, and Reset Counts. Reset All returns the simulation to its starting state.",
+      "interactionHint": "Choose an experiment and system, pick an initial state, optionally block an analyzer exit, then fire atoms through the analyzers and compare counter statistics with the expected values."
     },
-    "currentDetailsPattern": "{{experiment}}, {{system}} system. Initial state: {{initialState}}. Atoms detected: {{total}}. Watch is {{watchStatus}}.",
+    "currentDetailsPattern": "{{experiment}}, {{system}} system. Initial state: {{initialState}}. Atoms detected: {{total}}. Watch is {{watchStatus}}. Lost probability: {{deadEnd}}%.",
     "currentDetailsBuilderSuffix": " Builder mode is active.",
     "watchOn": "on",
     "watchOff": "off",
@@ -70,11 +103,18 @@
       "editUserStateButton": "Edit the user-defined initial state",
       "userStateBasisRadioGroup": "Input basis for the user-defined state",
       "userStateRealPattern": "Real part of component {{index}}",
-      "userStateImagPattern": "Imaginary part of component {{index}}"
+      "userStateImagPattern": "Imaginary part of component {{index}}",
+      "statePreparationRegion": "Prepared-state readout",
+      "blockerRadioGroup": "Block an analyzer exit"
     },
     "builder": {
       "analyzerTypeComboBox": "Analyzer measurement direction",
-      "deleteDeviceButton": "Delete this device"
+      "deleteDeviceButton": "Delete this device",
+      "sourceDevice": "Particle source",
+      "analyzerDevice": "Stern–Gerlach analyzer",
+      "magnetDevice": "Magnet",
+      "counterDevice": "Particle counter",
+      "outputPortPattern": "Output port {{index}}, drag to connect"
     },
     "keyboardHelp": {
       "fireHeading": "Fire atoms",
@@ -84,6 +124,8 @@
       "deleteDevice": "Delete the focused device",
       "wireHeading": "Wire devices",
       "dragWire": "Drag from an output port to an input port",
+      "blockerHeading": "Exit blockers",
+      "blockerHelp": "Choose Open or Block on an analyzer to filter a spin component",
       "comboHeading": "Combo boxes",
       "sliderHeading": "Adjust values"
     }

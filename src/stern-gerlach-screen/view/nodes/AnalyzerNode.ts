@@ -2,9 +2,10 @@
  * AnalyzerNode.ts
  *
  * Visual for a Stern–Gerlach analyzer, in the style of quantum-measurement's
- * SternGerlachNode: a black rounded box, cyan parabolic splitting curves from
- * the input to each output hole (the middle "0" output runs straight), dark
- * exit holes, and a white RichText label (SG_Z, SG_n, λ₄ …).
+ * SternGerlachNode: a black rounded box with a subtle entrance gradient, cyan
+ * parabolic splitting curves from the input to each output hole (the middle
+ * "0" output runs straight), dark exit holes, a white RichText label
+ * (SG_Z, SG_n, λ₄ …), and an optional exit-blocker wall.
  *
  * When Watch is on, a which-path light flashes at the output port each atom
  * leaves through (driven by analyzerExitEmitter, ~0.5 s fade).
@@ -15,7 +16,7 @@
 
 import type { Emitter, TReadOnlyProperty } from "scenerystack/axon";
 import { Shape } from "scenerystack/kite";
-import { Circle, Node, Path, Rectangle, RichText } from "scenerystack/scenery";
+import { Circle, LinearGradient, Node, Path, Rectangle, RichText } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import type { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
@@ -43,6 +44,9 @@ export class AnalyzerNode extends Node {
   // Which-path flash lights, indexed by output port; rebuilt when the system changes.
   private flashes: Circle[] = [];
 
+  // Exit-blocker walls, indexed by output port.
+  private blockers: Rectangle[] = [];
+
   /**
    * @param analyzer - the analyzer device
    * @param systemProperty - the active quantum system (drives output count)
@@ -60,9 +64,13 @@ export class AnalyzerNode extends Node {
     const halfWidth = analyzer.halfWidth * MODEL_VIEW_SCALE;
     const halfHeight = analyzer.halfHeight * MODEL_VIEW_SCALE;
 
+    const bodyGradient = new LinearGradient(-halfWidth, 0, halfWidth, 0)
+      .addColorStop(0, SternGerlachColors.analyzerEntranceFillProperty)
+      .addColorStop(0.18, SternGerlachColors.analyzerBodyFillProperty)
+      .addColorStop(1, SternGerlachColors.analyzerBodyFillProperty);
     const body = new Rectangle(-halfWidth, -halfHeight, 2 * halfWidth, 2 * halfHeight, {
       cornerRadius: 8,
-      fill: SternGerlachColors.analyzerBodyFillProperty,
+      fill: bodyGradient,
     });
     this.addChild(body);
 
@@ -79,6 +87,7 @@ export class AnalyzerNode extends Node {
     const rebuildCurves = (system: SpinSystem) => {
       curvesLayer.removeAllChildren();
       this.flashes = [];
+      this.blockers = [];
 
       const inputPoint = { x: -halfWidth, y: 0 };
       for (let outputIndex = 0; outputIndex < analyzer.outputCount(system); outputIndex++) {
@@ -108,6 +117,19 @@ export class AnalyzerNode extends Node {
             centerY: outY,
           }),
         );
+
+        // Physical wall over a blocked exit (PhET Spin exit-blocker look).
+        const blocker = new Rectangle(halfWidth - 4, outY - 12, 14, 24, {
+          cornerRadius: 2,
+          fill: SternGerlachColors.blockerFillProperty,
+          stroke: SternGerlachColors.analyzerLabelFillProperty,
+          lineWidth: 1,
+          visible: false,
+          pickable: false,
+        });
+        this.blockers[outputIndex] = blocker;
+        curvesLayer.addChild(blocker);
+
         // Which-path flash light just outside the output hole; starts invisible.
         const flash = new Circle(FLASH_RADIUS, {
           fill: SternGerlachColors.watchLightOnProperty,
@@ -130,6 +152,17 @@ export class AnalyzerNode extends Node {
           centerY: 0,
         }),
       );
+
+      updateBlockers(analyzer.blockedOutputProperty.value);
+    };
+
+    const updateBlockers = (blocked: number) => {
+      for (let i = 0; i < this.blockers.length; i++) {
+        const wall = this.blockers[i];
+        if (wall) {
+          wall.visible = blocked === i;
+        }
+      }
     };
 
     const updateLabel = (type: AnalyzerType) => {
@@ -140,8 +173,10 @@ export class AnalyzerNode extends Node {
 
     const systemListener = (system: SpinSystem) => rebuildCurves(system);
     const typeListener = (type: AnalyzerType) => updateLabel(type);
+    const blockedListener = (blocked: number) => updateBlockers(blocked);
     systemProperty.link(systemListener);
     analyzer.typeProperty.link(typeListener);
+    analyzer.blockedOutputProperty.link(blockedListener);
 
     // Light up the exiting output port when Watch is on.
     const exitListener = (source: Analyzer, outputIndex: number) => {
@@ -157,6 +192,7 @@ export class AnalyzerNode extends Node {
     this.disposeAnalyzerNode = () => {
       systemProperty.unlink(systemListener);
       analyzer.typeProperty.unlink(typeListener);
+      analyzer.blockedOutputProperty.unlink(blockedListener);
       analyzerExitEmitter.removeListener(exitListener);
     };
   }

@@ -70,10 +70,23 @@ export class ExperimentDefinition {
   /** Key into the `experiments` string group (view resolves it to a localized name). */
   public readonly nameKey: string;
 
+  /** Key into the `experimentNotation` string group, e.g. "[SGz, SGx]". */
+  public readonly notationKey: string;
+
+  /** Key into the `experimentGuidance` string group (prediction / observation prompt). */
+  public readonly guidanceKey: string;
+
   private readonly builder: (graph: ExperimentGraph, system: SpinSystem) => void;
 
-  public constructor(nameKey: string, builder: (graph: ExperimentGraph, system: SpinSystem) => void) {
+  public constructor(
+    nameKey: string,
+    builder: (graph: ExperimentGraph, system: SpinSystem) => void,
+    notationKey: string = nameKey,
+    guidanceKey: string = nameKey,
+  ) {
     this.nameKey = nameKey;
+    this.notationKey = notationKey;
+    this.guidanceKey = guidanceKey;
     this.builder = builder;
   }
 

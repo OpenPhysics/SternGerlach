@@ -94,8 +94,8 @@ export class SourceNode extends Node {
     sliderWrapper.top = halfHeight + 8;
     this.addChild(sliderWrapper);
 
-    // Mode selector below everything.
-    const radioFont = new PhetFont(12);
+    // Mode selector below everything — labels keep Single vs Continuous visually distinct.
+    const radioFont = new PhetFont({ size: 12, weight: "bold" });
     const modeRadioGroup = new AquaRadioButtonGroup(
       source.sourceModeProperty as Property<SourceMode>,
       [
