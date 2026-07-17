@@ -16,7 +16,10 @@
     "singleParticle": "Individual",
     "continuousBeam": "Continuo",
     "none": "Nada",
-    "lots": "Mucho"
+    "lots": "Mucho",
+    "expectedValues": "Valores esperados",
+    "resetCounts": "Restablecer conteos",
+    "doNPattern": "Hacer {{count}}"
   },
   "a11y": {
     "screenSummary": {
@@ -29,7 +32,10 @@
       "experimentComboBox": "Experimento predefinido",
       "fireButton": "Disparar un átomo",
       "sourceModeRadioGroup": "Modo de la fuente",
-      "emissionRateSlider": "Intensidad del haz"
+      "emissionRateSlider": "Intensidad del haz",
+      "expectedValuesCheckbox": "Mostrar líneas de valor esperado en los contadores",
+      "resetCountsButton": "Restablecer todos los contadores a cero",
+      "doNButtonPattern": "Disparar {{count}} átomos a la vez"
     }
   },
   "preferences": {

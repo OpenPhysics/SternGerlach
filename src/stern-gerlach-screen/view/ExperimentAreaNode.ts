@@ -24,8 +24,9 @@ import SternGerlachColors from "../../SternGerlachColors.js";
 import { Analyzer } from "../model/devices/Analyzer.js";
 import { Counter } from "../model/devices/Counter.js";
 import type { ExperimentDevice } from "../model/devices/ExperimentDevice.js";
-import { ParticleSource } from "../model/devices/ParticleSource.js";
+import { ParticleSource, SourceMode } from "../model/devices/ParticleSource.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
+import { BeamCanvasNode } from "./BeamCanvasNode.js";
 import { AnalyzerNode } from "./nodes/AnalyzerNode.js";
 import { CounterNode } from "./nodes/CounterNode.js";
 import { SourceNode } from "./nodes/SourceNode.js";
@@ -40,6 +41,7 @@ export class ExperimentAreaNode extends Node {
   private readonly wireLayer: Node;
   private readonly deviceLayer: Node;
   private readonly particleLayer: ParticleLayerNode;
+  private readonly beamLayer: BeamCanvasNode;
 
   public constructor(model: SternGerlachModel) {
     super();
@@ -62,9 +64,11 @@ export class ExperimentAreaNode extends Node {
     this.wireLayer = new Node();
     this.deviceLayer = new Node();
     this.particleLayer = new ParticleLayerNode(model.particleSystem, this.mvt);
+    this.beamLayer = new BeamCanvasNode(model.particleSystem, this.mvt);
     this.addChild(this.wireLayer);
     this.addChild(this.deviceLayer);
     this.addChild(this.particleLayer);
+    this.addChild(this.beamLayer);
 
     // Rebuild on any structural change. Preset rebuilds emit once per element; the
     // work per rebuild is small (a dozen nodes), so no debouncing is needed.
@@ -74,7 +78,16 @@ export class ExperimentAreaNode extends Node {
 
   /** Call once per frame so particles track their model positions. */
   public step(): void {
-    this.particleLayer.update();
+    // Continuous beams paint on the lightweight canvas; single fires use crisp circles.
+    const source = this.model.graph.getSource();
+    const continuous = source !== null && source.sourceModeProperty.value === SourceMode.CONTINUOUS;
+    this.particleLayer.visible = !continuous;
+    this.beamLayer.visible = continuous;
+    if (continuous) {
+      this.beamLayer.update();
+    } else {
+      this.particleLayer.update();
+    }
   }
 
   /** Recreates all device and wire nodes from the current graph. */

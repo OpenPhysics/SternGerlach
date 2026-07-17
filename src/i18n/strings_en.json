@@ -16,7 +16,10 @@
     "singleParticle": "Single",
     "continuousBeam": "Continuous",
     "none": "None",
-    "lots": "Lots"
+    "lots": "Lots",
+    "expectedValues": "Expected Values",
+    "resetCounts": "Reset Counts",
+    "doNPattern": "Do {{count}}"
   },
   "a11y": {
     "screenSummary": {
@@ -29,7 +32,10 @@
       "experimentComboBox": "Experiment preset",
       "fireButton": "Fire one atom",
       "sourceModeRadioGroup": "Source mode",
-      "emissionRateSlider": "Beam intensity"
+      "emissionRateSlider": "Beam intensity",
+      "expectedValuesCheckbox": "Show expected-value lines on the counters",
+      "resetCountsButton": "Reset all counters to zero",
+      "doNButtonPattern": "Fire {{count}} atoms at once"
     }
   },
   "preferences": {

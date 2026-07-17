@@ -1,27 +1,36 @@
 /**
  * ExperimentControlPanel.ts
  *
- * The right-hand control panel: the preset-experiment combo box (more
- * controls — watch, expected values, Do-N — join in later milestones).
+ * The right-hand control panel: the preset-experiment combo box, the
+ * expected-value toggle, the analytic Do-N batch buttons, and Reset Counts.
+ * Additional controls (watch, system, initial state) join in later milestones.
  */
 
-import type { Property } from "scenerystack/axon";
+import { PatternStringProperty } from "scenerystack/axon";
 import type { Node } from "scenerystack/scenery";
-import { Text, VBox } from "scenerystack/scenery";
+import { HBox, HSeparator, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { ComboBox } from "scenerystack/sun";
-import { LIGHT_SURFACE_TEXT_FILL, SIM_COMBO_BOX_OPTIONS } from "../../common/SimButtonOptions.js";
+import { Checkbox, ComboBox, RectangularPushButton } from "scenerystack/sun";
+import {
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  LIGHT_SURFACE_TEXT_FILL,
+  SIM_COMBO_BOX_OPTIONS,
+} from "../../common/SimButtonOptions.js";
 import { SimPanel } from "../../common/SimPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 import { ExperimentDefinition } from "../model/ExperimentDefinition.js";
+import type { SternGerlachModel } from "../model/SternGerlachModel.js";
+
+/** The batch sizes offered by the Do-N buttons (Spins.doAction). */
+const DO_N_SIZES = [10, 100, 1000] as const;
 
 export class ExperimentControlPanel extends SimPanel {
   /**
-   * @param experimentProperty - the model's selected preset
+   * @param model - the simulation model
    * @param listParent - node the combo box drops its list into (topmost in the screen view)
    */
-  public constructor(experimentProperty: Property<ExperimentDefinition>, listParent: Node) {
+  public constructor(model: SternGerlachModel, listParent: Node) {
     const strings = StringManager.getInstance();
     const controls = strings.getControls();
     const a11y = strings.getA11yStrings();
@@ -32,7 +41,7 @@ export class ExperimentControlPanel extends SimPanel {
     });
 
     const comboBox = new ComboBox(
-      experimentProperty,
+      model.experimentProperty,
       ExperimentDefinition.PRESETS.map((preset) => ({
         value: preset,
         createNode: () =>
@@ -52,12 +61,49 @@ export class ExperimentControlPanel extends SimPanel {
       },
     );
 
+    const expectedValuesCheckbox = new Checkbox(
+      model.expectedValuesVisibleProperty,
+      new Text(controls.expectedValuesStringProperty, {
+        font: new PhetFont(14),
+        fill: SternGerlachColors.textColorProperty,
+        maxWidth: 180,
+      }),
+      {
+        checkboxColor: SternGerlachColors.textColorProperty,
+        checkboxColorBackground: SternGerlachColors.panelBackgroundColorProperty,
+        spacing: 8,
+        accessibleName: a11y.controls.expectedValuesCheckboxStringProperty,
+      },
+    );
+
+    const doNButtons = DO_N_SIZES.map((count) => {
+      const labelProperty = new PatternStringProperty(controls.doNPatternStringProperty, { count });
+      const accessibleName = new PatternStringProperty(a11y.controls.doNButtonPatternStringProperty, { count });
+      return new RectangularPushButton({
+        ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+        baseColor: SternGerlachColors.controlSurfaceColorProperty,
+        content: new Text(labelProperty, { font: new PhetFont(13), fill: LIGHT_SURFACE_TEXT_FILL }),
+        listener: () => model.doN(count),
+        accessibleName,
+      });
+    });
+    const doNRow = new HBox({ children: doNButtons, spacing: 6 });
+
+    const resetCountsButton = new RectangularPushButton({
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+      baseColor: SternGerlachColors.controlSurfaceColorProperty,
+      content: new Text(controls.resetCountsStringProperty, { font: new PhetFont(13), fill: LIGHT_SURFACE_TEXT_FILL }),
+      listener: () => model.clearCounters(),
+      accessibleName: a11y.controls.resetCountsButtonStringProperty,
+    });
+
     super(
       new VBox({
-        children: [title, comboBox],
+        children: [title, comboBox, new HSeparator(), expectedValuesCheckbox, doNRow, resetCountsButton],
         align: "left",
-        spacing: 8,
+        spacing: 10,
       }),
+      { minWidth: 210 },
     );
   }
 }

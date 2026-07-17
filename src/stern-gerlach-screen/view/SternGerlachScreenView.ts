@@ -40,7 +40,7 @@ export class SternGerlachScreenView extends ScreenView {
     this.addChild(this.experimentAreaNode);
 
     // ── Control panel (combo box list drops into this view, above everything) ──
-    const controlPanel = new ExperimentControlPanel(model.experimentProperty, this);
+    const controlPanel = new ExperimentControlPanel(model, this);
     controlPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
     controlPanel.top = SCREEN_VIEW_MARGIN;
     this.addChild(controlPanel);

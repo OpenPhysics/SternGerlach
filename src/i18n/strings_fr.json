@@ -16,7 +16,10 @@
     "singleParticle": "Un par un",
     "continuousBeam": "Continu",
     "none": "Aucun",
-    "lots": "Beaucoup"
+    "lots": "Beaucoup",
+    "expectedValues": "Valeurs attendues",
+    "resetCounts": "Réinitialiser les compteurs",
+    "doNPattern": "Faire {{count}}"
   },
   "a11y": {
     "screenSummary": {
@@ -29,7 +32,10 @@
       "experimentComboBox": "Expérience prédéfinie",
       "fireButton": "Tirer un atome",
       "sourceModeRadioGroup": "Mode de la source",
-      "emissionRateSlider": "Intensité du faisceau"
+      "emissionRateSlider": "Intensité du faisceau",
+      "expectedValuesCheckbox": "Afficher les lignes de valeur attendue sur les compteurs",
+      "resetCountsButton": "Remettre tous les compteurs à zéro",
+      "doNButtonPattern": "Tirer {{count}} atomes à la fois"
     }
   },
   "preferences": {
