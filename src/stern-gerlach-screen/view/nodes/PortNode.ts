@@ -18,7 +18,7 @@ export class PortNode extends Circle {
       centerX,
       centerY,
       fill: SternGerlachColors.portFillProperty,
-      stroke: "#ffffff",
+      stroke: SternGerlachColors.analyzerLabelFillProperty,
       lineWidth: 1,
       cursor: interactive ? "pointer" : null,
     });

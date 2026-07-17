@@ -72,133 +72,142 @@ const SternGerlachColors = {
     projector: "#1a1a1a",
   }),
 
-  // ── Light control surfaces ───────────────────────────────────────────────────
-  // White chrome (combo boxes, flat push buttons, editable input fields) stays light
-  // in both profiles; its text stays dark. Same values in default and projector mode,
-  // but defined here so every color lives in one themeable place.
+  // ── Control surfaces ─────────────────────────────────────────────────────────
+  // Controls participate in the active profile. The Preferences dialog is the sole
+  // exception because its content is hosted on framework-owned, always-light chrome.
 
-  /** Fill of light control surfaces: combo-box button/list, editable input fields. */
+  /** Fill of combo-box buttons/lists and editable input fields. */
   controlSurfaceColorProperty: new ProfileColorProperty(SternGerlachNamespace, "controlSurface", {
-    default: "#ffffff",
+    default: "#26364a",
     projector: "#ffffff",
   }),
 
   /** Fill of a disabled control surface (grayed-out editable input field). */
   controlSurfaceDisabledColorProperty: new ProfileColorProperty(SternGerlachNamespace, "controlSurfaceDisabled", {
-    default: "#cccccc",
+    default: "#526173",
     projector: "#cccccc",
   }),
 
-  /** Text on light control surfaces: combo items, flat-button labels, field values, preferences. */
+  /** Text on control surfaces: combo items, flat-button labels, and field values. */
   controlSurfaceTextColorProperty: new ProfileColorProperty(SternGerlachNamespace, "controlSurfaceText", {
-    default: "#1a1a1a",
+    default: "#f4f8fb",
     projector: "#1a1a1a",
   }),
 
+  /** Hover/focus highlight behind combo-box list items. */
+  controlSurfaceHighlightColorProperty: new ProfileColorProperty(SternGerlachNamespace, "controlSurfaceHighlight", {
+    default: "#3a5168",
+    projector: "#dfe7ee",
+  }),
+
   // ── Experiment board ─────────────────────────────────────────────────────────
-  // The experiment area is a light board (quantum-measurement style) in BOTH
-  // profiles, so the device colors below are profile-invariant: they always sit
-  // on the light board. Projector mode only lightens the surrounding chrome.
+  // The complete play area changes profile; it is not an invariant light island.
 
   /** Fill of the experiment board behind the devices. */
   experimentAreaFillProperty: new ProfileColorProperty(SternGerlachNamespace, "experimentAreaFill", {
-    default: "#eef3f7",
+    default: "#101820",
     projector: "#f7fafc",
   }),
 
   /** Stroke around the experiment board. */
   experimentAreaStrokeProperty: new ProfileColorProperty(SternGerlachNamespace, "experimentAreaStroke", {
-    default: "#8899aa",
+    default: "#526575",
     projector: "#8899aa",
   }),
 
-  /** Body of a Stern–Gerlach analyzer (black box, QM style). */
+  /** Body of a Stern–Gerlach analyzer. */
   analyzerBodyFillProperty: new ProfileColorProperty(SternGerlachNamespace, "analyzerBodyFill", {
-    default: "#000000",
+    default: "#253746",
     projector: "#000000",
   }),
 
-  /** Analyzer label text (SG_Z, λ₄, …) on the black body. */
+  /** Analyzer label text (SG_Z, λ₄, …). */
   analyzerLabelFillProperty: new ProfileColorProperty(SternGerlachNamespace, "analyzerLabelFill", {
-    default: "#ffffff",
+    default: "#e8f7ff",
     projector: "#ffffff",
   }),
 
   /** The parabolic beam-splitting curves inside an analyzer. */
   splitterCurveStrokeProperty: new ProfileColorProperty(SternGerlachNamespace, "splitterCurveStroke", {
-    default: "#aaffff",
+    default: "#4fc3f7",
     projector: "#aaffff",
   }),
 
   /** The dark exit holes on an analyzer's output edge. */
   analyzerHoleFillProperty: new ProfileColorProperty(SternGerlachNamespace, "analyzerHole", {
-    default: "#333333",
+    default: "#0a1016",
     projector: "#333333",
   }),
 
   /** Particles (single-fire circles and continuous-beam dots). Magenta, QM style. */
   particleColorProperty: new ProfileColorProperty(SternGerlachNamespace, "particleColor", {
-    default: "#CC00CC",
+    default: "#ff55e8",
     projector: "#CC00CC",
   }),
 
   /** Wires connecting output ports to input ports. */
   wireStrokeProperty: new ProfileColorProperty(SternGerlachNamespace, "wireStroke", {
-    default: "#556677",
+    default: "#9cb4c6",
     projector: "#556677",
   }),
 
   /** Body of a magnet (red, as in the Java applet). */
   magnetBodyFillProperty: new ProfileColorProperty(SternGerlachNamespace, "magnetBodyFill", {
-    default: "#cc2222",
+    default: "#ff5a5f",
     projector: "#cc2222",
   }),
 
-  /** Histogram bar for UP-ish counters (black, QM style). */
+  /** Histogram bar for UP-ish counters. */
   counterBarUpFillProperty: new ProfileColorProperty(SternGerlachNamespace, "counterBarUpFill", {
-    default: "#000000",
+    default: "#4fc3f7",
     projector: "#000000",
   }),
 
   /** Histogram bar for DOWN-ish counters (magenta, QM style). */
   counterBarDownFillProperty: new ProfileColorProperty(SternGerlachNamespace, "counterBarDownFill", {
-    default: "#CC00CC",
+    default: "#ff55e8",
     projector: "#CC00CC",
   }),
 
   /** The green analytic expected-value line on counters. */
   expectedValueLineProperty: new ProfileColorProperty(SternGerlachNamespace, "expectedValueLine", {
-    default: "rgb(0,170,0)",
+    default: "rgb(77,220,120)",
     projector: "rgb(0,170,0)",
   }),
 
   /** A lit which-path watch light on an analyzer output. */
   watchLightOnProperty: new ProfileColorProperty(SternGerlachNamespace, "watchLightOn", {
-    default: "#ffdd00",
+    default: "#fff176",
     projector: "#ffdd00",
   }),
 
   /** Port circles on device edges. */
   portFillProperty: new ProfileColorProperty(SternGerlachNamespace, "portFill", {
-    default: "#445566",
+    default: "#7893a8",
     projector: "#445566",
   }),
 
   /** Highlighted port circle (legal wiring target under the cursor). */
   portHighlightProperty: new ProfileColorProperty(SternGerlachNamespace, "portHighlight", {
-    default: "#00aaff",
+    default: "#55d6ff",
     projector: "#00aaff",
+  }),
+
+  /** Destructive action button fill. */
+  destructiveButtonFillProperty: new ProfileColorProperty(SternGerlachNamespace, "destructiveButtonFill", {
+    default: "#ff5a5f",
+    projector: "#cc3333",
   }),
 
   /** Light band of the particle source's metallic gradient. */
   sourceGradientLightProperty: new ProfileColorProperty(SternGerlachNamespace, "sourceGradientLight", {
-    default: "#ffffff",
+    default: "#e3edf4",
     projector: "#ffffff",
   }),
 
   /** Dark band of the particle source's metallic gradient. */
   sourceGradientDarkProperty: new ProfileColorProperty(SternGerlachNamespace, "sourceGradientDark", {
-    default: "#999fa8",
+    default: "#596b79",
     projector: "#999fa8",
   }),
 };

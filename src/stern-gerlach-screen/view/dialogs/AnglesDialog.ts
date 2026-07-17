@@ -10,8 +10,10 @@ import type { NumberProperty, TReadOnlyProperty } from "scenerystack/axon";
 import { Range } from "scenerystack/dot";
 import { Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont } from "scenerystack/scenery-phet";
-import { Dialog } from "scenerystack/sim";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SimButtonOptions.js";
+import { SimDialog } from "../../../common/SimDialog.js";
 import { StringManager } from "../../../i18n/StringManager.js";
+import SternGerlachColors from "../../../SternGerlachColors.js";
 
 /** Small increment per arrow press / keyboard step, radians (5°). */
 const ANGLE_DELTA = Math.PI / 36;
@@ -24,13 +26,29 @@ function angleControl(
 ): NumberControl {
   return new NumberControl(title, property, range, {
     delta: ANGLE_DELTA,
-    titleNodeOptions: { font: new PhetFont(16) },
-    numberDisplayOptions: { decimalPlaces: 2, textOptions: { font: new PhetFont(15) } },
+    titleNodeOptions: {
+      font: new PhetFont(16),
+      fill: SternGerlachColors.textColorProperty,
+    },
+    numberDisplayOptions: {
+      decimalPlaces: 2,
+      textOptions: {
+        font: new PhetFont(15),
+        fill: SternGerlachColors.controlSurfaceTextColorProperty,
+      },
+      backgroundFill: SternGerlachColors.controlSurfaceColorProperty,
+      backgroundStroke: SternGerlachColors.panelBorderColorProperty,
+    },
+    arrowButtonOptions: {
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+      baseColor: SternGerlachColors.controlSurfaceColorProperty,
+      arrowFill: SternGerlachColors.controlSurfaceTextColorProperty,
+    },
     accessibleName,
   });
 }
 
-export class AnglesDialog extends Dialog {
+export class AnglesDialog extends SimDialog {
   public constructor(thetaProperty: NumberProperty, phiProperty: NumberProperty) {
     const strings = StringManager.getInstance();
     const controls = strings.getControls();
@@ -57,7 +75,10 @@ export class AnglesDialog extends Dialog {
     });
 
     super(content, {
-      title: new Text(dialogs.anglesTitleStringProperty, { font: new PhetFont({ size: 20, weight: "bold" }) }),
+      title: new Text(dialogs.anglesTitleStringProperty, {
+        font: new PhetFont({ size: 20, weight: "bold" }),
+        fill: SternGerlachColors.textColorProperty,
+      }),
     });
   }
 }

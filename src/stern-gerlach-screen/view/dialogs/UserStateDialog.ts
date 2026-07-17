@@ -19,10 +19,11 @@ import {
 import { Range } from "scenerystack/dot";
 import { GridBox, type Node, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { Dialog } from "scenerystack/sim";
 import { AquaRadioButtonGroup, NumberSpinner } from "scenerystack/sun";
 import { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import { SpinSystem } from "../../../common/quantum/SpinSystem.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SimButtonOptions.js";
+import { SimDialog } from "../../../common/SimDialog.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 import type { UserStateModel } from "../../model/UserStateModel.js";
@@ -39,14 +40,24 @@ function amplitudeSpinner(property: NumberProperty, accessibleName: TReadOnlyPro
     numberDisplayOptions: {
       decimalPlaces: 2,
       align: "center",
-      textOptions: { font: new PhetFont(13) },
+      textOptions: {
+        font: new PhetFont(13),
+        fill: SternGerlachColors.controlSurfaceTextColorProperty,
+      },
+      backgroundFill: SternGerlachColors.controlSurfaceColorProperty,
+      backgroundStroke: SternGerlachColors.panelBorderColorProperty,
       xMargin: 4,
       yMargin: 2,
+    },
+    arrowButtonOptions: {
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+      baseColor: SternGerlachColors.controlSurfaceColorProperty,
+      arrowFill: SternGerlachColors.controlSurfaceTextColorProperty,
     },
   });
 }
 
-export class UserStateDialog extends Dialog {
+export class UserStateDialog extends SimDialog {
   public constructor(userState: UserStateModel, systemProperty: TReadOnlyProperty<SpinSystem>) {
     const strings = StringManager.getInstance();
     const dialogs = strings.getDialogs();
@@ -112,7 +123,10 @@ export class UserStateDialog extends Dialog {
     const content = new VBox({ spacing: 16, align: "left", children: [basisGroup, grid] });
 
     super(content, {
-      title: new Text(dialogs.userStateTitleStringProperty, { font: new PhetFont({ size: 20, weight: "bold" }) }),
+      title: new Text(dialogs.userStateTitleStringProperty, {
+        font: new PhetFont({ size: 20, weight: "bold" }),
+        fill: SternGerlachColors.textColorProperty,
+      }),
     });
   }
 }

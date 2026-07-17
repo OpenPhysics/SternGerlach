@@ -46,15 +46,15 @@ export class SourceNode extends Node {
     const body = new Rectangle(-halfWidth, -halfHeight, 2 * halfWidth, 2 * halfHeight, {
       cornerRadius: 10,
       fill: bodyGradient,
-      stroke: "#555555",
+      stroke: SternGerlachColors.experimentAreaStrokeProperty,
     });
     this.addChild(body);
 
     // Nozzle reaching to the output port on the right edge.
     const nozzle = new Rectangle(halfWidth - 10, -8, 14, 16, {
       cornerRadius: 3,
-      fill: "#777777",
-      stroke: "#444444",
+      fill: SternGerlachColors.sourceGradientDarkProperty,
+      stroke: SternGerlachColors.analyzerHoleFillProperty,
     });
     this.addChild(nozzle);
 
@@ -62,7 +62,7 @@ export class SourceNode extends Node {
     const fireButton = new RoundPushButton({
       radius: 17,
       baseColor: SternGerlachColors.particleColorProperty,
-      content: new Circle(5, { fill: "white" }),
+      content: new Circle(5, { fill: SternGerlachColors.analyzerLabelFillProperty }),
       listener: fire,
       center: body.center,
       accessibleName: a11y.controls.fireButtonStringProperty,

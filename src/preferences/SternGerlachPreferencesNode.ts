@@ -11,9 +11,13 @@ import { PhetFont } from "scenerystack/scenery-phet";
 import { Checkbox } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
 import { StringManager } from "../i18n/StringManager.js";
-import SternGerlachColors from "../SternGerlachColors.js";
 import SternGerlachNamespace from "../SternGerlachNamespace.js";
 import type { SternGerlachPreferencesModel } from "./SternGerlachPreferencesModel.js";
+
+// Preferences are rendered on the framework's light dialog surface and deliberately
+// do not follow the simulation's default/projector color profile.
+const PREFERENCES_TEXT_COLOR = "#1a1a1a";
+const PREFERENCES_CONTROL_BACKGROUND = "#ffffff";
 
 export class SternGerlachPreferencesNode extends VBox {
   public constructor(preferencesModel: SternGerlachPreferencesModel, tandem?: Tandem) {
@@ -21,18 +25,18 @@ export class SternGerlachPreferencesNode extends VBox {
 
     const header = new Text(prefStrings.titleStringProperty, {
       font: new PhetFont({ size: 18, weight: "bold" }),
-      fill: SternGerlachColors.textColorProperty,
+      fill: PREFERENCES_TEXT_COLOR,
     });
 
     const su3Checkbox = new Checkbox(
       preferencesModel.su3EnabledProperty,
       new Text(prefStrings.su3EnableStringProperty, {
         font: new PhetFont(14),
-        fill: SternGerlachColors.textColorProperty,
+        fill: PREFERENCES_TEXT_COLOR,
       }),
       {
-        checkboxColor: SternGerlachColors.textColorProperty,
-        checkboxColorBackground: SternGerlachColors.panelBackgroundColorProperty,
+        checkboxColor: PREFERENCES_TEXT_COLOR,
+        checkboxColorBackground: PREFERENCES_CONTROL_BACKGROUND,
         spacing: 8,
         ...(tandem && { tandem: tandem.createTandem("su3Checkbox") }),
       },
@@ -40,7 +44,7 @@ export class SternGerlachPreferencesNode extends VBox {
 
     const su3Description = new Text(prefStrings.su3EnableDescriptionStringProperty, {
       font: new PhetFont(12),
-      fill: SternGerlachColors.textColorProperty,
+      fill: PREFERENCES_TEXT_COLOR,
     });
 
     super({

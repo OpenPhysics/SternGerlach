@@ -1,7 +1,7 @@
 /**
  * SternGerlachScreenView.ts
  *
- * The top-level view: the light experiment board on the left (source →
+ * The top-level view: the profile-aware experiment board on the left (source →
  * analyzers → counters with animated particles), the experiment control panel
  * on the right, and Reset All bottom-right.
  */

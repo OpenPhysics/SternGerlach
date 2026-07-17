@@ -9,8 +9,8 @@
  *
  * In builder (CUSTOM) mode, devices are draggable (pointer + keyboard),
  * deletable, and their output ports can be dragged to input ports to wire the
- * graph. The board stays light in both color profiles, so device colors are
- * profile-invariant.
+ * graph. The board and its devices follow the active default/projector color
+ * profile.
  */
 
 import type { Property } from "scenerystack/axon";
@@ -21,7 +21,6 @@ import { DragListener, KeyboardDragListener, Node, Path, Rectangle, RichText, Te
 import { PhetFont } from "scenerystack/scenery-phet";
 import { RectangularRadioButtonGroup } from "scenerystack/sun";
 import type { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../common/SimButtonOptions.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import {
   EXPERIMENT_AREA_HEIGHT,
@@ -293,8 +292,9 @@ export class ExperimentAreaNode extends Node {
       {
         orientation: "horizontal",
         spacing: 3,
+        // Do not spread FLAT_RECTANGULAR_BUTTON_OPTIONS: that uses ButtonNode.FlatAppearanceStrategy,
+        // which lacks SELECTED/DESELECTED. RectangularRadioButton already defaults to its own flat strategy.
         radioButtonOptions: {
-          ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
           baseColor: SternGerlachColors.controlSurfaceColorProperty,
           xMargin: 5,
           yMargin: 3,
@@ -310,10 +310,13 @@ export class ExperimentAreaNode extends Node {
   /** A small × button that deletes the device (builder mode). */
   private createDeleteButton(device: ExperimentDevice, visual: Node): Node {
     const a11y = StringManager.getInstance().getA11yStrings();
-    const label = new Text("✕", { font: new PhetFont({ size: 13, weight: "bold" }), fill: "#ffffff" });
+    const label = new Text("✕", {
+      font: new PhetFont({ size: 13, weight: "bold" }),
+      fill: SternGerlachColors.analyzerLabelFillProperty,
+    });
     const button = new Rectangle(0, 0, 18, 18, {
       cornerRadius: 4,
-      fill: "#cc3333",
+      fill: SternGerlachColors.destructiveButtonFillProperty,
       cursor: "pointer",
       children: [label],
       tagName: "button",

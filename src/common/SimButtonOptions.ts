@@ -14,19 +14,21 @@ export const FLAT_BUTTON_APPEARANCE_OPTIONS = {
   buttonAppearanceStrategy: ButtonNode.FlatAppearanceStrategy,
 } as const;
 
-/** Text on flat push buttons and combo-box items (always on a light control surface). */
+/** Profile-aware text on flat push buttons and combo-box items. */
 export const LIGHT_SURFACE_TEXT_FILL = SternGerlachColors.controlSurfaceTextColorProperty;
 
 /**
- * Combo-box chrome for panels. Item labels must use {@link LIGHT_SURFACE_TEXT_FILL}, not
- * {@link SternGerlachColors.textColorProperty} — that color is for labels on the dark panel fill.
+ * Profile-aware combo-box chrome for panels. Item labels must use
+ * {@link LIGHT_SURFACE_TEXT_FILL}, which contrasts with the control surface.
  */
 export const SIM_COMBO_BOX_OPTIONS = {
   buttonFill: SternGerlachColors.controlSurfaceColorProperty,
   listFill: SternGerlachColors.controlSurfaceColorProperty,
   buttonStroke: SternGerlachColors.panelBorderColorProperty,
   listStroke: SternGerlachColors.panelBorderColorProperty,
-} satisfies Pick<ComboBoxOptions, "buttonFill" | "listFill" | "buttonStroke" | "listStroke">;
+  // SceneryStack defaults this to near-white; that washes out dark-profile lists.
+  highlightFill: SternGerlachColors.controlSurfaceHighlightColorProperty,
+} satisfies Pick<ComboBoxOptions, "buttonFill" | "listFill" | "buttonStroke" | "listStroke" | "highlightFill">;
 
 /** Options for RectangularPushButton and NumberControl arrow buttons. */
 export const FLAT_RECTANGULAR_BUTTON_OPTIONS = FLAT_BUTTON_APPEARANCE_OPTIONS;
