@@ -6,6 +6,7 @@
  * on the right, and Reset All bottom-right.
  */
 
+import { Vector2 } from "scenerystack/dot";
 import { Node, Rectangle } from "scenerystack/scenery";
 import { ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
@@ -13,7 +14,11 @@ import { ScreenView } from "scenerystack/sim";
 import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SimButtonOptions.js";
 import { SCREEN_VIEW_MARGIN } from "../../SimConstants.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
+import { Analyzer } from "../model/devices/Analyzer.js";
+import { Counter } from "../model/devices/Counter.js";
+import { Magnet } from "../model/devices/Magnet.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
+import { DeviceToolboxNode } from "./DeviceToolboxNode.js";
 import { ExperimentAreaNode } from "./ExperimentAreaNode.js";
 import { ExperimentControlPanel } from "./ExperimentControlPanel.js";
 import { SternGerlachScreenSummaryContent } from "./SternGerlachScreenSummaryContent.js";
@@ -45,6 +50,18 @@ export class SternGerlachScreenView extends ScreenView {
     controlPanel.top = SCREEN_VIEW_MARGIN;
     this.addChild(controlPanel);
 
+    // ── Builder toolbox (visible only in Custom mode) ─────────────────────────
+    const toolbox = new DeviceToolboxNode(model.isCustomProperty, {
+      addAnalyzer: () =>
+        model.graph.addDevice(new Analyzer(this.spawnPosition(model), model.systemProperty.value.defaultType)),
+      addMagnet: () =>
+        model.graph.addDevice(new Magnet(this.spawnPosition(model), model.systemProperty.value.defaultType)),
+      addCounter: () => model.graph.addDevice(new Counter(this.spawnPosition(model))),
+    });
+    toolbox.left = SCREEN_VIEW_MARGIN;
+    toolbox.bottom = this.layoutBounds.maxY - SCREEN_VIEW_MARGIN;
+    this.addChild(toolbox);
+
     // ── Reset All button ──────────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
       ...FLAT_RESET_ALL_BUTTON_OPTIONS,
@@ -60,9 +77,15 @@ export class SternGerlachScreenView extends ScreenView {
     // ── Accessibility: keyboard / reading traversal order ─────────────────────
     this.addChild(
       new Node({
-        pdomOrder: [this.experimentAreaNode, controlPanel, resetAllButton],
+        pdomOrder: [this.experimentAreaNode, controlPanel, toolbox, resetAllButton],
       }),
     );
+  }
+
+  /** A staggered model position for a newly added builder device, to avoid stacking. */
+  private spawnPosition(model: SternGerlachModel): Vector2 {
+    const n = model.graph.devices.length;
+    return new Vector2(1.0 + (n % 6) * 0.14, 0.7 - (n % 6) * 0.16);
   }
 
   /** Resets view-side state. */

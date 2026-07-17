@@ -5,14 +5,17 @@
  */
 
 import { BooleanProperty } from "scenerystack/axon";
+import { Vector2 } from "scenerystack/dot";
 import { describe, expect, it } from "vitest";
 import { AnalyzerType } from "../../src/common/quantum/AnalyzerType.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 import { Analyzer } from "../../src/stern-gerlach-screen/model/devices/Analyzer.js";
+import { Counter } from "../../src/stern-gerlach-screen/model/devices/Counter.js";
 import { SourceMode } from "../../src/stern-gerlach-screen/model/devices/ParticleSource.js";
 import { ExperimentDefinition } from "../../src/stern-gerlach-screen/model/ExperimentDefinition.js";
 import { InitialStateSetting } from "../../src/stern-gerlach-screen/model/InitialStateSetting.js";
 import { SternGerlachModel } from "../../src/stern-gerlach-screen/model/SternGerlachModel.js";
+import { Wire } from "../../src/stern-gerlach-screen/model/Wire.js";
 import { seededRng } from "./testUtilities.js";
 
 function presetByKey(nameKey: string): ExperimentDefinition {
@@ -144,6 +147,63 @@ describe("SternGerlachModel", () => {
 
     su3Enabled.value = false;
     expect(model.systemProperty.value).toBe(SpinSystem.SPIN_HALF);
+  });
+
+  it("custom mode: hand-built interferometer reproduces the preset numbers", () => {
+    const model = new SternGerlachModel(seededRng(41));
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    model.initialStateProperty.value = InitialStateSetting.UNKNOWN_1; // |+z⟩
+
+    const graph = model.graph;
+    const source = graph.getSource();
+    expect(source).not.toBeNull();
+    if (!source) {
+      return;
+    }
+
+    const first = new Analyzer(new Vector2(1.0, 0.3), AnalyzerType.Z);
+    const middle = new Analyzer(new Vector2(1.8, 0.6), AnalyzerType.X);
+    const last = new Analyzer(new Vector2(2.6, 0.6), AnalyzerType.Z);
+    const upCounter = new Counter(new Vector2(3.4, 0.75));
+    const downCounter = new Counter(new Vector2(3.4, 0.45));
+    for (const device of [first, middle, last, upCounter, downCounter]) {
+      graph.addDevice(device);
+    }
+    graph.addWire(new Wire(source, 0, first));
+    graph.addWire(new Wire(first, 0, middle));
+    graph.addWire(new Wire(middle, 0, last));
+    graph.addWire(new Wire(middle, 1, last)); // recombine both X outputs
+    graph.addWire(new Wire(last, 0, upCounter));
+    graph.addWire(new Wire(last, 1, downCounter));
+
+    // Watch off: the middle measurement leaves no record, so |+z⟩ is restored → all up.
+    expect(upCounter.probabilityProperty.value).toBeCloseTo(1, 10);
+    expect(downCounter.probabilityProperty.value).toBeCloseTo(0, 10);
+
+    // Watch on: which-path destroys coherence → 50/50.
+    model.watchProperty.value = true;
+    expect(upCounter.probabilityProperty.value).toBeCloseTo(0.5, 10);
+    expect(downCounter.probabilityProperty.value).toBeCloseTo(0.5, 10);
+  });
+
+  it("custom build is retained when toggling to a preset and back", () => {
+    const model = new SternGerlachModel(seededRng(43));
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    const source = model.graph.getSource();
+    if (!source) {
+      throw new Error("no source");
+    }
+    const analyzer = new Analyzer(new Vector2(1.5, 0), AnalyzerType.X);
+    model.graph.addDevice(analyzer);
+    model.graph.addWire(new Wire(source, 0, analyzer));
+    const customDeviceCount = model.graph.devices.length;
+
+    model.experimentProperty.value = ExperimentDefinition.DEFAULT;
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    expect(model.graph.devices.length).toBe(customDeviceCount);
+    // The restored analyzer keeps its X type.
+    const restored = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer | undefined;
+    expect(restored?.typeProperty.value).toBe(AnalyzerType.X);
   });
 
   it("reset restores defaults and rebuilds fresh devices", () => {

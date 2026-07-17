@@ -10,7 +10,14 @@
     "zThenZ": "Analyseurs Z répétés",
     "interferometer": "Interféromètre",
     "magnet": "Précession magnétique",
-    "recombination": "Recombinaison"
+    "recombination": "Recombinaison",
+    "custom": "Personnalisé"
+  },
+  "toolbox": {
+    "title": "Boîte à outils",
+    "analyzer": "Analyseur",
+    "magnet": "Aimant",
+    "counter": "Compteur"
   },
   "controls": {
     "experiment": "Expérience",
@@ -48,7 +55,14 @@
       "anglesButton": "Ouvrir les commandes d'angle de direction",
       "thetaControl": "Angle polaire thêta",
       "phiControl": "Angle azimutal phi",
-      "systemRadioGroup": "Système quantique"
+      "systemRadioGroup": "Système quantique",
+      "analyzerToolboxItem": "Ajouter un analyseur au tableau",
+      "magnetToolboxItem": "Ajouter un aimant au tableau",
+      "counterToolboxItem": "Ajouter un compteur au tableau"
+    },
+    "builder": {
+      "analyzerTypeComboBox": "Direction de mesure de l'analyseur",
+      "deleteDeviceButton": "Supprimer cet appareil"
     }
   },
   "dialogs": {

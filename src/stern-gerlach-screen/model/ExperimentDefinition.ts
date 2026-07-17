@@ -184,6 +184,11 @@ export class ExperimentDefinition {
     });
   }
 
+  /** Whether this is the CUSTOM sentinel (the model, not this builder, populates the graph). */
+  public get isCustom(): boolean {
+    return this === ExperimentDefinition.CUSTOM;
+  }
+
   /** The preset list offered in the experiment combo box, in display order. */
   public static readonly PRESETS: readonly ExperimentDefinition[] = [
     ExperimentDefinition.singleAnalyzer("singleZ", AnalyzerType.Z),
@@ -193,6 +198,20 @@ export class ExperimentDefinition {
     ExperimentDefinition.interferometer(),
     ExperimentDefinition.magnetPrecession(),
     ExperimentDefinition.recombination(),
+  ];
+
+  /**
+   * The Custom (free-form builder) sentinel. Selecting it unlocks editing; the model restores the
+   * retained custom graph rather than calling this builder, which is a no-op.
+   */
+  public static readonly CUSTOM = new ExperimentDefinition("custom", () => {
+    // The model populates the graph from its retained custom snapshot; nothing to build here.
+  });
+
+  /** Every entry offered in the experiment combo box: the presets, then Custom. */
+  public static readonly CHOICES: readonly ExperimentDefinition[] = [
+    ...ExperimentDefinition.PRESETS,
+    ExperimentDefinition.CUSTOM,
   ];
 
   /** The default preset selected on startup and after Reset All. */

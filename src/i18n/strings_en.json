@@ -10,7 +10,14 @@
     "zThenZ": "Repeated Z Analyzers",
     "interferometer": "Interferometer",
     "magnet": "Magnet Precession",
-    "recombination": "Recombination"
+    "recombination": "Recombination",
+    "custom": "Custom"
+  },
+  "toolbox": {
+    "title": "Toolbox",
+    "analyzer": "Analyzer",
+    "magnet": "Magnet",
+    "counter": "Counter"
   },
   "controls": {
     "experiment": "Experiment",
@@ -48,7 +55,14 @@
       "anglesButton": "Open direction-angle controls",
       "thetaControl": "Polar angle theta",
       "phiControl": "Azimuthal angle phi",
-      "systemRadioGroup": "Quantum system"
+      "systemRadioGroup": "Quantum system",
+      "analyzerToolboxItem": "Add an analyzer to the board",
+      "magnetToolboxItem": "Add a magnet to the board",
+      "counterToolboxItem": "Add a counter to the board"
+    },
+    "builder": {
+      "analyzerTypeComboBox": "Analyzer measurement direction",
+      "deleteDeviceButton": "Delete this device"
     }
   },
   "dialogs": {

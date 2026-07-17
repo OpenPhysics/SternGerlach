@@ -134,4 +134,11 @@ export class StringManager {
   public getSystems() {
     return stringProperties.systems;
   }
+
+  /**
+   * Labels for the builder-mode device toolbox (analyzer, magnet, counter).
+   */
+  public getToolbox() {
+    return stringProperties.toolbox;
+  }
 }

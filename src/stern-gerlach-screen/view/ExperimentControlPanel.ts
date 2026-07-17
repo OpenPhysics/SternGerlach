@@ -44,15 +44,15 @@ export class ExperimentControlPanel extends SimPanel {
 
     const comboBox = new ComboBox(
       model.experimentProperty,
-      ExperimentDefinition.PRESETS.map((preset) => ({
-        value: preset,
+      ExperimentDefinition.CHOICES.map((choice) => ({
+        value: choice,
         createNode: () =>
-          new Text(strings.getExperimentNameProperty(preset.nameKey), {
+          new Text(strings.getExperimentNameProperty(choice.nameKey), {
             font: new PhetFont(14),
             fill: LIGHT_SURFACE_TEXT_FILL,
             maxWidth: 170,
           }),
-        accessibleName: strings.getExperimentNameProperty(preset.nameKey),
+        accessibleName: strings.getExperimentNameProperty(choice.nameKey),
       })),
       listParent,
       {
