@@ -1,0 +1,55 @@
+Instructions for Java aspects of Spins program
+
+SPINS is available as an application or as an Applet.  Java 1.2 or higher is
+required, since we use Swing components and some other Java 2 code.
+
+To run the spins Applet, you need the Java plugin.  This comes as part of JRE
+1.4 (Java Runtime Engine) and higher.  You can install JRE by going to the Sun
+website and downloading the installer for your system: 
+http://java.sun.com/j2se/
+
+To run the Spins application (spins.jar), you need a Java environment.  If you
+just want to run Java apps, then simply install the JRE (j2re) (Java Runtime
+Engine).  If you want to compile Java code, then you will need to install the
+Java SDK (j2sdk) (Standard Develpment Kit).  Once you have either of these
+installed, you can run the Spins application by simply double clicking on
+spins.jar, or you can type
+>java -jar spins.jar
+from a command line (in the directory where spins.jar resides).
+
+If you wish to edit the code and recompile, you can do the following:
+>javac Spins.java
+	recompiles all necessary files
+>java Spins
+	runs the application
+>jar cvfm spins.jar mainclass.mf *.class spinhelp.html images
+	makes the application into a jar file
+>java -jar spins.jar
+	runs the jar file
+
+To edit and test the Applet try:
+>javac SpinsApplet.java
+	recompiles the Applet
+>jar cvf SpinsApplet.jar *.class spinhelp.html images
+	makes the Applet into a jar file
+>appletviewer spinapplet.html
+	uses Java Appletviewer to run the applet 
+
+The Java application and applet have run under Unix, Windows, and Mac OS X.
+
+Some common problems with the Java implementation are:
+
+1)  Windows and dialog boxes open up smaller than expected.  Simply drag the
+lower right corner to expand.
+2)  Data entered in angle chooser or User State doesn't seem to be
+recognized.  Make sure you push enter or tab after each entry.   You can open
+the dialog again to check the data.  On some machines you must choose another
+Unknown and then come back to User State to open that dialog box again.
+3)  On some Mac OS X machines the graphics flash on and off while atoms are
+being counted.  No fix for this yet.
+4)  If you have trouble with the applet not running, you can trying using the
+older web link:
+www.physics.orst.edu/~mcintyre/ph425/spins/spinsapplet_old.html
+
+David McIntyre
+13 January 2004

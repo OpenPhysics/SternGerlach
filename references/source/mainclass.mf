@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+
+Main-Class: Spins
+Created-By: 1.2.1 (Sun Microsystems Inc.)
+
+
+
