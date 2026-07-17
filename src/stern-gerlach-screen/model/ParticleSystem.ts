@@ -3,7 +3,8 @@
  *
  * Owns and animates the live particles. Spawns them at the source (one per
  * fire() in SINGLE mode, a rate-driven stream in CONTINUOUS mode, capped at
- * MAX_LIVE_PARTICLES), flies them along straight rays between ports, and on
+ * MAX_LIVE_PARTICLES), flies them along the wire flight paths (WireGeometry,
+ * the same curves WireNode draws), and on
  * each device arrival delegates the physics to ExperimentEngine:
  * counters increment, magnets precess, analyzers collapse and re-route.
  * Dead ends (unwired output ports) make the particle vanish.
@@ -24,6 +25,7 @@ import type { ExperimentEngine, Rng } from "./ExperimentEngine.js";
 import type { ExperimentGraph } from "./ExperimentGraph.js";
 import type { InitialStateSetting } from "./InitialStateSetting.js";
 import { Particle } from "./Particle.js";
+import { wireWaypoints } from "./WireGeometry.js";
 
 export class ParticleSystem {
   /** Live particles, in spawn order. Read directly by particle/beam views each frame. */
@@ -95,7 +97,7 @@ export class ParticleSystem {
       this.userStateProvider(),
     );
     const start = source.getOutputPortPosition(0, system);
-    this.particles.push(new Particle(start.copy(), state, next, next.getInputPortPosition()));
+    this.particles.push(new Particle(start.copy(), state, next, wireWaypoints(start, next.getInputPortPosition())));
     this.changedEmitter.emit();
   }
 
@@ -120,17 +122,23 @@ export class ParticleSystem {
       // A fast particle may cross several devices in one step; the graph is acyclic,
       // so the chain of arrivals always terminates.
       while (budget > 0) {
-        const toTarget = particle.targetPoint.minus(particle.position);
-        const distance = toTarget.magnitude;
+        const waypoint = particle.waypoints[0];
+        if (waypoint === undefined) {
+          // Out of waypoints: the particle is at its target device's input port.
+          if (!this.handleArrival(particle, options)) {
+            break;
+          }
+          continue;
+        }
+        const toWaypoint = waypoint.minus(particle.position);
+        const distance = toWaypoint.magnitude;
         if (budget < distance) {
-          particle.position = particle.position.plus(toTarget.timesScalar(budget / distance));
+          particle.position = particle.position.plus(toWaypoint.timesScalar(budget / distance));
           break;
         }
         budget -= distance;
-        particle.position = particle.targetPoint;
-        if (!this.handleArrival(particle, options)) {
-          break;
-        }
+        particle.position = waypoint;
+        particle.waypoints.shift();
       }
     }
     this.changedEmitter.emit();
@@ -186,9 +194,10 @@ export class ParticleSystem {
       this.remove(particle);
       return false;
     }
-    particle.position = device.getOutputPortPosition(result.outputIndex, options.system);
+    const exit = device.getOutputPortPosition(result.outputIndex, options.system);
+    particle.position = exit;
     particle.target = result.next;
-    particle.targetPoint = result.next.getInputPortPosition();
+    particle.waypoints = wireWaypoints(exit, result.next.getInputPortPosition());
     return true;
   }
 

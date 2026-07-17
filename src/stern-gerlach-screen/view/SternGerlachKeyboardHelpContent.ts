@@ -36,9 +36,9 @@ function builderSection(): MoveDraggableItemsKeyboardHelpSection {
 
 function wireSection(): KeyboardHelpSection {
   const a11y = StringManager.getInstance().getA11yStrings().keyboardHelp;
-  const dragIcon = KeyboardHelpIconFactory.arrowKeysRowIcon();
+  const enterOrSpace = KeyboardHelpIconFactory.iconOrIcon(TextKeyNode.enter(), TextKeyNode.space());
   return new KeyboardHelpSection(a11y.wireHeadingStringProperty, [
-    KeyboardHelpSectionRow.labelWithIcon(a11y.dragWireStringProperty, dragIcon),
+    KeyboardHelpSectionRow.labelWithIcon(a11y.dragWireStringProperty, enterOrSpace),
   ]);
 }
 

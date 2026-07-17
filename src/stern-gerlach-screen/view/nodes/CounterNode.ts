@@ -18,6 +18,7 @@ import { Multilink } from "scenerystack/axon";
 import type { TColor } from "scenerystack/scenery";
 import { Line, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
+import { StringManager } from "../../../i18n/StringManager.js";
 import { MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 import { type Counter, expectedDetectedFraction } from "../../model/devices/Counter.js";
@@ -36,7 +37,8 @@ export class CounterNode extends Node {
    * @param expectedValuesVisibleProperty - toggles the green analytic line
    * @param deadEndProbabilityProperty - probability mass lost to blockers/dead ends, used to
    *   condition the expected line on detection (same denominator as the bars)
-   * @param barFill - histogram bar color (black for UP-ish ports, magenta for DOWN-ish)
+   * @param barFillProperty - histogram bar color, tracking the feeding port (cyan UP,
+   *   magenta DOWN, amber NONE); a Property so builder-mode rewiring recolors the bar
    * @param particleDetectedEmitter - optional emitter that flashes this counter on detection
    */
   public constructor(
@@ -44,7 +46,7 @@ export class CounterNode extends Node {
     totalDetectedProperty: TReadOnlyProperty<number>,
     expectedValuesVisibleProperty: TReadOnlyProperty<boolean>,
     deadEndProbabilityProperty: TReadOnlyProperty<number>,
-    barFill: TColor,
+    barFillProperty: TReadOnlyProperty<TColor>,
     particleDetectedEmitter?: Emitter<[Counter]>,
   ) {
     super();
@@ -67,7 +69,11 @@ export class CounterNode extends Node {
     });
     this.addChild(this.flash);
 
-    const bar = new Rectangle(0, 0, BAR_WIDTH, 0, { fill: barFill });
+    const bar = new Rectangle(0, 0, BAR_WIDTH, 0);
+    const barFillListener = (fill: TColor) => {
+      bar.fill = fill;
+    };
+    barFillProperty.link(barFillListener);
     this.addChild(bar);
 
     // Green analytic expected-value line across the bar's column.
@@ -95,7 +101,8 @@ export class CounterNode extends Node {
     });
     this.addChild(sampleText);
 
-    const update = (count: number, total: number) => {
+    const counterStrings = StringManager.getInstance().getCounterStrings();
+    const update = (count: number, total: number, percentPattern: string, samplePattern: string) => {
       const fraction = total > 0 ? count / total : 0;
       bar.setRect(-BAR_WIDTH / 2, halfHeight - 2 - fraction * barMaxHeight, BAR_WIDTH, fraction * barMaxHeight);
 
@@ -103,15 +110,23 @@ export class CounterNode extends Node {
       countText.left = halfWidth + 7;
       countText.centerY = -8;
 
-      percentText.string = total > 0 ? `${(100 * fraction).toFixed(1)}%` : "";
+      percentText.string = total > 0 ? percentPattern.replace("{{percent}}", (100 * fraction).toFixed(1)) : "";
       percentText.left = halfWidth + 7;
       percentText.top = countText.bottom + 1;
 
-      sampleText.string = total > 0 ? `n=${total}` : "";
+      sampleText.string = total > 0 ? samplePattern.replace("{{total}}", `${total}`) : "";
       sampleText.left = halfWidth + 7;
       sampleText.top = percentText.bottom + 1;
     };
-    const countMultilink = new Multilink([counter.countProperty, totalDetectedProperty], update);
+    const countMultilink = new Multilink(
+      [
+        counter.countProperty,
+        totalDetectedProperty,
+        counterStrings.percentPatternStringProperty,
+        counterStrings.samplePatternStringProperty,
+      ],
+      update,
+    );
 
     const updateExpected = (probability: number, visible: boolean, deadEnd: number) => {
       const fraction = expectedDetectedFraction(probability, deadEnd);
@@ -135,6 +150,7 @@ export class CounterNode extends Node {
     this.disposeCounterNode = () => {
       countMultilink.dispose();
       expectedMultilink.dispose();
+      barFillProperty.unlink(barFillListener);
       particleDetectedEmitter?.removeListener(detectionListener);
     };
   }

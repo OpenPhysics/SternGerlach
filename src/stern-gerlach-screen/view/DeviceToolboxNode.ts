@@ -49,13 +49,13 @@ export type ToolboxCallbacks = {
 const ICON_HALF_WIDTH = 24;
 const ICON_HALF_HEIGHT = 18;
 
-/** A boxed device body (analyzer/magnet) carrying a small "SG" label. */
-function boxIcon(fill: TPaint): Node {
+/** A boxed device body (analyzer/magnet) carrying a small type label. */
+function boxIcon(fill: TPaint, labelMarkup: string): Node {
   const box = new Rectangle(-ICON_HALF_WIDTH, -ICON_HALF_HEIGHT, 2 * ICON_HALF_WIDTH, 2 * ICON_HALF_HEIGHT, {
     cornerRadius: 6,
     fill,
   });
-  const label = new RichText("SG<sub>z</sub>", {
+  const label = new RichText(labelMarkup, {
     font: new PhetFont({ size: 13, weight: "bold" }),
     fill: SternGerlachColors.analyzerLabelFillProperty,
   });
@@ -65,7 +65,7 @@ function boxIcon(fill: TPaint): Node {
 
 /** Analyzer icon: a black body with two cyan splitting curves and exit holes. */
 function analyzerIcon(): Node {
-  const icon = boxIcon(SternGerlachColors.analyzerBodyFillProperty);
+  const icon = boxIcon(SternGerlachColors.analyzerBodyFillProperty, "SG<sub>z</sub>");
   const inputX = -ICON_HALF_WIDTH;
   const outX = ICON_HALF_WIDTH;
   for (const outY of [-9, 9]) {
@@ -84,9 +84,9 @@ function analyzerIcon(): Node {
   return icon;
 }
 
-/** Magnet icon: the same boxed body, in the magnet's red. */
+/** Magnet icon: the same boxed body in the magnet's red, labeled by field direction. */
 function magnetIcon(): Node {
-  return boxIcon(SternGerlachColors.magnetBodyFillProperty);
+  return boxIcon(SternGerlachColors.magnetBodyFillProperty, "B<sub>z</sub>");
 }
 
 /** Counter icon: a light box holding a short histogram bar. */

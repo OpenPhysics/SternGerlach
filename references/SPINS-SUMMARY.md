@@ -75,8 +75,10 @@ are (re)computed from θ and φ in `SetPhi(theta, phi)` whenever the user change
 - `0`–`3` → **Unknown #1–#4** — specific, hard-coded state vectors the student is meant to
   determine experimentally (`InitialState[system][whichInit]`).
 - `4` → **User State** — components the user types in a chosen basis; the program normalizes them.
-- `5` → **Random** — each atom is emitted in a random eigenstate of the first analyzer's axis
-  (equal probability among the 2 or 3 projections). This is the default at startup.
+- `5` → **Random** — each atom is emitted in a random eigenstate drawn from a fixed basis:
+  Sz (`EigenVector[2]`) for spin-½, the spin-1 Sy eigenstates (`EigenVector[9]`) for spin-1 and
+  SU(3), with equal probability among the 2 or 3 states (see `Experiment.run`). This is the
+  default at startup.
 
 ### Two execution modes
 

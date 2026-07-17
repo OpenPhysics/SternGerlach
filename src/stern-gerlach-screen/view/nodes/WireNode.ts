@@ -2,8 +2,9 @@
  * WireNode.ts
  *
  * Visual for a wire: a horizontal-tangent bezier from a device's output port
- * to the target's input port. Reacts to both devices' positions so it keeps
- * up when devices move (builder mode, later milestone).
+ * to the target's input port, using the shared WireGeometry control points so
+ * the drawn curve is exactly the particles' flight path. Reacts to both
+ * devices' positions so it keeps up when devices move (builder mode).
  */
 
 import type { TReadOnlyProperty } from "scenerystack/axon";
@@ -14,6 +15,7 @@ import { Path } from "scenerystack/scenery";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 import type { Wire } from "../../model/Wire.js";
+import { wireControlPoints } from "../../model/WireGeometry.js";
 
 export class WireNode extends Path {
   private readonly disposeWireNode: () => void;
@@ -26,12 +28,16 @@ export class WireNode extends Path {
 
     const update = () => {
       const system = systemProperty.value;
-      const start = mvt.modelToViewPosition(wire.source.getOutputPortPosition(wire.outputIndex, system));
-      const end = mvt.modelToViewPosition(wire.target.getInputPortPosition());
-      const lead = Math.max(20, Math.abs(end.x - start.x) * 0.45);
-      this.shape = new Shape()
-        .moveTo(start.x, start.y)
-        .cubicCurveTo(start.x + lead, start.y, end.x - lead, end.y, end.x, end.y);
+      const { p0, c1, c2, p3 } = wireControlPoints(
+        wire.source.getOutputPortPosition(wire.outputIndex, system),
+        wire.target.getInputPortPosition(),
+      );
+      // The mvt is affine, so transforming the control points transforms the whole bézier.
+      const v0 = mvt.modelToViewPosition(p0);
+      const v1 = mvt.modelToViewPosition(c1);
+      const v2 = mvt.modelToViewPosition(c2);
+      const v3 = mvt.modelToViewPosition(p3);
+      this.shape = new Shape().moveTo(v0.x, v0.y).cubicCurveTo(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y);
     };
 
     const multilink = new Multilink(

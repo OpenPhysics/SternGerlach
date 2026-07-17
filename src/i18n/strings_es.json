@@ -24,7 +24,7 @@
     "custom": "[Personalizado]"
   },
   "experimentGuidance": {
-    "singleZ": "Predice: para un estado preparado |+z⟩, ¿qué contador debería activarse? Dispara átomos y compara con los valores esperados.",
+    "singleZ": "Con un haz aleatorio, ambos contadores convergen a 50/50. Luego elige el Estado de usuario |+z⟩ como estado inicial y predice: ¿qué contador debería activarse?",
     "singleX": "Un estado preparado en Z medido en X es 50/50. Observa la convergencia de los contadores con Valores esperados.",
     "zThenX": "Después de SGz, el haz UP es |+z⟩. Medirlo con SGx debería ser de nuevo 50/50.",
     "zThenZ": "Repetir la misma base deja el estado sin cambios. El segundo SGz nunca debe convertir un átomo UP en DOWN.",
@@ -38,6 +38,10 @@
     "unknownHidden": "Estado misterioso: dispara átomos para inferirlo a partir de los contadores.",
     "randomMixture": "Mezcla aleatoria: cada estado de la base es igualmente probable.",
     "probabilityPattern": "P({{label}})={{percent}}%"
+  },
+  "counters": {
+    "percentPattern": "{{percent}}%",
+    "samplePattern": "n={{total}}"
   },
   "toolbox": {
     "title": "Herramientas",
@@ -114,7 +118,7 @@
       "analyzerDevice": "Analizador de Stern–Gerlach",
       "magnetDevice": "Imán",
       "counterDevice": "Contador de partículas",
-      "outputPortPattern": "Puerto de salida {{index}}, arrastrar para conectar"
+      "outputPortPattern": "Puerto de salida {{index}}, pulsa Intro o Espacio para cambiar su conexión"
     },
     "keyboardHelp": {
       "fireHeading": "Disparar átomos",
@@ -123,7 +127,7 @@
       "moveDevice": "Mover un dispositivo en el tablero",
       "deleteDevice": "Eliminar el dispositivo enfocado",
       "wireHeading": "Conectar dispositivos",
-      "dragWire": "Arrastrar de un puerto de salida a uno de entrada",
+      "dragWire": "Cambiar la conexión de un puerto de salida entre los destinos posibles",
       "blockerHeading": "Bloqueadores de salida",
       "blockerHelp": "Elige Abierto o Bloquear en un analizador para filtrar un componente de espín",
       "comboHeading": "Cuadros combinados",

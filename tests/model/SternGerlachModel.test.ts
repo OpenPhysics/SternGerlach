@@ -285,6 +285,24 @@ describe("SternGerlachModel", () => {
     expect(analyzer.blockedOutputProperty.value).toBe(-1);
   });
 
+  it("changing direction angles only clears counts when an n-type device exists", () => {
+    const model = new SternGerlachModel(seededRng(43));
+    model.doN(100);
+    expect(model.totalDetectedProperty.value).toBe(100);
+
+    // No n̂ device on the default board: the angles are unobservable, counts survive.
+    model.thetaProperty.value = Math.PI / 3;
+    expect(model.totalDetectedProperty.value).toBe(100);
+
+    // With an n̂ analyzer the angles shape the physics, so changing them clears counts.
+    const analyzer = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer;
+    analyzer.typeProperty.value = AnalyzerType.N;
+    model.doN(100);
+    expect(model.totalDetectedProperty.value).toBe(100);
+    model.phiProperty.value = Math.PI / 5;
+    expect(model.totalDetectedProperty.value).toBe(0);
+  });
+
   it("reset restores defaults and rebuilds fresh devices", () => {
     const model = new SternGerlachModel(seededRng(29));
     const originalCounters = model.graph.getCounters();

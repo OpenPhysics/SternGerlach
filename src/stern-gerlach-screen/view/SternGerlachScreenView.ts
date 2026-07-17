@@ -102,8 +102,11 @@ export class SternGerlachScreenView extends ScreenView {
 
   /** A staggered model position for a newly added builder device, to avoid stacking. */
   private spawnPosition(model: SternGerlachModel): Vector2 {
-    const n = model.graph.devices.length;
-    return new Vector2(1.0 + (n % 6) * 0.14, 0.7 - (n % 6) * 0.16);
+    // Two staggered diagonals of 6 slots each before positions repeat.
+    const slot = model.graph.devices.length % 12;
+    const step = slot % 6;
+    const row = Math.floor(slot / 6);
+    return new Vector2(1.0 + step * 0.14 + row * 0.07, 0.7 - step * 0.16 - row * 0.4);
   }
 
   /** Resets view-side state. */

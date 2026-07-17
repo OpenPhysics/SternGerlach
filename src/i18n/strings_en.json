@@ -24,7 +24,7 @@
     "custom": "[Custom]"
   },
   "experimentGuidance": {
-    "singleZ": "Predict: for a prepared |+z⟩ state, which counter should fire? Fire atoms and compare with Expected Values.",
+    "singleZ": "With a Random beam, both counters converge to 50/50. Then set Initial State to User State |+z⟩ and predict: which counter should fire?",
     "singleX": "A Z-prepared state measured along X is 50/50. Watch the counters converge when Expected Values is on.",
     "zThenX": "After SGz, the UP beam is |+z⟩. Measuring that beam with SGx should again be 50/50.",
     "zThenZ": "Repeating the same basis leaves the state unchanged. The second SGz should never flip an UP atom to DOWN.",
@@ -38,6 +38,10 @@
     "unknownHidden": "Mystery state — fire atoms to infer it from the counters.",
     "randomMixture": "Random mixture: each basis state is equally likely.",
     "probabilityPattern": "P({{label}})={{percent}}%"
+  },
+  "counters": {
+    "percentPattern": "{{percent}}%",
+    "samplePattern": "n={{total}}"
   },
   "toolbox": {
     "title": "Toolbox",
@@ -114,7 +118,7 @@
       "analyzerDevice": "Stern–Gerlach analyzer",
       "magnetDevice": "Magnet",
       "counterDevice": "Particle counter",
-      "outputPortPattern": "Output port {{index}}, drag to connect"
+      "outputPortPattern": "Output port {{index}}, press Enter or Space to cycle its connection"
     },
     "keyboardHelp": {
       "fireHeading": "Fire atoms",
@@ -123,7 +127,7 @@
       "moveDevice": "Move a device on the board",
       "deleteDevice": "Delete the focused device",
       "wireHeading": "Wire devices",
-      "dragWire": "Drag from an output port to an input port",
+      "dragWire": "Cycle an output port's connection through the possible targets",
       "blockerHeading": "Exit blockers",
       "blockerHelp": "Choose Open or Block on an analyzer to filter a spin component",
       "comboHeading": "Combo boxes",

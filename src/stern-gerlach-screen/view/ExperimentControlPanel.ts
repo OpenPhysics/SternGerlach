@@ -7,7 +7,7 @@
  * plus watch, system, direction-angle, and dead-end probability readouts.
  */
 
-import { DerivedProperty, PatternStringProperty } from "scenerystack/axon";
+import { DerivedProperty, DynamicProperty, PatternStringProperty } from "scenerystack/axon";
 import type { Node } from "scenerystack/scenery";
 import { HBox, HSeparator, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
@@ -76,20 +76,19 @@ export class ExperimentControlPanel extends SimPanel {
       },
     );
 
-    const notationProperty = new DerivedProperty(
-      [model.experimentProperty],
-      (experiment) => strings.getExperimentNotationProperty(experiment.notationKey).value,
-    );
+    // DynamicProperty tracks both the selected experiment AND the live locale.
+    const notationProperty = new DynamicProperty<string, string, ExperimentDefinition>(model.experimentProperty, {
+      derive: (experiment) => strings.getExperimentNotationProperty(experiment.notationKey),
+    });
     const notationText = new Text(notationProperty, {
       font: new PhetFont({ size: 13, weight: "bold" }),
       fill: SternGerlachColors.accentColorProperty,
       maxWidth: 190,
     });
 
-    const guidanceProperty = new DerivedProperty(
-      [model.experimentProperty],
-      (experiment) => strings.getExperimentGuidanceProperty(experiment.guidanceKey).value,
-    );
+    const guidanceProperty = new DynamicProperty<string, string, ExperimentDefinition>(model.experimentProperty, {
+      derive: (experiment) => strings.getExperimentGuidanceProperty(experiment.guidanceKey),
+    });
     const guidanceLabel = new Text(controls.guidanceStringProperty, {
       font: new PhetFont({ size: 12, weight: "bold" }),
       fill: SternGerlachColors.textColorProperty,

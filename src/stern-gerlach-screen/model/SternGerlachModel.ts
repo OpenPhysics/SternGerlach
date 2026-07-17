@@ -15,7 +15,7 @@
 import { BooleanProperty, DerivedProperty, NumberProperty, Property, type TReadOnlyProperty } from "scenerystack/axon";
 import { dotRandom, Vector2 } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
-import type { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
+import { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
 import type { ComplexVector } from "../../common/quantum/ComplexVector.js";
 import { OperatorTable } from "../../common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../common/quantum/SpinSystem.js";
@@ -211,10 +211,18 @@ export class SternGerlachModel implements TModel {
       property.lazyLink(onUserStateChange);
     }
 
-    // The global direction angles reshape the Sn operators.
+    // The global direction angles reshape the Sn operators. Statistics are only invalidated
+    // when some device actually measures/precesses along n̂ — otherwise changing the angles
+    // is unobservable and the accumulated counts stay valid.
     const applyAngles = () => {
       this.operatorTable.setDirectionAngles(this.thetaProperty.value, this.phiProperty.value);
-      this.handleConfigurationChange();
+      const usesDirectionAngles = this.graph.devices.some(
+        (device) =>
+          (device instanceof Analyzer || device instanceof Magnet) && device.typeProperty.value === AnalyzerType.N,
+      );
+      if (usesDirectionAngles) {
+        this.handleConfigurationChange();
+      }
     };
     this.thetaProperty.lazyLink(applyAngles);
     this.phiProperty.lazyLink(applyAngles);

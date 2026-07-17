@@ -24,7 +24,7 @@
     "custom": "[Personnalisé]"
   },
   "experimentGuidance": {
-    "singleZ": "Prédisez : pour un état préparé |+z⟩, quel compteur doit s'activer ? Tirez des atomes et comparez aux valeurs attendues.",
+    "singleZ": "Avec un faisceau aléatoire, les deux compteurs convergent vers 50/50. Choisissez ensuite l'état utilisateur |+z⟩ comme état initial et prédisez : quel compteur doit s'activer ?",
     "singleX": "Un état préparé en Z mesuré selon X est 50/50. Observez la convergence des compteurs avec les valeurs attendues.",
     "zThenX": "Après SGz, le faisceau UP est |+z⟩. Le mesurer avec SGx doit à nouveau donner 50/50.",
     "zThenZ": "Répéter la même base laisse l'état inchangé. Le second SGz ne doit jamais faire basculer un atome UP vers DOWN.",
@@ -38,6 +38,10 @@
     "unknownHidden": "État mystère — tirez des atomes pour l'inférer à partir des compteurs.",
     "randomMixture": "Mélange aléatoire : chaque état de base est équiprobable.",
     "probabilityPattern": "P({{label}})={{percent}}%"
+  },
+  "counters": {
+    "percentPattern": "{{percent}}%",
+    "samplePattern": "n={{total}}"
   },
   "toolbox": {
     "title": "Boîte à outils",
@@ -114,7 +118,7 @@
       "analyzerDevice": "Analyseur de Stern–Gerlach",
       "magnetDevice": "Aimant",
       "counterDevice": "Compteur de particules",
-      "outputPortPattern": "Port de sortie {{index}}, glisser pour connecter"
+      "outputPortPattern": "Port de sortie {{index}}, appuyez sur Entrée ou Espace pour changer sa connexion"
     },
     "keyboardHelp": {
       "fireHeading": "Tirer des atomes",
@@ -123,7 +127,7 @@
       "moveDevice": "Déplacer un appareil sur le tableau",
       "deleteDevice": "Supprimer l'appareil sélectionné",
       "wireHeading": "Relier les appareils",
-      "dragWire": "Glisser d'un port de sortie vers un port d'entrée",
+      "dragWire": "Faire défiler la connexion d'un port de sortie parmi les cibles possibles",
       "blockerHeading": "Bloqueurs de sortie",
       "blockerHelp": "Choisir Ouvert ou Bloquer sur un analyseur pour filtrer une composante de spin",
       "comboHeading": "Listes déroulantes",

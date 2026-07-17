@@ -150,6 +150,13 @@ export class StringManager {
   }
 
   /**
+   * Patterns for the counter readouts (percent of detected atoms, sample size).
+   */
+  public getCounterStrings() {
+    return stringProperties.counters;
+  }
+
+  /**
    * Labels for the sim's controls (experiment chooser, fire button, source mode, …).
    */
   public getControls() {

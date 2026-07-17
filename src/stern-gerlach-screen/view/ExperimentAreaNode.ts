@@ -13,11 +13,11 @@
  * profile.
  */
 
-import type { Property } from "scenerystack/axon";
+import { PatternStringProperty, Property } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
-import type { PressListenerEvent } from "scenerystack/scenery";
+import type { PressListenerEvent, TColor } from "scenerystack/scenery";
 import { DragListener, KeyboardDragListener, Node, Path, Rectangle, RichText, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { RectangularRadioButtonGroup } from "scenerystack/sun";
@@ -41,7 +41,7 @@ import { Wire } from "../model/Wire.js";
 import { BeamCanvasNode } from "./BeamCanvasNode.js";
 import { AnalyzerNode, analyzerLabelMarkup } from "./nodes/AnalyzerNode.js";
 import { CounterNode } from "./nodes/CounterNode.js";
-import { MagnetNode } from "./nodes/MagnetNode.js";
+import { MagnetNode, magnetLabelMarkup } from "./nodes/MagnetNode.js";
 import { PortNode } from "./nodes/PortNode.js";
 import { SourceNode } from "./nodes/SourceNode.js";
 import { WireNode } from "./nodes/WireNode.js";
@@ -229,24 +229,42 @@ export class ExperimentAreaNode extends Node {
       return new MagnetNode(device, this.model.systemProperty);
     }
     if (device instanceof Counter) {
-      // UP-ish ports get cyan bars, DOWN-ish magenta — decided by the feeding port.
-      const feed = this.model.graph.getWiresInto(device)[0];
-      const barFill =
-        feed && feed.outputIndex === 1
-          ? SternGerlachColors.counterBarDownFillProperty
-          : SternGerlachColors.counterBarUpFillProperty;
+      // Bar color follows the feeding port (UP cyan, DOWN magenta, NONE amber) and is
+      // recomputed whenever the wiring changes, so builder-mode rewiring recolors the bar.
+      const barFillProperty = new Property<TColor>(this.counterBarFill(device));
+      const wireListener = () => {
+        barFillProperty.value = this.counterBarFill(device);
+      };
+      this.model.graph.wires.elementAddedEmitter.addListener(wireListener);
+      this.model.graph.wires.elementRemovedEmitter.addListener(wireListener);
       const counterNode = new CounterNode(
         device,
         this.model.totalDetectedProperty,
         this.model.expectedValuesVisibleProperty,
         this.model.deadEndProbabilityProperty,
-        barFill,
+        barFillProperty,
         this.model.particleSystem.particleDetectedEmitter,
       );
+      counterNode.disposeEmitter.addListener(() => {
+        this.model.graph.wires.elementAddedEmitter.removeListener(wireListener);
+        this.model.graph.wires.elementRemovedEmitter.removeListener(wireListener);
+      });
       this.counterNodes.push(counterNode);
       return counterNode;
     }
     throw new Error(`no view for device ${device.id}`);
+  }
+
+  /** Bar color for a counter, decided by the output port feeding it (UP/DOWN/NONE). */
+  private counterBarFill(counter: Counter): TColor {
+    const feed = this.model.graph.getWiresInto(counter)[0];
+    if (feed?.outputIndex === 1) {
+      return SternGerlachColors.counterBarDownFillProperty;
+    }
+    if (feed?.outputIndex === 2) {
+      return SternGerlachColors.counterBarZeroFillProperty;
+    }
+    return SternGerlachColors.counterBarUpFillProperty;
   }
 
   /** Adds builder-mode interactivity to a device container: drag-to-move, delete, and wiring ports. */
@@ -292,6 +310,11 @@ export class ExperimentAreaNode extends Node {
     if (device.isDeletable) {
       container.addInputListener({
         keydown: (event) => {
+          // Only when the device container itself is focused — not while a child control
+          // (type radio, blocker radio, field spinner, ports) has focus.
+          if (event.target !== container) {
+            return;
+          }
           const key = event.domEvent?.key;
           if (key === "Delete" || key === "Backspace") {
             this.model.graph.removeDevice(device);
@@ -315,8 +338,10 @@ export class ExperimentAreaNode extends Node {
     }
 
     // Type selector for analyzers and magnets (the valid types depend on the system).
+    // Magnets are labeled by field direction (B_z), analyzers by measurement (SG_z).
     if (device instanceof Analyzer || device instanceof Magnet) {
-      const selector = this.createTypeSelector(device.typeProperty, visual);
+      const markup = device instanceof Magnet ? magnetLabelMarkup : analyzerLabelMarkup;
+      const selector = this.createTypeSelector(device.typeProperty, visual, markup);
       container.addChild(selector);
       container.disposeEmitter.addListener(() => selector.dispose());
     }
@@ -382,14 +407,18 @@ export class ExperimentAreaNode extends Node {
   }
 
   /** A flat radio group letting the user pick an analyzer/magnet type (builder mode). */
-  private createTypeSelector(typeProperty: Property<AnalyzerType>, visual: Node): Node {
+  private createTypeSelector(
+    typeProperty: Property<AnalyzerType>,
+    visual: Node,
+    labelMarkup: (type: AnalyzerType) => string,
+  ): Node {
     const a11y = StringManager.getInstance().getA11yStrings();
     const group = new RectangularRadioButtonGroup(
       typeProperty,
       this.model.systemProperty.value.analyzerTypes.map((type) => ({
         value: type,
         createNode: () =>
-          new RichText(analyzerLabelMarkup(type), {
+          new RichText(labelMarkup(type), {
             font: new PhetFont(12),
             fill: SternGerlachColors.controlSurfaceTextColorProperty,
           }),
@@ -438,14 +467,29 @@ export class ExperimentAreaNode extends Node {
     return button;
   }
 
-  /** An output port handle whose drag rubber-bands a wire to a legal input port. */
+  /**
+   * An output port handle whose drag rubber-bands a wire to a legal input port. For keyboard
+   * users, Enter/Space cycles the port's connection through every legal target, then unwired.
+   */
   private createOutputPort(device: ExperimentDevice, outputIndex: number): PortNode {
     const a11y = StringManager.getInstance().getA11yStrings();
     const offset = device.getOutputPortOffset(outputIndex, this.model.systemProperty.value);
     const port = new PortNode(offset.x * MODEL_VIEW_SCALE, -offset.y * MODEL_VIEW_SCALE, true);
     port.tagName = "div";
     port.focusable = true;
-    port.accessibleName = a11y.builder.outputPortPatternStringProperty.value.replace("{{index}}", `${outputIndex + 1}`);
+    port.accessibleName = new PatternStringProperty(a11y.builder.outputPortPatternStringProperty, {
+      index: outputIndex + 1,
+    });
+
+    // Keyboard wiring: each activation re-routes this output to the next legal target.
+    port.addInputListener({
+      keydown: (event) => {
+        const key = event.domEvent?.key;
+        if (key === "Enter" || key === " ") {
+          this.cycleWireTarget(device, outputIndex);
+        }
+      },
+    });
 
     let rubberBand: Path | null = null;
     const listener = new DragListener({
@@ -485,6 +529,29 @@ export class ExperimentAreaNode extends Node {
     });
     port.addInputListener(listener);
     return port;
+  }
+
+  /**
+   * Keyboard wiring: moves the wire on the given output port to the next legal target device
+   * (in board order), and past the last target leaves the port unwired, so repeated Enter/Space
+   * presses cycle through every possible connection.
+   */
+  private cycleWireTarget(source: ExperimentDevice, outputIndex: number): void {
+    const existing = this.model.graph.getWireFrom(source, outputIndex);
+    const currentTarget = existing?.target ?? null;
+    if (existing) {
+      this.model.graph.removeWire(existing);
+    }
+    const candidates = this.model.graph.devices.filter(
+      (device) =>
+        device !== source && device.hasInput && this.model.graph.canAddWire(new Wire(source, outputIndex, device)),
+    );
+    // Cycle order: candidate 0 … n−1, then unwired, then back to candidate 0.
+    const currentIndex = currentTarget === null ? -1 : candidates.indexOf(currentTarget);
+    const next = currentIndex === -1 ? candidates[0] : candidates[currentIndex + 1];
+    if (next) {
+      this.model.graph.addWire(new Wire(source, outputIndex, next));
+    }
   }
 
   /** The device whose input port is closest to a point (within threshold), excluding the source. */

@@ -73,6 +73,12 @@ lines. Blocked-DOWN single-Z: bar → 100 %, line at 50 %, forever.
 
 ## 2. Physics/pedagogy hazards (correct-by-parity, but misleading on screen)
 
+> **Status 2026-07-17:** §2.1, §2.2, and §2.4 are **fixed** (Born-weighted display-path
+> sampling in the engine; magnets relabeled B_z/B_λₖ everywhere including the toolbox and type
+> selector; particles now fly the shared WireGeometry bézier that WireNode draws). §2.3 (λ₈
+> aliasing) is deliberately retained for SPINS parity and is now documented for educators in
+> `doc/model.md`.
+
 ### 2.1 Coherent pass-through shows which-path information that shouldn't exist
 
 When analyzer outputs are merged and Watch is off, the engine correctly passes the state through
@@ -106,6 +112,15 @@ vertically offset connection.
 ---
 
 ## 3. Smaller findings
+
+> **Status 2026-07-17:** all fixed except two intentional leftovers — the harmless double
+> rebuild on Reset All, and the Node-22 requirement (environment, not code). Keyboard wiring now
+> exists (Enter/Space on a focused output port cycles its connection through every legal target,
+> then unwired), the Delete/Backspace listener only fires when the device container itself has
+> focus, locale-stale derivations use DynamicProperty, counter readouts are localized, counter
+> bar colors track rewiring (with a new amber color for the m=0 beam), the Single-Z guidance now
+> matches the Random default, θ/φ edits keep counts when no n̂ device exists, spawn positions
+> cycle 12 slots, and `doc/model.md` is written.
 
 - **Keyboard help promises wiring that doesn't exist.** Output ports are focusable and the help
   dialog has a "wire" section with arrow keys (`SternGerlachKeyboardHelpContent.ts:37-43`), but

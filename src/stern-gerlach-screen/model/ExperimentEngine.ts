@@ -39,7 +39,12 @@ export type Rng = () => number;
 
 /** Outcome of one Monte-Carlo hop through a magnet or analyzer. */
 export type TransitResult = {
-  /** Output port the particle leaves through (drives the watch flash and travel path). */
+  /**
+   * Output port the particle leaves through (drives the watch flash and travel path).
+   * On coherent (merged, watch-off) branches this is sampled Born-weighted for DISPLAY
+   * only — the carried state stays coherent, and since merging never happens with watch
+   * on, the sampled index can never leak which-path information into the physics.
+   */
   outputIndex: number;
   /** The (possibly collapsed or precessed) state after the device. */
   newState: ComplexVector;
@@ -137,8 +142,10 @@ export class ExperimentEngine {
     const nextAt1 = this.nextOf(analyzer, 1);
 
     // Both outputs feed the same device and nobody is watching: coherent pass-through.
+    // The exit port is sampled Born-weighted for display only; the state is untouched.
     if (nextAt0 === nextAt1 && !options.watch) {
-      return { outputIndex: 0, newState: state, next: nextAt0 };
+      const displayIndex = rng() < this.operatorTable.getEigenvector(op, 0).dotProdSquared(state) ? 0 : 1;
+      return { outputIndex: displayIndex, newState: state, next: nextAt0 };
     }
 
     const up = this.operatorTable.getEigenvector(op, 0);
@@ -159,8 +166,13 @@ export class ExperimentEngine {
     const nexts = [this.nextOf(analyzer, 0), this.nextOf(analyzer, 1), this.nextOf(analyzer, 2)];
     const grouping = groupOutputs(nexts, options.watch);
     if (grouping === "all-merged") {
-      // All 3 outputs go to the same place: full coherent pass-through.
-      return { outputIndex: 0, newState: state, next: nexts[0] as ExperimentDevice | null };
+      // All 3 outputs go to the same place: full coherent pass-through. The exit port is
+      // sampled Born-weighted for display only; the state is untouched.
+      return {
+        outputIndex: this.sampleDisplayIndex(op, state, [0, 1, 2], rng),
+        newState: state,
+        next: nexts[0] as ExperimentDevice | null,
+      };
     }
     const { i, j, k, twoTheSame } = grouping;
 
@@ -175,8 +187,9 @@ export class ExperimentEngine {
       outputIndex = k;
     } else if (twoTheSame) {
       // The merged pair (i, j) is taken coherently: remove the k component and renormalize.
+      // Which of the two merged ports the particle is DRAWN leaving is Born-sampled.
       newState = eigenK.projectOut(state);
-      outputIndex = i;
+      outputIndex = this.sampleDisplayIndex(op, state, [i, j], rng);
     } else {
       const eigenJ = this.operatorTable.getEigenvector(op, j);
       if (rand - prob < eigenJ.dotProdSquared(state)) {
@@ -188,6 +201,27 @@ export class ExperimentEngine {
       }
     }
     return { outputIndex, newState, next: nexts[outputIndex] as ExperimentDevice | null };
+  }
+
+  /**
+   * Samples which of the given (merged) output ports the particle is displayed leaving,
+   * Born-weighted by the state's overlap with each port's eigenvector. Display-only: callers
+   * pass the state through unchanged, and all candidate ports lead to the same device.
+   */
+  private sampleDisplayIndex(op: number, state: ComplexVector, candidates: readonly number[], rng: Rng): number {
+    const weights = candidates.map((index) => this.operatorTable.getEigenvector(op, index).dotProdSquared(state));
+    const total = weights.reduce((sum, w) => sum + w, 0);
+    if (total < PROBABILITY_EPSILON) {
+      return candidates[0] as number;
+    }
+    let rand = rng() * total;
+    for (let c = 0; c < candidates.length; c++) {
+      rand -= weights[c] as number;
+      if (rand < 0) {
+        return candidates[c] as number;
+      }
+    }
+    return candidates[candidates.length - 1] as number;
   }
 
   /**

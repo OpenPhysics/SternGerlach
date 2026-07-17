@@ -8,10 +8,11 @@
  * simulation's current state.
  */
 
-import { DerivedProperty, PatternStringProperty } from "scenerystack/axon";
+import { DerivedProperty, DynamicProperty, PatternStringProperty } from "scenerystack/axon";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import { StringManager } from "../../i18n/StringManager.js";
+import type { ExperimentDefinition } from "../model/ExperimentDefinition.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
 
 export class SternGerlachScreenSummaryContent extends ScreenSummaryContent {
@@ -21,10 +22,10 @@ export class SternGerlachScreenSummaryContent extends ScreenSummaryContent {
     const controls = strings.getControls();
     const systems = strings.getSystems();
 
-    const experimentName = new DerivedProperty(
-      [model.experimentProperty],
-      (experiment) => strings.getExperimentNameProperty(experiment.nameKey).value,
-    );
+    // DynamicProperty tracks both the selected experiment AND the live locale.
+    const experimentName = new DynamicProperty<string, string, ExperimentDefinition>(model.experimentProperty, {
+      derive: (experiment) => strings.getExperimentNameProperty(experiment.nameKey),
+    });
 
     const systemName = new DerivedProperty(
       [model.systemProperty, systems.spinHalfStringProperty, systems.spinOneStringProperty, systems.su3StringProperty],

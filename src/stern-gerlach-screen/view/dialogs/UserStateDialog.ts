@@ -100,8 +100,13 @@ export class UserStateDialog extends SimDialog {
         fill: labelFill,
         layoutOptions: { column: 0, row: index + 1 },
       });
-      const reAccessible = new PatternStringProperty(a11y.controls.userStateRealPatternStringProperty, { index });
-      const imAccessible = new PatternStringProperty(a11y.controls.userStateImagPatternStringProperty, { index });
+      // 1-based for humans, matching the output-port numbering.
+      const reAccessible = new PatternStringProperty(a11y.controls.userStateRealPatternStringProperty, {
+        index: index + 1,
+      });
+      const imAccessible = new PatternStringProperty(a11y.controls.userStateImagPatternStringProperty, {
+        index: index + 1,
+      });
       const reSpinner = amplitudeSpinner(userState.re[index] as NumberProperty, reAccessible);
       const imSpinner = amplitudeSpinner(userState.im[index] as NumberProperty, imAccessible);
       reSpinner.layoutOptions = { column: 1, row: index + 1 };

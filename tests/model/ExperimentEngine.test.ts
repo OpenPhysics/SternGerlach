@@ -279,6 +279,41 @@ describe("ExperimentEngine Monte-Carlo vs analytic", () => {
     expect(result.next).toBe(last);
   });
 
+  it("coherent pass-through samples the DISPLAY exit Born-weighted without touching the state", () => {
+    const graph = new ExperimentGraph();
+    const table = new OperatorTable();
+    const engine = new ExperimentEngine(graph, table);
+    const source = addSource(graph);
+    const middle = addAnalyzer(graph, AnalyzerType.X);
+    const last = addAnalyzer(graph, AnalyzerType.Z);
+    wire(graph, source, 0, middle);
+    wire(graph, middle, 0, last);
+    wire(graph, middle, 1, last);
+
+    // |+x⟩ into a merged X analyzer: the drawn path must always be the UP port…
+    const plusX = table.getEigenvector(0, 0);
+    const rngA = seededRng(5);
+    for (let i = 0; i < 200; i++) {
+      const result = engine.transitDevice(middle, plusX, { system: SPIN_HALF, watch: false }, rngA);
+      expect(result.outputIndex).toBe(0);
+      expect(result.newState).toBe(plusX);
+    }
+
+    // …while |+z⟩ (50/50 in X) splits the drawn paths evenly, still without collapsing.
+    const plusZ = table.getEigenvector(2, 0);
+    const rngB = seededRng(6);
+    let upExits = 0;
+    const trials = 4000;
+    for (let i = 0; i < trials; i++) {
+      const result = engine.transitDevice(middle, plusZ, { system: SPIN_HALF, watch: false }, rngB);
+      expect(result.newState).toBe(plusZ);
+      if (result.outputIndex === 0) {
+        upExits++;
+      }
+    }
+    expect(Math.abs(upExits / trials - 0.5)).toBeLessThan(0.03);
+  });
+
   it("coherent 3-state recombination collapses to the exact normalized ProjectOut state", () => {
     const graph = new ExperimentGraph();
     const table = new OperatorTable();

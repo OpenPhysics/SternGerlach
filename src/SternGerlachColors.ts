@@ -187,6 +187,12 @@ const SternGerlachColors = {
     projector: "#CC00CC",
   }),
 
+  /** Histogram bar for counters fed by the m=0 (NONE) output of a 3-state analyzer. */
+  counterBarZeroFillProperty: new ProfileColorProperty(SternGerlachNamespace, "counterBarZeroFill", {
+    default: "#ffd54f",
+    projector: "#B8860B",
+  }),
+
   /** The green analytic expected-value line on counters. */
   expectedValueLineProperty: new ProfileColorProperty(SternGerlachNamespace, "expectedValueLine", {
     default: "rgb(77,220,120)",
