@@ -41,11 +41,14 @@
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "L'aire de jeu montre une source de particules reliée, à travers des analyseurs de Stern–Gerlach, à des compteurs de particules sur un tableau d'expérience clair.",
-      "controlArea": "La zone de contrôle comporte un sélecteur d'expériences prédéfinies et un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
-      "interactionHint": "Choisissez une expérience, puis tirez des atomes à travers les analyseurs et observez les compteurs."
+      "playArea": "L'aire de jeu montre une source de particules reliée, à travers des analyseurs de Stern–Gerlach et des aimants, à des compteurs de particules sur un tableau d'expérience clair. Les points magenta animés représentent les atomes en vol. En mode Personnalisé, vous pouvez ajouter des appareils, les déplacer et relier les ports de sortie aux ports d'entrée.",
+      "controlArea": "La zone de contrôle comporte un sélecteur d'expériences prédéfinies, un sélecteur de système quantique, un sélecteur d'état initial, des cases Observer et Valeurs attendues, des commandes d'angle de direction, des boutons analytiques Faire N et Réinitialiser les compteurs. Tout réinitialiser ramène la simulation à son état initial.",
+      "interactionHint": "Choisissez une expérience et un système, sélectionnez un état initial, puis tirez des atomes à travers les analyseurs et comparez les statistiques des compteurs aux valeurs attendues."
     },
-    "currentDetails": "La simulation est dans son état initial.",
+    "currentDetailsPattern": "{{experiment}}, système {{system}}. État initial : {{initialState}}. Atomes détectés : {{total}}. Observation {{watchStatus}}.",
+    "currentDetailsBuilderSuffix": " Le mode Personnalisé est actif.",
+    "watchOn": "activée",
+    "watchOff": "désactivée",
     "controls": {
       "experimentComboBox": "Expérience prédéfinie",
       "fireButton": "Tirer un atome",
@@ -72,6 +75,17 @@
     "builder": {
       "analyzerTypeComboBox": "Direction de mesure de l'analyseur",
       "deleteDeviceButton": "Supprimer cet appareil"
+    },
+    "keyboardHelp": {
+      "fireHeading": "Tirer des atomes",
+      "fireAtom": "Tirer un atome depuis la source",
+      "buildHeading": "Mode personnalisé",
+      "moveDevice": "Déplacer un appareil sur le tableau",
+      "deleteDevice": "Supprimer l'appareil sélectionné",
+      "wireHeading": "Relier les appareils",
+      "dragWire": "Glisser d'un port de sortie vers un port d'entrée",
+      "comboHeading": "Listes déroulantes",
+      "sliderHeading": "Ajuster les valeurs"
     }
   },
   "dialogs": {

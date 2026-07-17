@@ -41,11 +41,14 @@
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "El área de juego muestra una fuente de partículas conectada a través de analizadores de Stern–Gerlach a contadores de partículas sobre un tablero de experimento claro.",
-      "controlArea": "El área de control tiene un selector de experimentos predefinidos y un botón Restablecer todo que devuelve la simulación a su estado inicial.",
-      "interactionHint": "Elige un experimento, luego dispara átomos a través de los analizadores y observa los contadores."
+      "playArea": "El área de juego muestra una fuente de partículas conectada a través de analizadores de Stern–Gerlach e imanes a contadores de partículas sobre un tablero de experimento claro. Los puntos magenta animados representan átomos en vuelo. En el modo Personalizado puede añadir dispositivos, arrastrarlos y conectar puertos de salida a puertos de entrada.",
+      "controlArea": "El área de control tiene un selector de experimentos predefinidos, un selector de sistema cuántico, un selector de estado inicial, casillas de observación y valores esperados, controles de ángulos de dirección, botones analíticos Hacer N y Restablecer conteos. Restablecer todo devuelve la simulación a su estado inicial.",
+      "interactionHint": "Elige un experimento y un sistema, selecciona un estado inicial, luego dispara átomos a través de los analizadores y compara las estadísticas de los contadores con los valores esperados."
     },
-    "currentDetails": "La simulación está en su estado inicial.",
+    "currentDetailsPattern": "{{experiment}}, sistema {{system}}. Estado inicial: {{initialState}}. Átomos detectados: {{total}}. Observación {{watchStatus}}.",
+    "currentDetailsBuilderSuffix": " El modo Personalizado está activo.",
+    "watchOn": "activada",
+    "watchOff": "desactivada",
     "controls": {
       "experimentComboBox": "Experimento predefinido",
       "fireButton": "Disparar un átomo",
@@ -72,6 +75,17 @@
     "builder": {
       "analyzerTypeComboBox": "Dirección de medición del analizador",
       "deleteDeviceButton": "Eliminar este dispositivo"
+    },
+    "keyboardHelp": {
+      "fireHeading": "Disparar átomos",
+      "fireAtom": "Disparar un átomo desde la fuente",
+      "buildHeading": "Modo personalizado",
+      "moveDevice": "Mover un dispositivo en el tablero",
+      "deleteDevice": "Eliminar el dispositivo enfocado",
+      "wireHeading": "Conectar dispositivos",
+      "dragWire": "Arrastrar de un puerto de salida a uno de entrada",
+      "comboHeading": "Cuadros combinados",
+      "sliderHeading": "Ajustar valores"
     }
   },
   "dialogs": {

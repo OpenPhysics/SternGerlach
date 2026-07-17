@@ -309,12 +309,15 @@ export class ExperimentAreaNode extends Node {
 
   /** A small × button that deletes the device (builder mode). */
   private createDeleteButton(device: ExperimentDevice, visual: Node): Node {
+    const a11y = StringManager.getInstance().getA11yStrings();
     const label = new Text("✕", { font: new PhetFont({ size: 13, weight: "bold" }), fill: "#ffffff" });
     const button = new Rectangle(0, 0, 18, 18, {
       cornerRadius: 4,
       fill: "#cc3333",
       cursor: "pointer",
       children: [label],
+      tagName: "button",
+      accessibleName: a11y.builder.deleteDeviceButtonStringProperty,
     });
     label.center = new Vector2(9, 9);
     button.right = visual.right + 6;

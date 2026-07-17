@@ -41,11 +41,14 @@
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "The play area shows a particle source wired through Stern–Gerlach analyzers to particle counters on a light experiment board.",
-      "controlArea": "The control area has an experiment preset chooser and a Reset All button that returns the simulation to its starting state.",
-      "interactionHint": "Choose an experiment, then fire atoms through the analyzers and watch the counters."
+      "playArea": "The play area shows a particle source wired through Stern–Gerlach analyzers and magnets to particle counters on a light experiment board. Animated magenta dots represent atoms in flight. In Custom mode you can add devices, drag them into place, and wire output ports to input ports.",
+      "controlArea": "The control area has an experiment preset chooser, a quantum-system selector, an initial-state chooser, watch and expected-value toggles, direction-angle controls, analytic Do-N batch buttons, and Reset Counts. Reset All returns the simulation to its starting state.",
+      "interactionHint": "Choose an experiment and system, pick an initial state, then fire atoms through the analyzers and compare counter statistics with the expected values."
     },
-    "currentDetails": "The simulation is in its initial state.",
+    "currentDetailsPattern": "{{experiment}}, {{system}} system. Initial state: {{initialState}}. Atoms detected: {{total}}. Watch is {{watchStatus}}.",
+    "currentDetailsBuilderSuffix": " Builder mode is active.",
+    "watchOn": "on",
+    "watchOff": "off",
     "controls": {
       "experimentComboBox": "Experiment preset",
       "fireButton": "Fire one atom",
@@ -72,6 +75,17 @@
     "builder": {
       "analyzerTypeComboBox": "Analyzer measurement direction",
       "deleteDeviceButton": "Delete this device"
+    },
+    "keyboardHelp": {
+      "fireHeading": "Fire atoms",
+      "fireAtom": "Fire one atom from the source",
+      "buildHeading": "Builder mode",
+      "moveDevice": "Move a device on the board",
+      "deleteDevice": "Delete the focused device",
+      "wireHeading": "Wire devices",
+      "dragWire": "Drag from an output port to an input port",
+      "comboHeading": "Combo boxes",
+      "sliderHeading": "Adjust values"
     }
   },
   "dialogs": {
