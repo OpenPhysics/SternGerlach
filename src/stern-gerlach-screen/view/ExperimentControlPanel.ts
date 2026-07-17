@@ -1,9 +1,10 @@
 /**
  * ExperimentControlPanel.ts
  *
- * The right-hand control panel: the preset-experiment combo box, the
- * expected-value toggle, the analytic Do-N batch buttons, and Reset Counts.
- * Additional controls (watch, system, initial state) join in later milestones.
+ * The right-hand control panel: the preset-experiment combo box, the initial-state
+ * chooser (Random, Unknown #1-#4, User State), the expected-value toggle, the
+ * analytic Do-N batch buttons, and Reset Counts. Also hosts watch, system, and
+ * direction-angle controls.
  */
 
 import { PatternStringProperty } from "scenerystack/axon";
@@ -21,11 +22,23 @@ import { SimPanel } from "../../common/SimPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 import { ExperimentDefinition } from "../model/ExperimentDefinition.js";
+import { InitialStateSetting } from "../model/InitialStateSetting.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
 import { AnglesDialog } from "./dialogs/AnglesDialog.js";
+import { UserStateDialog } from "./dialogs/UserStateDialog.js";
 
 /** The batch sizes offered by the Do-N buttons (Spins.doAction). */
 const DO_N_SIZES = [10, 100, 1000] as const;
+
+/** Initial-state choices in combo order: Unknown #1-#4, User State, Random (default). */
+const INITIAL_STATE_CHOICES = [
+  InitialStateSetting.UNKNOWN_1,
+  InitialStateSetting.UNKNOWN_2,
+  InitialStateSetting.UNKNOWN_3,
+  InitialStateSetting.UNKNOWN_4,
+  InitialStateSetting.USER,
+  InitialStateSetting.RANDOM,
+] as const;
 
 export class ExperimentControlPanel extends SimPanel {
   /**
@@ -99,6 +112,49 @@ export class ExperimentControlPanel extends SimPanel {
       },
     );
 
+    const initialStateLabel = new Text(controls.initialStateStringProperty, {
+      font: new PhetFont({ size: 14, weight: "bold" }),
+      fill: SternGerlachColors.textColorProperty,
+    });
+
+    const initialStateComboBox = new ComboBox(
+      model.initialStateProperty,
+      INITIAL_STATE_CHOICES.map((choice) => {
+        const labelProperty =
+          choice.unknownIndex !== null
+            ? new PatternStringProperty(controls.unknownPatternStringProperty, { number: choice.unknownIndex + 1 })
+            : choice.isUser
+              ? controls.userStateStringProperty
+              : controls.randomStringProperty;
+        return {
+          value: choice,
+          createNode: () =>
+            new Text(labelProperty, { font: new PhetFont(14), fill: LIGHT_SURFACE_TEXT_FILL, maxWidth: 170 }),
+          accessibleName: labelProperty,
+        };
+      }),
+      listParent,
+      {
+        ...SIM_COMBO_BOX_OPTIONS,
+        xMargin: 10,
+        yMargin: 7,
+        accessibleName: a11y.controls.initialStateComboBoxStringProperty,
+      },
+    );
+
+    const userStateDialog = new UserStateDialog(model.userStateModel, model.systemProperty);
+    const editUserStateButton = new RectangularPushButton({
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+      baseColor: SternGerlachColors.controlSurfaceColorProperty,
+      content: new Text(controls.userStateStringProperty, {
+        font: new PhetFont(13),
+        fill: LIGHT_SURFACE_TEXT_FILL,
+        maxWidth: 170,
+      }),
+      listener: () => userStateDialog.show(),
+      accessibleName: a11y.controls.editUserStateButtonStringProperty,
+    });
+
     const checkboxOptions = {
       checkboxColor: SternGerlachColors.textColorProperty,
       checkboxColorBackground: SternGerlachColors.panelBackgroundColorProperty,
@@ -161,6 +217,9 @@ export class ExperimentControlPanel extends SimPanel {
           title,
           comboBox,
           systemRadioGroup,
+          initialStateLabel,
+          initialStateComboBox,
+          editUserStateButton,
           new HSeparator(),
           watchCheckbox,
           expectedValuesCheckbox,

@@ -67,10 +67,19 @@ export class ExperimentEngine {
   }
 
   /**
-   * Samples the state a freshly fired particle carries. Unknown settings return the
-   * hard-coded state; RANDOM picks uniformly from the fixed basis (Experiment.run 410-424).
+   * Samples the state a freshly fired particle carries. USER returns the user-defined vector
+   * (already rotated into the Z basis); Unknown settings return the hard-coded state; RANDOM
+   * picks uniformly from the fixed basis (Experiment.run 410-424).
    */
-  public sampleInitialState(setting: InitialStateSetting, system: SpinSystem, rng: Rng): ComplexVector {
+  public sampleInitialState(
+    setting: InitialStateSetting,
+    system: SpinSystem,
+    rng: Rng,
+    userState?: ComplexVector,
+  ): ComplexVector {
+    if (setting.isUser && userState) {
+      return userState;
+    }
     if (setting.unknownIndex !== null) {
       return this.operatorTable.getUnknownState(system, setting.unknownIndex);
     }
@@ -178,7 +187,11 @@ export class ExperimentEngine {
    * depth-first path-sum from the source. Counters not reachable from the source get 0
    * (dead ends lose their probability, so the map's values may sum to less than 1).
    */
-  public computeCounterProbabilities(setting: InitialStateSetting, options: EngineOptions): Map<Counter, number> {
+  public computeCounterProbabilities(
+    setting: InitialStateSetting,
+    options: EngineOptions,
+    userState?: ComplexVector,
+  ): Map<Counter, number> {
     const result = new Map<Counter, number>();
     for (const counter of this.graph.getCounters()) {
       result.set(counter, 0);
@@ -190,13 +203,18 @@ export class ExperimentEngine {
       return result;
     }
 
-    // RANDOM averages over its fixed basis with equal weights (ComputeProb lines 829-864).
-    const initialStates: Array<{ state: ComplexVector; weight: number }> =
-      setting.unknownIndex !== null
-        ? [{ state: this.operatorTable.getUnknownState(options.system, setting.unknownIndex), weight: 1 }]
-        : this.operatorTable
-            .getRandomBasis(options.system)
-            .map((state, _index, basis) => ({ state, weight: 1 / basis.length }));
+    // USER is a definite state; Unknown is a single hard-coded state; RANDOM averages over its
+    // fixed basis with equal weights (ComputeProb lines 829-864).
+    let initialStates: Array<{ state: ComplexVector; weight: number }>;
+    if (setting.isUser && userState) {
+      initialStates = [{ state: userState, weight: 1 }];
+    } else if (setting.unknownIndex !== null) {
+      initialStates = [{ state: this.operatorTable.getUnknownState(options.system, setting.unknownIndex), weight: 1 }];
+    } else {
+      initialStates = this.operatorTable
+        .getRandomBasis(options.system)
+        .map((state, _index, basis) => ({ state, weight: 1 / basis.length }));
+    }
 
     for (const { state, weight } of initialStates) {
       this.visit(first, state, weight, options, result);

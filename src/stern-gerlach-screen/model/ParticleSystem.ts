@@ -14,6 +14,7 @@
  */
 
 import { Emitter, type TReadOnlyProperty } from "scenerystack/axon";
+import type { ComplexVector } from "../../common/quantum/ComplexVector.js";
 import type { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import { MAX_LIVE_PARTICLES, PARTICLE_SPEED } from "../../SimConstants.js";
 import { Analyzer } from "./devices/Analyzer.js";
@@ -44,6 +45,9 @@ export class ParticleSystem {
   private readonly initialStateProperty: TReadOnlyProperty<InitialStateSetting>;
   private readonly rng: Rng;
 
+  // Supplies the current user-defined state (rotated into the Z basis) for the USER setting.
+  private readonly userStateProvider: () => ComplexVector | undefined;
+
   // Fractional particles accumulated in CONTINUOUS mode; a particle spawns per whole unit.
   private emissionAccumulator: number;
 
@@ -54,6 +58,7 @@ export class ParticleSystem {
     watchProperty: TReadOnlyProperty<boolean>,
     initialStateProperty: TReadOnlyProperty<InitialStateSetting>,
     rng: Rng,
+    userStateProvider: () => ComplexVector | undefined = () => undefined,
   ) {
     this.particles = [];
     this.analyzerExitEmitter = new Emitter({ parameters: [{ valueType: Analyzer }, { valueType: "number" }] });
@@ -65,6 +70,7 @@ export class ParticleSystem {
     this.watchProperty = watchProperty;
     this.initialStateProperty = initialStateProperty;
     this.rng = rng;
+    this.userStateProvider = userStateProvider;
     this.emissionAccumulator = 0;
   }
 
@@ -82,7 +88,12 @@ export class ParticleSystem {
       return;
     }
     const system = this.systemProperty.value;
-    const state = this.engine.sampleInitialState(this.initialStateProperty.value, system, this.rng);
+    const state = this.engine.sampleInitialState(
+      this.initialStateProperty.value,
+      system,
+      this.rng,
+      this.userStateProvider(),
+    );
     const start = source.getOutputPortPosition(0, system);
     this.particles.push(new Particle(start.copy(), state, next, next.getInputPortPosition()));
     this.changedEmitter.emit();

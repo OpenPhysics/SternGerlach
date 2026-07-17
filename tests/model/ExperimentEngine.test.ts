@@ -16,6 +16,7 @@ import { addAnalyzer, addCounter, addSource, seededRng, wire } from "./testUtili
 
 const { SPIN_HALF, SPIN_ONE, SU3 } = SpinSystem;
 const PLUS_Z = InitialStateSetting.UNKNOWN_1; // spin-½ unknown #1 is |+z⟩
+const MINUS_Y = InitialStateSetting.UNKNOWN_2; // spin-½ unknown #2 is |−y⟩
 const RANDOM = InitialStateSetting.RANDOM;
 
 function probOf(map: Map<Counter, number>, counter: Counter): number {
@@ -37,6 +38,22 @@ describe("ExperimentEngine analytic path-sum", () => {
     const probs = engine.computeCounterProbabilities(PLUS_Z, { system: SPIN_HALF, watch: false });
     expect(probOf(probs, up)).toBeCloseTo(1, 10);
     expect(probOf(probs, down)).toBeCloseTo(0, 10);
+  });
+
+  it("Unknown #2 (|−y⟩) → Y gives 100% down — M8 gate", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    const source = addSource(graph);
+    const analyzer = addAnalyzer(graph, AnalyzerType.Y);
+    const up = addCounter(graph);
+    const down = addCounter(graph);
+    wire(graph, source, 0, analyzer);
+    wire(graph, analyzer, 0, up);
+    wire(graph, analyzer, 1, down);
+
+    const probs = engine.computeCounterProbabilities(MINUS_Y, { system: SPIN_HALF, watch: false });
+    expect(probOf(probs, up)).toBeCloseTo(0, 10);
+    expect(probOf(probs, down)).toBeCloseTo(1, 10);
   });
 
   it("|+z⟩ → X analyzer gives (½, ½)", () => {

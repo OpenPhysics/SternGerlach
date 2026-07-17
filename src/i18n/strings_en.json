@@ -33,7 +33,11 @@
     "fieldStrength": "Field",
     "angles": "Angles…",
     "theta": "θ",
-    "phi": "φ"
+    "phi": "φ",
+    "initialState": "Initial State",
+    "random": "Random",
+    "unknownPattern": "Unknown #{{number}}",
+    "userState": "User State…"
   },
   "a11y": {
     "screenSummary": {
@@ -58,7 +62,12 @@
       "systemRadioGroup": "Quantum system",
       "analyzerToolboxItem": "Add an analyzer to the board",
       "magnetToolboxItem": "Add a magnet to the board",
-      "counterToolboxItem": "Add a counter to the board"
+      "counterToolboxItem": "Add a counter to the board",
+      "initialStateComboBox": "Initial state",
+      "editUserStateButton": "Edit the user-defined initial state",
+      "userStateBasisRadioGroup": "Input basis for the user-defined state",
+      "userStateRealPattern": "Real part of component {{index}}",
+      "userStateImagPattern": "Imaginary part of component {{index}}"
     },
     "builder": {
       "analyzerTypeComboBox": "Analyzer measurement direction",
@@ -66,7 +75,11 @@
     }
   },
   "dialogs": {
-    "anglesTitle": "Direction Angles"
+    "anglesTitle": "Direction Angles",
+    "userStateTitle": "User-Defined State",
+    "basis": "Basis",
+    "real": "Re",
+    "imaginary": "Im"
   },
   "systems": {
     "spinHalf": "Spin ½",

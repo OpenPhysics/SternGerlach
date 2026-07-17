@@ -16,6 +16,7 @@ import { BooleanProperty, DerivedProperty, NumberProperty, Property, type TReadO
 import { dotRandom, Vector2 } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
 import type { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
+import type { ComplexVector } from "../../common/quantum/ComplexVector.js";
 import { OperatorTable } from "../../common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import { TimeModel } from "../../common/TimeModel.js";
@@ -29,6 +30,7 @@ import { ExperimentEngine, type Rng } from "./ExperimentEngine.js";
 import { ExperimentGraph } from "./ExperimentGraph.js";
 import { InitialStateSetting } from "./InitialStateSetting.js";
 import { ParticleSystem } from "./ParticleSystem.js";
+import { UserStateModel } from "./UserStateModel.js";
 import { Wire } from "./Wire.js";
 
 /** A serializable snapshot of one device, used to retain the custom build across preset switches. */
@@ -57,8 +59,11 @@ export class SternGerlachModel implements TModel {
   /** The selected preset experiment. */
   public readonly experimentProperty: Property<ExperimentDefinition>;
 
-  /** What the source emits: Random mixture (default) or one of the Unknown mystery states. */
+  /** What the source emits: Random mixture (default), an Unknown mystery state, or the user state. */
   public readonly initialStateProperty: Property<InitialStateSetting>;
+
+  /** The user-defined initial state (amplitudes + basis), used when initialState is USER. */
+  public readonly userStateModel: UserStateModel;
 
   /** Whether the which-path lights are on. Watching destroys coherent recombination. */
   public readonly watchProperty: BooleanProperty;
@@ -120,6 +125,7 @@ export class SternGerlachModel implements TModel {
     this.systemProperty = new Property(SpinSystem.SPIN_HALF);
     this.experimentProperty = new Property(ExperimentDefinition.DEFAULT);
     this.initialStateProperty = new Property(InitialStateSetting.RANDOM);
+    this.userStateModel = new UserStateModel();
     this.watchProperty = new BooleanProperty(false);
     this.expectedValuesVisibleProperty = new BooleanProperty(false);
     this.thetaProperty = new NumberProperty(Math.PI / 2);
@@ -136,6 +142,7 @@ export class SternGerlachModel implements TModel {
       this.watchProperty,
       this.initialStateProperty,
       this.rng,
+      () => this.currentUserState(),
     );
     this.timer = new TimeModel(true);
     this.rebuildingGraph = false;
@@ -182,6 +189,17 @@ export class SternGerlachModel implements TModel {
     // Initial state and watch invalidate statistics without touching the board.
     this.initialStateProperty.lazyLink(() => this.handleConfigurationChange());
     this.watchProperty.lazyLink(() => this.handleConfigurationChange());
+
+    // Editing the user-defined state (amplitudes or basis) is a configuration change.
+    const onUserStateChange = () => {
+      if (this.initialStateProperty.value.isUser) {
+        this.handleConfigurationChange();
+      }
+    };
+    this.userStateModel.basisProperty.lazyLink(onUserStateChange);
+    for (const property of this.userStateModel.properties) {
+      property.lazyLink(onUserStateChange);
+    }
 
     // The global direction angles reshape the Sn operators.
     const applyAngles = () => {
@@ -235,6 +253,7 @@ export class SternGerlachModel implements TModel {
     this.watchProperty.reset();
     this.expectedValuesVisibleProperty.reset();
     this.initialStateProperty.reset();
+    this.userStateModel.reset();
     this.thetaProperty.reset();
     this.phiProperty.reset();
     this.systemProperty.reset();
@@ -260,12 +279,21 @@ export class SternGerlachModel implements TModel {
     }
   }
 
+  /** The user-defined state rotated into the computational Z basis for the active system. */
+  public currentUserState(): ComplexVector {
+    return this.userStateModel.toZBasisVector(this.operatorTable, this.systemProperty.value);
+  }
+
   /** Recomputes the analytic probability for every counter (expected-value lines, Do-N). */
   public recomputeProbabilities(): void {
-    const probabilities = this.engine.computeCounterProbabilities(this.initialStateProperty.value, {
-      system: this.systemProperty.value,
-      watch: this.watchProperty.value,
-    });
+    const probabilities = this.engine.computeCounterProbabilities(
+      this.initialStateProperty.value,
+      {
+        system: this.systemProperty.value,
+        watch: this.watchProperty.value,
+      },
+      this.currentUserState(),
+    );
     for (const [counter, probability] of probabilities) {
       counter.probabilityProperty.value = probability;
     }

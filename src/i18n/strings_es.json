@@ -33,7 +33,11 @@
     "fieldStrength": "Campo",
     "angles": "Ángulos…",
     "theta": "θ",
-    "phi": "φ"
+    "phi": "φ",
+    "initialState": "Estado inicial",
+    "random": "Aleatorio",
+    "unknownPattern": "Desconocido #{{number}}",
+    "userState": "Estado del usuario…"
   },
   "a11y": {
     "screenSummary": {
@@ -58,7 +62,12 @@
       "systemRadioGroup": "Sistema cuántico",
       "analyzerToolboxItem": "Añadir un analizador al tablero",
       "magnetToolboxItem": "Añadir un imán al tablero",
-      "counterToolboxItem": "Añadir un contador al tablero"
+      "counterToolboxItem": "Añadir un contador al tablero",
+      "initialStateComboBox": "Estado inicial",
+      "editUserStateButton": "Editar el estado inicial definido por el usuario",
+      "userStateBasisRadioGroup": "Base de entrada para el estado definido por el usuario",
+      "userStateRealPattern": "Parte real del componente {{index}}",
+      "userStateImagPattern": "Parte imaginaria del componente {{index}}"
     },
     "builder": {
       "analyzerTypeComboBox": "Dirección de medición del analizador",
@@ -66,7 +75,11 @@
     }
   },
   "dialogs": {
-    "anglesTitle": "Ángulos de dirección"
+    "anglesTitle": "Ángulos de dirección",
+    "userStateTitle": "Estado definido por el usuario",
+    "basis": "Base",
+    "real": "Re",
+    "imaginary": "Im"
   },
   "systems": {
     "spinHalf": "Espín ½",

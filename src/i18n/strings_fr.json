@@ -33,7 +33,11 @@
     "fieldStrength": "Champ",
     "angles": "Angles…",
     "theta": "θ",
-    "phi": "φ"
+    "phi": "φ",
+    "initialState": "État initial",
+    "random": "Aléatoire",
+    "unknownPattern": "Inconnu n°{{number}}",
+    "userState": "État de l'utilisateur…"
   },
   "a11y": {
     "screenSummary": {
@@ -58,7 +62,12 @@
       "systemRadioGroup": "Système quantique",
       "analyzerToolboxItem": "Ajouter un analyseur au tableau",
       "magnetToolboxItem": "Ajouter un aimant au tableau",
-      "counterToolboxItem": "Ajouter un compteur au tableau"
+      "counterToolboxItem": "Ajouter un compteur au tableau",
+      "initialStateComboBox": "État initial",
+      "editUserStateButton": "Modifier l'état initial défini par l'utilisateur",
+      "userStateBasisRadioGroup": "Base d'entrée pour l'état défini par l'utilisateur",
+      "userStateRealPattern": "Partie réelle du composant {{index}}",
+      "userStateImagPattern": "Partie imaginaire du composant {{index}}"
     },
     "builder": {
       "analyzerTypeComboBox": "Direction de mesure de l'analyseur",
@@ -66,7 +75,11 @@
     }
   },
   "dialogs": {
-    "anglesTitle": "Angles de direction"
+    "anglesTitle": "Angles de direction",
+    "userStateTitle": "État défini par l'utilisateur",
+    "basis": "Base",
+    "real": "Re",
+    "imaginary": "Im"
   },
   "systems": {
     "spinHalf": "Spin ½",
