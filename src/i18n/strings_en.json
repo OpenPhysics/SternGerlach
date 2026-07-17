@@ -9,7 +9,8 @@
     "zThenX": "Z then X Analyzers",
     "zThenZ": "Repeated Z Analyzers",
     "interferometer": "Interferometer",
-    "magnet": "Magnet Precession"
+    "magnet": "Magnet Precession",
+    "recombination": "Recombination"
   },
   "controls": {
     "experiment": "Experiment",
@@ -46,14 +47,21 @@
       "magnetFieldSpinner": "Magnet field strength",
       "anglesButton": "Open direction-angle controls",
       "thetaControl": "Polar angle theta",
-      "phiControl": "Azimuthal angle phi"
+      "phiControl": "Azimuthal angle phi",
+      "systemRadioGroup": "Quantum system"
     }
   },
   "dialogs": {
     "anglesTitle": "Direction Angles"
   },
+  "systems": {
+    "spinHalf": "Spin ½",
+    "spinOne": "Spin 1",
+    "su3": "SU(3)"
+  },
   "preferences": {
     "title": "Simulation",
-    "exampleToggle": "Example Toggle"
+    "su3Enable": "Enable SU(3) system",
+    "su3EnableDescription": "Adds SU(3) (Gell-Mann λ₁–λ₈) as a third quantum system."
   }
 }

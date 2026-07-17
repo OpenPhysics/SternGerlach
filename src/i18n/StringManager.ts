@@ -127,4 +127,11 @@ export class StringManager {
   public getDialogs() {
     return stringProperties.dialogs;
   }
+
+  /**
+   * Localized names of the quantum systems (spin-½, spin-1, SU(3)).
+   */
+  public getSystems() {
+    return stringProperties.systems;
+  }
 }

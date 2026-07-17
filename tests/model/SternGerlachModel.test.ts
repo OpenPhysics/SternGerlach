@@ -4,8 +4,10 @@
  * end-to-end, and reset.
  */
 
+import { BooleanProperty } from "scenerystack/axon";
 import { describe, expect, it } from "vitest";
 import { AnalyzerType } from "../../src/common/quantum/AnalyzerType.js";
+import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 import { Analyzer } from "../../src/stern-gerlach-screen/model/devices/Analyzer.js";
 import { SourceMode } from "../../src/stern-gerlach-screen/model/devices/ParticleSource.js";
 import { ExperimentDefinition } from "../../src/stern-gerlach-screen/model/ExperimentDefinition.js";
@@ -125,6 +127,23 @@ describe("SternGerlachModel", () => {
     model.watchProperty.value = true;
     expect(counters[0]?.probabilityProperty.value).toBeCloseTo(0.5, 10);
     expect(counters[1]?.probabilityProperty.value).toBeCloseTo(0.5, 10);
+  });
+
+  it("switching to spin-1 rebuilds analyzers with three outputs (three counters on single Z)", () => {
+    const model = new SternGerlachModel(seededRng(31));
+    expect(model.graph.getCounters()).toHaveLength(2);
+    model.systemProperty.value = SpinSystem.SPIN_ONE;
+    expect(model.graph.getCounters()).toHaveLength(3);
+  });
+
+  it("disabling SU(3) while it is active falls the system back to spin-½", () => {
+    const su3Enabled = new BooleanProperty(true);
+    const model = new SternGerlachModel(seededRng(37), su3Enabled);
+    model.systemProperty.value = SpinSystem.SU3;
+    expect(model.systemProperty.value).toBe(SpinSystem.SU3);
+
+    su3Enabled.value = false;
+    expect(model.systemProperty.value).toBe(SpinSystem.SPIN_HALF);
   });
 
   it("reset restores defaults and rebuilds fresh devices", () => {

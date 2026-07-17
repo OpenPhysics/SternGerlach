@@ -20,10 +20,10 @@ import SternGerlachNamespace from "../SternGerlachNamespace.js";
 
 const sternGerlachQueryParameters = QueryStringMachine.getAll({
   /**
-   * Example public boolean parameter. Replace with real sim-specific parameters,
-   * or remove if the sim has none.
+   * Enables the SU(3) (Gell-Mann λ₁-λ₈) quantum system as a third choice in the
+   * main UI. Off by default; also toggleable at runtime in Preferences → Simulation.
    */
-  exampleToggle: {
+  su3: {
     type: "boolean",
     defaultValue: false,
     public: true,

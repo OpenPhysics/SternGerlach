@@ -159,6 +159,31 @@ export class ExperimentDefinition {
     });
   }
 
+  /**
+   * Recombination: the first analyzer's UP and NONE outputs merge into a second analyzer while its
+   * DOWN output is counted directly. Under a 3-state system this is the classic 2-of-3 coherent
+   * recombination (ProjectOut of the DOWN eigencomponent); under spin-½ both outputs merge, restoring
+   * the input state at the second analyzer.
+   */
+  private static recombination(): ExperimentDefinition {
+    return new ExperimentDefinition("recombination", (graph, system) => {
+      const source = new ParticleSource(new Vector2(0.3, 0.25));
+      const first = new Analyzer(new Vector2(1.05, 0.25), typeFor(AnalyzerType.Z, system));
+      const second = new Analyzer(new Vector2(2.15, 0.55), typeFor(AnalyzerType.X, system));
+      graph.addDevice(source);
+      graph.addDevice(first);
+      graph.addDevice(second);
+      graph.addWire(new Wire(source, 0, first));
+      // Merge UP (0) with NONE (2) for 3-state systems; merge both outputs for spin-½.
+      const mergedOutputs = system.stateCount === 3 ? [0, 2] : [0, 1];
+      for (const outputIndex of mergedOutputs) {
+        graph.addWire(new Wire(first, outputIndex, second));
+      }
+      addCountersForAnalyzer(graph, system, second, 3.4);
+      addCountersForAnalyzer(graph, system, first, 3.4, -0.6);
+    });
+  }
+
   /** The preset list offered in the experiment combo box, in display order. */
   public static readonly PRESETS: readonly ExperimentDefinition[] = [
     ExperimentDefinition.singleAnalyzer("singleZ", AnalyzerType.Z),
@@ -167,6 +192,7 @@ export class ExperimentDefinition {
     ExperimentDefinition.chained("zThenZ", AnalyzerType.Z, AnalyzerType.Z),
     ExperimentDefinition.interferometer(),
     ExperimentDefinition.magnetPrecession(),
+    ExperimentDefinition.recombination(),
   ];
 
   /** The default preset selected on startup and after Reset All. */

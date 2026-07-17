@@ -10,7 +10,8 @@ import { PatternStringProperty } from "scenerystack/axon";
 import type { Node } from "scenerystack/scenery";
 import { HBox, HSeparator, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { Checkbox, ComboBox, RectangularPushButton } from "scenerystack/sun";
+import { AquaRadioButtonGroup, Checkbox, ComboBox, RectangularPushButton } from "scenerystack/sun";
+import { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import {
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
   LIGHT_SURFACE_TEXT_FILL,
@@ -59,6 +60,42 @@ export class ExperimentControlPanel extends SimPanel {
         xMargin: 10,
         yMargin: 7,
         accessibleName: a11y.controls.experimentComboBoxStringProperty,
+      },
+    );
+
+    const systems = strings.getSystems();
+    const systemRadioGroup = new AquaRadioButtonGroup(
+      model.systemProperty,
+      [
+        {
+          value: SpinSystem.SPIN_HALF,
+          createNode: () =>
+            new Text(systems.spinHalfStringProperty, {
+              font: new PhetFont(14),
+              fill: SternGerlachColors.textColorProperty,
+            }),
+        },
+        {
+          value: SpinSystem.SPIN_ONE,
+          createNode: () =>
+            new Text(systems.spinOneStringProperty, {
+              font: new PhetFont(14),
+              fill: SternGerlachColors.textColorProperty,
+            }),
+        },
+        {
+          value: SpinSystem.SU3,
+          createNode: () =>
+            new Text(systems.su3StringProperty, { font: new PhetFont(14), fill: SternGerlachColors.textColorProperty }),
+          // SU(3) is only offered when enabled in Preferences → Simulation.
+          options: { visibleProperty: model.su3EnabledProperty },
+        },
+      ],
+      {
+        orientation: "horizontal",
+        spacing: 12,
+        radioButtonOptions: { radius: 7 },
+        accessibleName: a11y.controls.systemRadioGroupStringProperty,
       },
     );
 
@@ -123,6 +160,7 @@ export class ExperimentControlPanel extends SimPanel {
         children: [
           title,
           comboBox,
+          systemRadioGroup,
           new HSeparator(),
           watchCheckbox,
           expectedValuesCheckbox,

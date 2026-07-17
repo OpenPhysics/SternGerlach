@@ -24,9 +24,9 @@ export class SternGerlachPreferencesNode extends VBox {
       fill: SternGerlachColors.textColorProperty,
     });
 
-    const exampleToggleCheckbox = new Checkbox(
-      preferencesModel.exampleToggleProperty,
-      new Text(prefStrings.exampleToggleStringProperty, {
+    const su3Checkbox = new Checkbox(
+      preferencesModel.su3EnabledProperty,
+      new Text(prefStrings.su3EnableStringProperty, {
         font: new PhetFont(14),
         fill: SternGerlachColors.textColorProperty,
       }),
@@ -34,14 +34,19 @@ export class SternGerlachPreferencesNode extends VBox {
         checkboxColor: SternGerlachColors.textColorProperty,
         checkboxColorBackground: SternGerlachColors.panelBackgroundColorProperty,
         spacing: 8,
-        ...(tandem && { tandem: tandem.createTandem("exampleToggleCheckbox") }),
+        ...(tandem && { tandem: tandem.createTandem("su3Checkbox") }),
       },
     );
 
+    const su3Description = new Text(prefStrings.su3EnableDescriptionStringProperty, {
+      font: new PhetFont(12),
+      fill: SternGerlachColors.textColorProperty,
+    });
+
     super({
       align: "left",
-      spacing: 12,
-      children: [header, exampleToggleCheckbox],
+      spacing: 8,
+      children: [header, su3Checkbox, su3Description],
     });
   }
 }

@@ -12,7 +12,7 @@
  * statistics from different configurations.
  */
 
-import { BooleanProperty, NumberProperty, Property } from "scenerystack/axon";
+import { BooleanProperty, NumberProperty, Property, type TReadOnlyProperty } from "scenerystack/axon";
 import { dotRandom } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
 import { OperatorTable } from "../../common/quantum/OperatorTable.js";
@@ -68,6 +68,9 @@ export class SternGerlachModel implements TModel {
   /** Play/pause + elapsed time for the animation. Starts playing. */
   public readonly timer: TimeModel;
 
+  /** Whether the SU(3) system is offered (Preferences → Simulation). */
+  public readonly su3EnabledProperty: TReadOnlyProperty<boolean>;
+
   private readonly rng: Rng;
 
   // Guards against re-entrant configuration handling while a preset rebuild mutates the graph.
@@ -78,9 +81,14 @@ export class SternGerlachModel implements TModel {
 
   /**
    * @param rng - uniform [0,1) random source; tests inject a seeded one (default: dotRandom)
+   * @param su3EnabledProperty - whether SU(3) is a selectable system (default: always off)
    */
-  public constructor(rng: Rng = () => dotRandom.nextDouble()) {
+  public constructor(
+    rng: Rng = () => dotRandom.nextDouble(),
+    su3EnabledProperty: TReadOnlyProperty<boolean> = new BooleanProperty(false),
+  ) {
     this.rng = rng;
+    this.su3EnabledProperty = su3EnabledProperty;
     this.systemProperty = new Property(SpinSystem.SPIN_HALF);
     this.experimentProperty = new Property(ExperimentDefinition.DEFAULT);
     this.initialStateProperty = new Property(InitialStateSetting.RANDOM);
@@ -120,6 +128,13 @@ export class SternGerlachModel implements TModel {
     // Preset or system selection rebuilds the board.
     this.experimentProperty.lazyLink(() => this.rebuildGraph());
     this.systemProperty.lazyLink(() => this.rebuildGraph());
+
+    // Disabling SU(3) while it is active falls the system back to spin-½ (Java parity).
+    this.su3EnabledProperty.lazyLink((enabled) => {
+      if (!enabled && this.systemProperty.value === SpinSystem.SU3) {
+        this.systemProperty.value = SpinSystem.SPIN_HALF;
+      }
+    });
 
     // Initial state and watch invalidate statistics without touching the board.
     this.initialStateProperty.lazyLink(() => this.handleConfigurationChange());

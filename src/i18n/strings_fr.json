@@ -9,7 +9,8 @@
     "zThenX": "Analyseurs Z puis X",
     "zThenZ": "Analyseurs Z répétés",
     "interferometer": "Interféromètre",
-    "magnet": "Précession magnétique"
+    "magnet": "Précession magnétique",
+    "recombination": "Recombinaison"
   },
   "controls": {
     "experiment": "Expérience",
@@ -46,14 +47,21 @@
       "magnetFieldSpinner": "Intensité du champ de l'aimant",
       "anglesButton": "Ouvrir les commandes d'angle de direction",
       "thetaControl": "Angle polaire thêta",
-      "phiControl": "Angle azimutal phi"
+      "phiControl": "Angle azimutal phi",
+      "systemRadioGroup": "Système quantique"
     }
   },
   "dialogs": {
     "anglesTitle": "Angles de direction"
   },
+  "systems": {
+    "spinHalf": "Spin ½",
+    "spinOne": "Spin 1",
+    "su3": "SU(3)"
+  },
   "preferences": {
     "title": "Simulation",
-    "exampleToggle": "Exemple de bascule"
+    "su3Enable": "Activer le système SU(3)",
+    "su3EnableDescription": "Ajoute SU(3) (Gell-Mann λ₁–λ₈) comme troisième système quantique."
   }
 }

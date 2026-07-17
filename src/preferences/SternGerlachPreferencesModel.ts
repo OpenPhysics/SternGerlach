@@ -15,18 +15,18 @@ import SternGerlachNamespace from "../SternGerlachNamespace.js";
 import sternGerlachQueryParameters from "./sternGerlachQueryParameters.js";
 
 export class SternGerlachPreferencesModel {
-  /** Example preference; initial value comes from the `exampleToggle` query parameter. */
-  public readonly exampleToggleProperty: BooleanProperty;
+  /** Whether the SU(3) system is offered in the main UI; initial value from the `su3` query parameter. */
+  public readonly su3EnabledProperty: BooleanProperty;
 
   public constructor(tandem?: Tandem) {
-    this.exampleToggleProperty = new BooleanProperty(
-      sternGerlachQueryParameters.exampleToggle,
-      tandem ? { tandem: tandem.createTandem("exampleToggleProperty") } : undefined,
+    this.su3EnabledProperty = new BooleanProperty(
+      sternGerlachQueryParameters.su3,
+      tandem ? { tandem: tandem.createTandem("su3EnabledProperty") } : undefined,
     );
   }
 
   public reset(): void {
-    this.exampleToggleProperty.reset();
+    this.su3EnabledProperty.reset();
   }
 }
 
