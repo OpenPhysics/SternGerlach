@@ -3,15 +3,33 @@
   "screens": {
     "sim": "Sim"
   },
+  "experiments": {
+    "singleZ": "Single Analyzer (Z)",
+    "singleX": "Single Analyzer (X)",
+    "zThenX": "Z then X Analyzers",
+    "zThenZ": "Repeated Z Analyzers",
+    "interferometer": "Interferometer"
+  },
+  "controls": {
+    "experiment": "Experiment",
+    "fire": "Fire",
+    "singleParticle": "Single",
+    "continuousBeam": "Continuous",
+    "none": "None",
+    "lots": "Lots"
+  },
   "a11y": {
     "screenSummary": {
-      "playArea": "The play area shows the main simulation content.",
-      "controlArea": "The control area has a Reset All button that returns the simulation to its starting state.",
-      "interactionHint": "Explore the simulation by interacting with its controls."
+      "playArea": "The play area shows a particle source wired through Stern–Gerlach analyzers to particle counters on a light experiment board.",
+      "controlArea": "The control area has an experiment preset chooser and a Reset All button that returns the simulation to its starting state.",
+      "interactionHint": "Choose an experiment, then fire atoms through the analyzers and watch the counters."
     },
     "currentDetails": "The simulation is in its initial state.",
     "controls": {
-      "exampleControl": "Example control"
+      "experimentComboBox": "Experiment preset",
+      "fireButton": "Fire one atom",
+      "sourceModeRadioGroup": "Source mode",
+      "emissionRateSlider": "Beam intensity"
     }
   },
   "preferences": {

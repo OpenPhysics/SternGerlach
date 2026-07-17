@@ -3,15 +3,33 @@
   "screens": {
     "sim": "Sim"
   },
+  "experiments": {
+    "singleZ": "Analizador único (Z)",
+    "singleX": "Analizador único (X)",
+    "zThenX": "Analizadores Z luego X",
+    "zThenZ": "Analizadores Z repetidos",
+    "interferometer": "Interferómetro"
+  },
+  "controls": {
+    "experiment": "Experimento",
+    "fire": "Disparar",
+    "singleParticle": "Individual",
+    "continuousBeam": "Continuo",
+    "none": "Nada",
+    "lots": "Mucho"
+  },
   "a11y": {
     "screenSummary": {
-      "playArea": "El área de juego muestra el contenido principal de la simulación.",
-      "controlArea": "El área de control tiene un botón Restablecer todo que devuelve la simulación a su estado inicial.",
-      "interactionHint": "Explora la simulación interactuando con sus controles."
+      "playArea": "El área de juego muestra una fuente de partículas conectada a través de analizadores de Stern–Gerlach a contadores de partículas sobre un tablero de experimento claro.",
+      "controlArea": "El área de control tiene un selector de experimentos predefinidos y un botón Restablecer todo que devuelve la simulación a su estado inicial.",
+      "interactionHint": "Elige un experimento, luego dispara átomos a través de los analizadores y observa los contadores."
     },
     "currentDetails": "La simulación está en su estado inicial.",
     "controls": {
-      "exampleControl": "Control de ejemplo"
+      "experimentComboBox": "Experimento predefinido",
+      "fireButton": "Disparar un átomo",
+      "sourceModeRadioGroup": "Modo de la fuente",
+      "emissionRateSlider": "Intensidad del haz"
     }
   },
   "preferences": {

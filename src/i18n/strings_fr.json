@@ -3,15 +3,33 @@
   "screens": {
     "sim": "Sim"
   },
+  "experiments": {
+    "singleZ": "Analyseur unique (Z)",
+    "singleX": "Analyseur unique (X)",
+    "zThenX": "Analyseurs Z puis X",
+    "zThenZ": "Analyseurs Z répétés",
+    "interferometer": "Interféromètre"
+  },
+  "controls": {
+    "experiment": "Expérience",
+    "fire": "Tirer",
+    "singleParticle": "Un par un",
+    "continuousBeam": "Continu",
+    "none": "Aucun",
+    "lots": "Beaucoup"
+  },
   "a11y": {
     "screenSummary": {
-      "playArea": "La zone de jeu affiche le contenu principal de la simulation.",
-      "controlArea": "La zone de contrôle comporte un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
-      "interactionHint": "Explorez la simulation en interagissant avec ses commandes."
+      "playArea": "L'aire de jeu montre une source de particules reliée, à travers des analyseurs de Stern–Gerlach, à des compteurs de particules sur un tableau d'expérience clair.",
+      "controlArea": "La zone de contrôle comporte un sélecteur d'expériences prédéfinies et un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
+      "interactionHint": "Choisissez une expérience, puis tirez des atomes à travers les analyseurs et observez les compteurs."
     },
     "currentDetails": "La simulation est dans son état initial.",
     "controls": {
-      "exampleControl": "Contrôle d'exemple"
+      "experimentComboBox": "Expérience prédéfinie",
+      "fireButton": "Tirer un atome",
+      "sourceModeRadioGroup": "Mode de la source",
+      "emissionRateSlider": "Intensité du faisceau"
     }
   },
   "preferences": {

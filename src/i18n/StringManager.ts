@@ -101,4 +101,23 @@ export class StringManager {
   public getPreferences() {
     return stringProperties.preferences;
   }
+
+  /**
+   * Localized names of the preset experiments, keyed by ExperimentDefinition.nameKey.
+   */
+  public getExperimentNameProperty(nameKey: string): ReadOnlyProperty<string> {
+    const experiments = stringProperties.experiments as unknown as Record<string, ReadOnlyProperty<string>>;
+    const property = experiments[`${nameKey}StringProperty`];
+    if (!property) {
+      throw new Error(`no experiment name string for key "${nameKey}"`);
+    }
+    return property;
+  }
+
+  /**
+   * Labels for the sim's controls (experiment chooser, fire button, source mode, …).
+   */
+  public getControls() {
+    return stringProperties.controls;
+  }
 }

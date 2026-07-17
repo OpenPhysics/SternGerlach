@@ -27,6 +27,19 @@ export const SCREEN_VIEW_MARGIN = 20;
 /** Corner radius shared by control panels and dialogs. */
 export const PANEL_CORNER_RADIUS = 6;
 
+// ── Experiment-board view layout (screen pixels) ──────────────────────────────
+
+/** Size of the light experiment board. */
+export const EXPERIMENT_AREA_WIDTH = 745;
+export const EXPERIMENT_AREA_HEIGHT = 540;
+
+/** Model-to-view scale: pixels per model unit. */
+export const MODEL_VIEW_SCALE = 175;
+
+/** Where model (0, 0) sits inside the experiment board's local frame. */
+export const MODEL_ORIGIN_IN_AREA_X = 30;
+export const MODEL_ORIGIN_IN_AREA_Y = 340;
+
 // ── Experiment-board model coordinates ────────────────────────────────────────
 // The experiment lives in an abstract model space: +x rightward along the beam,
 // +y up, roughly x ∈ [0, 4], y ∈ [−1.2, 1.2]. The view maps it to pixels with a
@@ -68,6 +81,11 @@ export const MAGNET_FIELD_NUMBER_MAX = 99;
 SternGerlachNamespace.register("SimConstants", {
   SCREEN_VIEW_MARGIN,
   PANEL_CORNER_RADIUS,
+  EXPERIMENT_AREA_WIDTH,
+  EXPERIMENT_AREA_HEIGHT,
+  MODEL_VIEW_SCALE,
+  MODEL_ORIGIN_IN_AREA_X,
+  MODEL_ORIGIN_IN_AREA_Y,
   SOURCE_HALF_WIDTH,
   SOURCE_HALF_HEIGHT,
   ANALYZER_HALF_WIDTH,
