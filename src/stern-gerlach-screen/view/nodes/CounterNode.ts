@@ -3,9 +3,12 @@
  *
  * Visual for a particle counter: a light box holding a vertical histogram bar
  * whose height is proportional to count / totalDetected, with a numeric count
- * readout and percent to the right. A green expected-value line (the analytic
- * probability) is toggled by expectedValuesVisibleProperty. A brief yellow
- * flash fires on each detection (PhET Spin camera-flash pedagogy).
+ * readout and percent to the right. A green expected-value line is toggled by
+ * expectedValuesVisibleProperty; it shows the analytic probability conditioned
+ * on detection (P / (1 − lost)), the same denominator as the bars, so bars and
+ * lines converge together even when blockers/dead ends discard probability.
+ * A brief yellow flash fires on each detection (PhET Spin camera-flash
+ * pedagogy).
  *
  * Local origin: the device's center; the input port is the left-edge center.
  */
@@ -17,7 +20,7 @@ import { Line, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
-import type { Counter } from "../../model/devices/Counter.js";
+import { type Counter, expectedDetectedFraction } from "../../model/devices/Counter.js";
 
 const BAR_WIDTH = 26;
 const FLASH_DURATION = 0.35;
@@ -31,6 +34,8 @@ export class CounterNode extends Node {
    * @param counter - the counter device
    * @param totalDetectedProperty - shared denominator for the bar height
    * @param expectedValuesVisibleProperty - toggles the green analytic line
+   * @param deadEndProbabilityProperty - probability mass lost to blockers/dead ends, used to
+   *   condition the expected line on detection (same denominator as the bars)
    * @param barFill - histogram bar color (black for UP-ish ports, magenta for DOWN-ish)
    * @param particleDetectedEmitter - optional emitter that flashes this counter on detection
    */
@@ -38,6 +43,7 @@ export class CounterNode extends Node {
     counter: Counter,
     totalDetectedProperty: TReadOnlyProperty<number>,
     expectedValuesVisibleProperty: TReadOnlyProperty<boolean>,
+    deadEndProbabilityProperty: TReadOnlyProperty<number>,
     barFill: TColor,
     particleDetectedEmitter?: Emitter<[Counter]>,
   ) {
@@ -107,13 +113,14 @@ export class CounterNode extends Node {
     };
     const countMultilink = new Multilink([counter.countProperty, totalDetectedProperty], update);
 
-    const updateExpected = (probability: number, visible: boolean) => {
+    const updateExpected = (probability: number, visible: boolean, deadEnd: number) => {
+      const fraction = expectedDetectedFraction(probability, deadEnd);
       expectedLine.visible = visible;
-      expectedLine.setY1(halfHeight - 2 - probability * barMaxHeight);
-      expectedLine.setY2(halfHeight - 2 - probability * barMaxHeight);
+      expectedLine.setY1(halfHeight - 2 - fraction * barMaxHeight);
+      expectedLine.setY2(halfHeight - 2 - fraction * barMaxHeight);
     };
     const expectedMultilink = new Multilink(
-      [counter.probabilityProperty, expectedValuesVisibleProperty],
+      [counter.probabilityProperty, expectedValuesVisibleProperty, deadEndProbabilityProperty],
       updateExpected,
     );
 

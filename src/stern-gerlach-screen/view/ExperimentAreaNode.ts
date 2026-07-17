@@ -239,6 +239,7 @@ export class ExperimentAreaNode extends Node {
         device,
         this.model.totalDetectedProperty,
         this.model.expectedValuesVisibleProperty,
+        this.model.deadEndProbabilityProperty,
         barFill,
         this.model.particleSystem.particleDetectedEmitter,
       );

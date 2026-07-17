@@ -12,6 +12,7 @@ import { PhetFont } from "scenerystack/scenery-phet";
 import { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import {
   type BlochVector,
+  basisLabels,
   blochVectorFromSpinHalf,
   computationalProbabilities,
   ketMarkup,
@@ -126,7 +127,7 @@ function formatProbabilities(
   system: SpinSystem,
   stateStrings: ReturnType<StringManager["getStatePreparation"]>,
 ): string {
-  const labels = system.stateCount === 2 ? ["+", "−"] : ["+", "−", "0"];
+  const labels = basisLabels(system);
   return probs
     .map((p, i) =>
       stateStrings.probabilityPatternStringProperty.value

@@ -13,6 +13,17 @@ import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
 import { COUNTER_HALF_HEIGHT, COUNTER_HALF_WIDTH } from "../../../SimConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
 
+/**
+ * Expected share of *detected* atoms for a counter with absolute per-fired probability
+ * `probability`, when `deadEndProbability` of the mass is lost to blockers/dead ends:
+ * P / (1 − lost). This is the quantity the histogram bars (count / totalDetected) converge
+ * to, so the expected-value line must use it as well. Returns 0 when everything is lost.
+ */
+export function expectedDetectedFraction(probability: number, deadEndProbability: number): number {
+  const detected = 1 - deadEndProbability;
+  return detected > 1e-12 ? Math.min(1, probability / detected) : 0;
+}
+
 export class Counter extends ExperimentDevice {
   /** Number of particles detected since the last clear. */
   public readonly countProperty: NumberProperty;

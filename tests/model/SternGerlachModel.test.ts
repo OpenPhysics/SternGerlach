@@ -219,6 +219,72 @@ describe("SternGerlachModel", () => {
     expect(restored?.typeProperty.value).toBe(AnalyzerType.X);
   });
 
+  it("restoring an SU(3) custom build under spin-1/2 sanitizes types instead of crashing", () => {
+    const su3Enabled = new BooleanProperty(true);
+    const model = new SternGerlachModel(seededRng(31), su3Enabled);
+
+    // Build a custom experiment under SU(3): source → λ4 analyzer → counter.
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    model.systemProperty.value = SpinSystem.SU3;
+    const source = model.graph.getSource();
+    expect(source).not.toBeNull();
+    const analyzer = new Analyzer(new Vector2(1.5, 0), AnalyzerType.LAMBDA_4);
+    const counter = new Counter(new Vector2(3, 0));
+    model.graph.addDevice(analyzer);
+    model.graph.addDevice(counter);
+    model.graph.addWire(new Wire(source as NonNullable<typeof source>, 0, analyzer));
+    model.graph.addWire(new Wire(analyzer, 0, counter));
+
+    // Leave Custom (stashes the snapshot), switch the system, and come back.
+    model.experimentProperty.value = ExperimentDefinition.DEFAULT;
+    model.systemProperty.value = SpinSystem.SPIN_HALF;
+    expect(() => {
+      model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    }).not.toThrow();
+
+    // The λ4 type is invalid under spin-½ and falls back to the system default.
+    const restored = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer | undefined;
+    expect(restored?.typeProperty.value).toBe(SpinSystem.SPIN_HALF.defaultType);
+  });
+
+  it("restoring a spin-1 custom build under spin-1/2 drops third-port wires and blockers", () => {
+    const model = new SternGerlachModel(seededRng(37));
+
+    // Custom build under spin-1: analyzer with a wire from the NONE output and a blocker on it.
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    model.systemProperty.value = SpinSystem.SPIN_ONE;
+    const source = model.graph.getSource();
+    const analyzer = new Analyzer(new Vector2(1.5, 0), AnalyzerType.Z);
+    const counter = new Counter(new Vector2(3, 0));
+    model.graph.addDevice(analyzer);
+    model.graph.addDevice(counter);
+    model.graph.addWire(new Wire(source as NonNullable<typeof source>, 0, analyzer));
+    model.graph.addWire(new Wire(analyzer, 2, counter));
+    analyzer.blockedOutputProperty.value = 2;
+
+    model.experimentProperty.value = ExperimentDefinition.DEFAULT;
+    model.systemProperty.value = SpinSystem.SPIN_HALF;
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+
+    const restored = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer;
+    // The wire from the (now absent) third output is gone; only the source wire remains.
+    expect(model.graph.wires.filter((w) => w.outputIndex === 2)).toHaveLength(0);
+    // The blocker on the absent port is cleared.
+    expect(restored.blockedOutputProperty.value).toBe(-1);
+  });
+
+  it("switching a custom build from spin-1 to spin-1/2 clears a third-port blocker in place", () => {
+    const model = new SternGerlachModel(seededRng(41));
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    model.systemProperty.value = SpinSystem.SPIN_ONE;
+    const analyzer = new Analyzer(new Vector2(1.5, 0), AnalyzerType.Z);
+    model.graph.addDevice(analyzer);
+    analyzer.blockedOutputProperty.value = 2;
+
+    model.systemProperty.value = SpinSystem.SPIN_HALF;
+    expect(analyzer.blockedOutputProperty.value).toBe(-1);
+  });
+
   it("reset restores defaults and rebuilds fresh devices", () => {
     const model = new SternGerlachModel(seededRng(29));
     const originalCounters = model.graph.getCounters();

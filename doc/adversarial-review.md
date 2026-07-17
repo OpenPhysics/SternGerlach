@@ -16,6 +16,10 @@ systematic statistical inconsistency, and several pedagogical hazards.
 
 ## 1. Confirmed bugs (reproduced with failing tests)
 
+> **Status 2026-07-17:** all three bugs in this section are **fixed**, each with regression
+> tests (`tests/quantum/StateDisplay.test.ts`, `tests/model/SternGerlachModel.test.ts`,
+> `tests/model/Counter.test.ts`). The subsections below record the findings as reviewed.
+
 ### 1.1 Spin-1 state readout swaps the |0⟩ and |−⟩ labels
 
 `ketMarkup` and the probability formatter use labels `["+", "−", "0"]` for components 0–2

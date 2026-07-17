@@ -49,11 +49,20 @@ export function computationalProbabilities(state: ComplexVector, stateCount: num
 }
 
 /**
+ * Display labels for the computational Z-basis components, in component order.
+ * The 3-state order is (+1, 0, −1): component 1 is the m = 0 amplitude and
+ * component 2 is m = −1 (see the OperatorTable op 7 eigenvectors).
+ */
+export function basisLabels(system: SpinSystem): readonly string[] {
+  return system.stateCount === 2 ? ["+", "−"] : ["+", "0", "−"];
+}
+
+/**
  * RichText ket markup for a state in the Z basis, e.g.
  * `|ψ⟩ = (0.71)|+⟩ + (0.71)|−⟩`.
  */
 export function ketMarkup(state: ComplexVector, system: SpinSystem, digits = 2): string {
-  const labels = system.stateCount === 2 ? ["+", "−"] : ["+", "−", "0"];
+  const labels = basisLabels(system);
   const parts: string[] = [];
   for (let i = 0; i < system.stateCount; i++) {
     const amp = state.components[i] as Complex;

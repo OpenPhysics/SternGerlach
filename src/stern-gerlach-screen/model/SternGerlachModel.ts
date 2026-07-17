@@ -42,12 +42,15 @@ type DeviceSnapshot =
 
 /** A serializable snapshot of the whole custom graph (device descriptors + wires by index). */
 type GraphSnapshot = {
+  /** The system the build was captured under; restoring under a different one sanitizes the build. */
+  system: SpinSystem;
   devices: DeviceSnapshot[];
   wires: { sourceIndex: number; outputIndex: number; targetIndex: number }[];
 };
 
 /** The graph the builder starts from the first time Custom is chosen: a lone source. */
 const DEFAULT_CUSTOM_SNAPSHOT: GraphSnapshot = {
+  system: SpinSystem.SPIN_HALF,
   devices: [{ kind: "source", position: new Vector2(0.4, 0) }],
   wires: [],
 };
@@ -358,6 +361,12 @@ export class SternGerlachModel implements TModel {
         for (const wire of this.graph.wires.filter((w) => w.outputIndex === 2)) {
           this.graph.removeWire(wire);
         }
+        // A blocker on the (now absent) third output would be unrepresentable in the UI.
+        for (const device of this.graph.devices) {
+          if (device instanceof Analyzer && device.blockedOutputProperty.value >= system.stateCount) {
+            device.blockedOutputProperty.value = NO_BLOCKED_OUTPUT;
+          }
+        }
       }
     } finally {
       this.rebuildingGraph = false;
@@ -395,37 +404,46 @@ export class SternGerlachModel implements TModel {
       outputIndex: wire.outputIndex,
       targetIndex: devices.indexOf(wire.target),
     }));
-    return { devices: deviceSnapshots, wires };
+    return { system: this.systemProperty.value, devices: deviceSnapshots, wires };
   }
 
-  /** Rebuilds the graph from a snapshot. */
+  /**
+   * Rebuilds the graph from a snapshot. The build may have been captured under a different
+   * system (leave Custom → switch system → return to Custom), so everything system-dependent
+   * is sanitized against the *current* system: invalid analyzer/magnet types fall back to the
+   * system default, wires from output ports the system doesn't have are dropped, and blockers
+   * on absent ports are cleared.
+   */
   private restoreSnapshot(snapshot: GraphSnapshot): void {
+    const system = this.systemProperty.value;
     this.graph.clear();
-    const devices = snapshot.devices.map((snap): ExperimentDevice => this.deviceFromSnapshot(snap));
+    const devices = snapshot.devices.map((snap): ExperimentDevice => this.deviceFromSnapshot(snap, system));
     for (const device of devices) {
       this.graph.addDevice(device);
     }
     for (const wire of snapshot.wires) {
       const source = devices[wire.sourceIndex];
       const target = devices[wire.targetIndex];
-      if (source && target) {
+      if (source && target && wire.outputIndex < source.outputCount(system)) {
         this.graph.addWire(new Wire(source, wire.outputIndex, target));
       }
     }
   }
 
-  /** Reconstructs a single device from its snapshot descriptor. */
-  private deviceFromSnapshot(snap: DeviceSnapshot): ExperimentDevice {
+  /** Reconstructs a single device from its snapshot descriptor, sanitized for the given system. */
+  private deviceFromSnapshot(snap: DeviceSnapshot, system: SpinSystem): ExperimentDevice {
     if (snap.kind === "source") {
       return new ParticleSource(snap.position.copy());
     }
+    const validType = (type: AnalyzerType) => (system.analyzerTypes.includes(type) ? type : system.defaultType);
     if (snap.kind === "analyzer") {
-      const analyzer = new Analyzer(snap.position.copy(), snap.type);
-      analyzer.blockedOutputProperty.value = snap.blockedOutput ?? NO_BLOCKED_OUTPUT;
+      const analyzer = new Analyzer(snap.position.copy(), validType(snap.type));
+      const blocked = snap.blockedOutput ?? NO_BLOCKED_OUTPUT;
+      analyzer.blockedOutputProperty.value = blocked < system.stateCount ? blocked : NO_BLOCKED_OUTPUT;
       return analyzer;
     }
     if (snap.kind === "magnet") {
-      const magnet = new Magnet(snap.position.copy(), snap.type);
+      const magnet = new Magnet(snap.position.copy(), validType(snap.type));
       magnet.fieldNumberProperty.value = snap.field;
       return magnet;
     }
