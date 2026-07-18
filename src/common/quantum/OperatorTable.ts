@@ -1,22 +1,20 @@
 /**
  * OperatorTable.ts
  *
- * The 12 observable operators, their squares, and their eigenvectors, plus the
- * hard-coded unknown initial states and the Random-state bases. Verbatim port
- * of `Experiment.initVectors()` and `Experiment.SetPhi()` from the SPINS Java
- * source (references/source/Experiment.java:82-304).
+ * Observable operators, their squares, and their eigenvectors, plus the
+ * hard-coded unknown initial states and the Random-state bases. Port of
+ * `Experiment.initVectors()` / `Experiment.SetPhi()` from the SPINS Java
+ * source, with contiguous indices after dropping the unused SU(3) slots.
  *
- * Operator indices (the right-hand side of the Java typeTable — see
- * SpinSystem.opFor):
- *   0-2   spin-½ Pauli Sx / Sy / Sz (doubling as SU(3) λ₁-λ₃)
- *   3-6   SU(3) Gell-Mann λ₄-λ₇
- *   7-9   spin-1 Sz / Sx / Sy (op 7 doubles as SU(3) "λ₈" — Java parity)
- *   10-11 Sn(θ, φ) for spin-½ / spin-1, recomputed by setDirectionAngles
+ * Operator indices (see SpinSystem.opFor):
+ *   0-2  spin-½ Pauli Sx / Sy / Sz
+ *   3-5  spin-1 Sz / Sx / Sy
+ *   6-7  Sn(θ, φ) for spin-½ / spin-1, recomputed by setDirectionAngles
  *
- * EIGENVECTOR INDEX CONVENTION (preserve verbatim — Experiment.java:100-107):
+ * EIGENVECTOR INDEX CONVENTION (preserve — Experiment.java:100-107):
  * for every operator, eigenvector index 0, 1, 2 corresponds to eigenvalues
  * +1, −1, 0. This matches analyzer output ports UP = 0, DOWN = 1, NONE = 2.
- * Op 10 (spin-½ Sn) defines only eigenvectors 0 and 1; index 2 is the zero
+ * Op 6 (spin-½ Sn) defines only eigenvectors 0 and 1; index 2 is the zero
  * vector, exactly as in Java.
  *
  * Instance-owned (no mutable statics) so tests can construct independent
@@ -24,14 +22,14 @@
  */
 
 import { assert } from "scenerystack/assert";
-import { AnalyzerType } from "./AnalyzerType.js";
+import type { AnalyzerType } from "./AnalyzerType.js";
 import { Complex } from "./Complex.js";
 import { ComplexMatrix } from "./ComplexMatrix.js";
 import { ComplexVector } from "./ComplexVector.js";
 import { SpinSystem } from "./SpinSystem.js";
 
-/** Number of distinct operator matrices (Java opCount). */
-export const OPERATOR_COUNT = 12;
+/** Number of operator matrices (spin-½ + spin-1 fixed ops and Sn pair). */
+export const OPERATOR_COUNT = 8;
 
 const ROOT2_INV = 1 / Math.sqrt(2);
 
@@ -59,7 +57,7 @@ export class OperatorTable {
     this._theta = theta;
     this._phi = phi;
 
-    // ── Fixed operators 0-9 (Experiment.initVectors, lines 108-202) ───────────
+    // ── Fixed operators 0-5 ───────────────────────────────────────────────────
 
     // op 0: Sx spin-½ Pauli matrix and eigenstates
     this.operators[0] = ComplexMatrix.fromEntries([
@@ -94,91 +92,47 @@ export class OperatorTable {
       v(Complex.ZERO, Complex.ZERO, Complex.ONE),
     ];
 
-    // op 3: λ₄ SU(3) matrix and eigenstates
+    // op 3: Sz spin-1 matrix and eigenstates |+1⟩, |−1⟩, |0⟩
     this.operators[3] = ComplexMatrix.fromEntries([
-      [0, 2, Complex.ONE],
-      [2, 0, Complex.ONE],
-    ]);
-    this.eigenvectorTable[3] = [
-      v(c(ROOT2_INV, 0), Complex.ZERO, c(ROOT2_INV, 0)),
-      v(c(ROOT2_INV, 0), Complex.ZERO, c(-ROOT2_INV, 0)),
-      v(Complex.ZERO, Complex.ONE),
-    ];
-
-    // op 4: λ₅ SU(3) matrix and eigenstates
-    this.operators[4] = ComplexMatrix.fromEntries([
-      [0, 2, c(0, -1)],
-      [2, 0, Complex.I],
-    ]);
-    this.eigenvectorTable[4] = [
-      v(c(ROOT2_INV, 0), Complex.ZERO, c(0, ROOT2_INV)),
-      v(c(ROOT2_INV, 0), Complex.ZERO, c(0, -ROOT2_INV)),
-      v(Complex.ZERO, Complex.ONE),
-    ];
-
-    // op 5: λ₆ SU(3) matrix and eigenstates
-    this.operators[5] = ComplexMatrix.fromEntries([
-      [1, 2, Complex.ONE],
-      [2, 1, Complex.ONE],
-    ]);
-    this.eigenvectorTable[5] = [
-      v(Complex.ZERO, c(ROOT2_INV, 0), c(ROOT2_INV, 0)),
-      v(Complex.ZERO, c(ROOT2_INV, 0), c(-ROOT2_INV, 0)),
-      v(Complex.ONE, Complex.ZERO),
-    ];
-
-    // op 6: λ₇ SU(3) matrix and eigenstates
-    this.operators[6] = ComplexMatrix.fromEntries([
-      [1, 2, c(0, -1)],
-      [2, 1, Complex.I],
-    ]);
-    this.eigenvectorTable[6] = [
-      v(Complex.ZERO, c(ROOT2_INV, 0), c(0, ROOT2_INV)),
-      v(Complex.ZERO, c(ROOT2_INV, 0), c(0, -ROOT2_INV)),
-      v(Complex.ONE, Complex.ZERO),
-    ];
-
-    // op 7: Sz spin-1 matrix and eigenstates |+1⟩, |−1⟩, |0⟩
-    this.operators[7] = ComplexMatrix.fromEntries([
       [0, 0, Complex.ONE],
       [2, 2, c(-1, 0)],
     ]);
-    this.eigenvectorTable[7] = [
+    this.eigenvectorTable[3] = [
       v(Complex.ONE, Complex.ZERO),
       v(Complex.ZERO, Complex.ZERO, Complex.ONE),
       v(Complex.ZERO, Complex.ONE),
     ];
 
-    // op 8: Sx spin-1 matrix and eigenstates
-    this.operators[8] = ComplexMatrix.fromEntries([
+    // op 4: Sx spin-1 matrix and eigenstates
+    this.operators[4] = ComplexMatrix.fromEntries([
       [0, 1, c(ROOT2_INV, 0)],
       [1, 0, c(ROOT2_INV, 0)],
       [1, 2, c(ROOT2_INV, 0)],
       [2, 1, c(ROOT2_INV, 0)],
     ]);
-    this.eigenvectorTable[8] = [
+    this.eigenvectorTable[4] = [
       v(c(0.5, 0), c(ROOT2_INV, 0), c(0.5, 0)),
       v(c(0.5, 0), c(-ROOT2_INV, 0), c(0.5, 0)),
       v(c(ROOT2_INV, 0), Complex.ZERO, c(-ROOT2_INV, 0)),
     ];
 
-    // op 9: Sy spin-1 matrix and eigenstates
-    this.operators[9] = ComplexMatrix.fromEntries([
+    // op 5: Sy spin-1 matrix and eigenstates
+    this.operators[5] = ComplexMatrix.fromEntries([
       [0, 1, c(0, -ROOT2_INV)],
       [1, 0, c(0, ROOT2_INV)],
       [1, 2, c(0, -ROOT2_INV)],
       [2, 1, c(0, ROOT2_INV)],
     ]);
-    this.eigenvectorTable[9] = [
+    this.eigenvectorTable[5] = [
       v(c(0.5, 0), c(0, ROOT2_INV), c(-0.5, 0)),
       v(c(0.5, 0), c(0, -ROOT2_INV), c(-0.5, 0)),
       v(c(ROOT2_INV, 0), Complex.ZERO, c(ROOT2_INV, 0)),
     ];
 
-    // ops 10-11 and their squares are filled in by setDirectionAngles
+    // ops 6-7 and their squares are filled in by setDirectionAngles
     this.setDirectionAngles(theta, phi);
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 6; i++) {
       this.operatorsSquared[i] = this.getOperator(i).squared();
     }
 
@@ -191,7 +145,7 @@ export class OperatorTable {
       v(c(0.5, 0), c(0.75, -sqrt3 / 4)), // |n⟩ 120°, 330°
     ];
     const spinOneUnknowns: readonly ComplexVector[] = [
-      this.getEigenvector(9, 0), // |1⟩y
+      this.getEigenvector(5, 0), // |1⟩y
       v(c(0.5, 0), c(ROOT2_INV / 2, (ROOT2_INV / 2) * sqrt3), c(-0.25, sqrt3 / 4)), // |1⟩n 90°, 60°
       v(c(1 / sqrt3, 0), c(0, -1 / sqrt3), c(-1 / sqrt3, 0)), // not a directional state
       v(c(ROOT2_INV, 0), Complex.ZERO, c(0, -ROOT2_INV)), // |0⟩n 90°, 45°
@@ -199,7 +153,6 @@ export class OperatorTable {
     this.unknownStates = new Map([
       [SpinSystem.SPIN_HALF, spinHalfUnknowns],
       [SpinSystem.SPIN_ONE, spinOneUnknowns],
-      [SpinSystem.SU3, spinOneUnknowns], // Java: InitialState[2][i] aliases InitialState[1][i]
     ]);
   }
 
@@ -214,7 +167,7 @@ export class OperatorTable {
   }
 
   /**
-   * Sets new direction angles and recomputes operators 10 (spin-½ Sn) and 11 (spin-1 Sn),
+   * Sets new direction angles and recomputes operators 6 (spin-½ Sn) and 7 (spin-1 Sn),
    * their squares, and their eigenvectors. Port of Experiment.SetPhi (lines 268-304).
    */
   public setDirectionAngles(theta: number, phi: number): void {
@@ -226,25 +179,25 @@ export class OperatorTable {
     const sinP = Math.sin(phi);
     const cosP = Math.cos(phi);
 
-    // op 10: Sn(θ, φ) spin-½ matrix and eigenvectors
-    this.operators[10] = ComplexMatrix.fromEntries([
+    // op 6: Sn(θ, φ) spin-½ matrix and eigenvectors
+    this.operators[6] = ComplexMatrix.fromEntries([
       [0, 0, c(cosT, 0)],
       [0, 1, c(sinT * cosP, -sinT * sinP)],
       [1, 0, c(sinT * cosP, sinT * sinP)],
       [1, 1, c(-cosT, 0)],
     ]);
-    this.operatorsSquared[10] = this.operators[10].squared();
+    this.operatorsSquared[6] = this.operators[6].squared();
 
     const sinHalfT = Math.sin(theta / 2);
     const cosHalfT = Math.cos(theta / 2);
-    this.eigenvectorTable[10] = [
+    this.eigenvectorTable[6] = [
       v(c(cosHalfT, 0), c(sinHalfT * cosP, sinHalfT * sinP)),
       v(c(sinHalfT, 0), c(-cosHalfT * cosP, -cosHalfT * sinP)),
-      ComplexVector.ZERO, // Java leaves EigenVector[10][2] as the zero vector
+      ComplexVector.ZERO, // Java leaves the unused third eigenvector as zero
     ];
 
-    // op 11: Sn(θ, φ) spin-1 matrix and eigenvectors
-    this.operators[11] = ComplexMatrix.fromEntries([
+    // op 7: Sn(θ, φ) spin-1 matrix and eigenvectors
+    this.operators[7] = ComplexMatrix.fromEntries([
       [0, 0, c(cosT, 0)],
       [0, 1, c(ROOT2_INV * sinT * cosP, -ROOT2_INV * sinT * sinP)],
       [1, 0, c(ROOT2_INV * sinT * cosP, ROOT2_INV * sinT * sinP)],
@@ -252,9 +205,9 @@ export class OperatorTable {
       [2, 1, c(ROOT2_INV * sinT * cosP, ROOT2_INV * sinT * sinP)],
       [2, 2, c(-cosT, 0)],
     ]);
-    this.operatorsSquared[11] = this.operators[11].squared();
+    this.operatorsSquared[7] = this.operators[7].squared();
 
-    this.eigenvectorTable[11] = [
+    this.eigenvectorTable[7] = [
       v(
         c(((1 + cosT) * cosP) / 2, (-(1 + cosT) * sinP) / 2),
         c(ROOT2_INV * sinT, 0),
@@ -273,17 +226,15 @@ export class OperatorTable {
     ];
   }
 
-  /** The operator matrix for the given operator index (0-11). */
+  /** The operator matrix for the given operator index (0-7). */
   public getOperator(op: number): ComplexMatrix {
     assert?.(op >= 0 && op < OPERATOR_COUNT, `invalid operator index: ${op}`);
-    // All OPERATOR_COUNT slots are filled by the constructor.
     return this.operators[op] as ComplexMatrix;
   }
 
-  /** The square of the operator matrix for the given operator index (0-11). */
+  /** The square of the operator matrix for the given operator index (0-7). */
   public getOperatorSquared(op: number): ComplexMatrix {
     assert?.(op >= 0 && op < OPERATOR_COUNT, `invalid operator index: ${op}`);
-    // All OPERATOR_COUNT slots are filled by the constructor.
     return this.operatorsSquared[op] as ComplexMatrix;
   }
 
@@ -305,29 +256,18 @@ export class OperatorTable {
     return (this.unknownStates.get(system) as readonly ComplexVector[])[index] as ComplexVector;
   }
 
-  /**
-   * Eigenstate of Sz or Sx for a named preparation (+Z/−Z/+X/−X). For SU(3), Z maps to λ₃
-   * and X to λ₁ (the embedded Pauli matrices), matching how those directions appear in the
-   * Gell-Mann set.
-   */
+  /** Eigenstate of Sz or Sx for a named preparation (+Z/−Z/+X/−X). */
   public getPreparedEigenstate(system: SpinSystem, type: AnalyzerType, index: 0 | 1): ComplexVector {
-    const op =
-      system === SpinSystem.SU3
-        ? type === AnalyzerType.X
-          ? system.opFor(AnalyzerType.LAMBDA_1)
-          : system.opFor(AnalyzerType.LAMBDA_3)
-        : system.opFor(type);
-    return this.getEigenvector(op, index);
+    return this.getEigenvector(system.opFor(type), index);
   }
 
   /**
-   * The equal-weight basis used for the Random initial state: the Sz eigenstates for spin-½
-   * (Java EigenVector[2][0..1]), the spin-1 Sy eigenstates for spin-1 and SU(3)
-   * (Java EigenVector[9][0..2]). Port of Experiment.run (lines 412-420).
+   * The equal-weight basis used for the Random initial state: the Sz eigenstates for spin-½,
+   * the Sy eigenstates for spin-1. Port of Experiment.run (lines 412-420).
    */
   public getRandomBasis(system: SpinSystem): readonly ComplexVector[] {
     return system === SpinSystem.SPIN_HALF
       ? [this.getEigenvector(2, 0), this.getEigenvector(2, 1)]
-      : [this.getEigenvector(9, 0), this.getEigenvector(9, 1), this.getEigenvector(9, 2)];
+      : [this.getEigenvector(5, 0), this.getEigenvector(5, 1), this.getEigenvector(5, 2)];
   }
 }

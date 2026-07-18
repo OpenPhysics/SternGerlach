@@ -29,16 +29,9 @@ export class SternGerlachScreenSummaryContent extends ScreenSummaryContent {
     });
 
     const systemName = new DerivedProperty(
-      [model.systemProperty, systems.spinHalfStringProperty, systems.spinOneStringProperty, systems.su3StringProperty],
-      (system) => {
-        if (system === SpinSystem.SPIN_HALF) {
-          return systems.spinHalfStringProperty.value;
-        }
-        if (system === SpinSystem.SPIN_ONE) {
-          return systems.spinOneStringProperty.value;
-        }
-        return systems.su3StringProperty.value;
-      },
+      [model.systemProperty, systems.spinHalfStringProperty, systems.spinOneStringProperty],
+      (system) =>
+        system === SpinSystem.SPIN_ONE ? systems.spinOneStringProperty.value : systems.spinHalfStringProperty.value,
     );
 
     const unknownNumber = new DerivedProperty([model.initialStateProperty], (setting) =>

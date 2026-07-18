@@ -2,7 +2,7 @@
  * MagnetNode.ts
  *
  * Visual for a uniform-field magnet: a red rounded body carrying a white
- * field-direction label (B_z … B_λ₈ — NOT "SG": a magnet precesses the spin
+ * field-direction label (B_z, B_x, … — NOT "SG": a magnet precesses the spin
  * without measuring it) and, below it, a spinner that dials the integer field
  * strength 0-99 (φ = 2π·n/72). Single output port on the right edge.
  *
@@ -24,14 +24,10 @@ import type { Magnet } from "../../model/devices/Magnet.js";
 
 /**
  * The display label for a magnet's field direction: B with the axis as a
- * subscript (B_z, B_n) or, for SU(3) observables, the Gell-Mann operator
- * (B_λ₄). Deliberately not the analyzer's "SG" markup — a magnet applies a
- * unitary precession, it does not measure.
+ * subscript (B_z, B_n). Deliberately not the analyzer's "SG" markup — a magnet
+ * applies a unitary precession, it does not measure.
  */
 export function magnetLabelMarkup(type: AnalyzerType): string {
-  if (type.code >= "1" && type.code <= "8") {
-    return `B<sub>λ${type.code}</sub>`;
-  }
   return `B<sub>${type.code}</sub>`;
 }
 

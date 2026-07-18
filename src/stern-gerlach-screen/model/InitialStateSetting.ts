@@ -44,8 +44,7 @@ export class InitialStateSetting extends EnumerationValue {
 
   /**
    * Named Sz/Sx eigenstate, or null for Unknown / USER / RANDOM.
-   * For spin-½ and spin-1, resolved via OperatorTable eigenvectors; for SU(3),
-   * Z→λ₃ and X→λ₁ (embedded Pauli matrices).
+   * Resolved via OperatorTable eigenvectors for the active spin system.
    */
   public readonly eigenstate: PreparedEigenstate | null;
 

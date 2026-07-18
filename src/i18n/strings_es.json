@@ -24,14 +24,14 @@
     "custom": "[Personalizado]"
   },
   "experimentGuidance": {
-    "singleZ": "Con |+z⟩ preparado (el valor por defecto), el contador UP debería recibir todos los átomos. Cambia a Aleatorio y observa cómo ambos contadores convergen a 50/50.",
-    "singleX": "Un estado preparado en Z medido en X es 50/50. Observa la convergencia de los contadores con Valores esperados.",
-    "zThenX": "Después de SGz, el haz + es |+z⟩. Medirlo con SGx debería ser de nuevo 50/50.",
-    "zThenZ": "Repetir la misma base deja el estado sin cambios. El segundo SGz nunca debe convertir un átomo + en −.",
-    "interferometer": "Con Observar desactivado, recombinar ambos caminos SGx restaura el estado original en el SGz final. Con Observar activado, la interferencia desaparece.",
-    "magnet": "Ajusta el campo del imán para hacer precesar el espín. Los conteos del analizador X oscilan con el campo.",
-    "recombination": "Fusionar caminos seleccionados antes del siguiente analizador puede restaurar la coherencia. Compara Observar activado y desactivado.",
-    "custom": "Construye tu propio aparato: arrastra dispositivos, conecta puertos y prueba bloquear una salida para filtrar un componente de espín."
+    "singleZ": "Empieza con |+z⟩ (el valor por defecto): el contador UP debería recibir todos los átomos. Cambia a |+x⟩ o Aleatorio para ver otras estadísticas.",
+    "singleX": "Con |+z⟩ preparado, una medida en X es 50/50. Prueba luego |+x⟩: entonces UP debería recibir todos los átomos.",
+    "zThenX": "Con |+z⟩ preparado, el primer SGz envía todo hacia UP. Ese haz sigue siendo |+z⟩, así que SGx sobre él es 50/50.",
+    "zThenZ": "Con |+z⟩ preparado, ambos analizadores SGz envían todos los átomos hacia UP: repetir la misma base nunca voltea el estado.",
+    "interferometer": "Prepara |+z⟩. Con Observar desactivado, recombinar ambos caminos SGx restaura |+z⟩ en el SGz final. Activa Observar y la interferencia desaparece.",
+    "magnet": "Prepara |+z⟩ y luego ajusta el campo del imán para hacer precesar el espín antes de SGx. Los conteos deberían oscilar con el campo.",
+    "recombination": "Prepara |+z⟩. Fusionar caminos seleccionados antes del siguiente analizador puede restaurar la coherencia: compara Observar activado y desactivado.",
+    "custom": "Prepara un autoestado nombrado cerca de la fuente y construye tu propio aparato: arrastra dispositivos, conecta puertos y prueba bloquear una salida."
   },
   "statePreparation": {
     "title": "Estado preparado",
@@ -156,21 +156,18 @@
     "imaginary": "Imaginaria",
     "howToUseTitle": "Cómo usar esta simulación",
     "howToUseStep1": "Empieza con un experimento predefinido, o cambia el Sistema a Personalizado y arrastra analizadores, imanes y contadores al tablero para construir el tuyo.",
-    "howToUseStep2": "Define el estado inicial junto a la fuente: empieza con |+z⟩ (por defecto), luego prueba |−z⟩, |+x⟩, |−x⟩, Aleatorio o un estado misterioso Desconocido.",
+    "howToUseStep2": "Define el estado inicial junto a la fuente: |+z⟩ es el valor por defecto. Prueba luego |−z⟩, |+x⟩ o |−x⟩; Aleatorio y Desconocido sirven después para mezclas y misterios.",
     "howToUseStep3": "Dispara un solo átomo para ver cómo atraviesa el aparato, o cambia a Continuo y activa Observar para ver muchos a la vez.",
     "howToUseStep4": "Activa Valores esperados y usa los botones Hacer N para lanzar grandes lotes: comprueba si las estadísticas de los contadores convergen hacia la predicción.",
     "howToUseStep5": "Cuando domines lo básico, prueba a bloquear una salida del analizador o a cambiar los ángulos de dirección para ver cómo cambia el resultado."
   },
   "systems": {
     "spinHalf": "Espín ½",
-    "spinOne": "Espín 1",
-    "su3": "SU(3)"
+    "spinOne": "Espín 1"
   },
   "preferences": {
     "title": "Simulación",
     "spinOneEnable": "Habilitar el sistema Espín 1",
-    "spinOneEnableDescription": "Muestra un selector Espín ½ / Espín 1 en la fuente de partículas. Desactivado por defecto (solo espín ½).",
-    "su3Enable": "Habilitar el sistema SU(3)",
-    "su3EnableDescription": "Añade SU(3) (Gell-Mann λ₁–λ₈) como sistema cuántico adicional en el selector de la fuente."
+    "spinOneEnableDescription": "Muestra un selector Espín ½ / Espín 1 en la fuente de partículas. Desactivado por defecto (solo espín ½)."
   }
 }

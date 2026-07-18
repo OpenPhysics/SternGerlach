@@ -46,22 +46,8 @@ describe("UserStateModel.toZBasisVector", () => {
     model.re[2].value = 0;
 
     const state = model.toZBasisVector(table, SpinSystem.SPIN_ONE);
-    const plusOne = table.getEigenvector(7, 0);
+    const plusOne = table.getEigenvector(3, 0);
     expect(state.equalsEpsilon(plusOne, 1e-10)).toBe(true);
-  });
-
-  it("SU(3): amplitudes are taken directly without basis rotation", () => {
-    const table = new OperatorTable();
-    const model = new UserStateModel();
-    model.basisProperty.value = AnalyzerType.X;
-    model.re[0].value = 0.6;
-    model.re[1].value = 0.8;
-    model.re[2].value = 0;
-
-    const state = model.toZBasisVector(table, SpinSystem.SU3);
-    const norm = Math.sqrt(0.6 * 0.6 + 0.8 * 0.8);
-    expect(state.components[0].re).toBeCloseTo(0.6 / norm, 8);
-    expect(state.components[1].re).toBeCloseTo(0.8 / norm, 8);
   });
 
   it("a zero input falls back to |0⟩ (component 0 = 1)", () => {

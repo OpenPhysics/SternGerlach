@@ -7,7 +7,7 @@
  * None…Lots intensity slider (CONTINUOUS mode), and an AquaRadioButtonGroup
  * to switch between the two modes.
  *
- * The quantum-system chooser (Spin ½ / Spin 1 / SU(3)) lives on ExperimentAreaNode
+ * The quantum-system chooser (Spin ½ / Spin 1) lives on ExperimentAreaNode
  * as a persistent overlay — it must not be disposed mid-click when changing
  * system rebuilds the device layer (that disposed the radios before Voicing
  * finished and tripped "utterance is not an Utterance").

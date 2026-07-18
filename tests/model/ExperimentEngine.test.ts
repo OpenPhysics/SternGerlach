@@ -14,7 +14,7 @@ import { ExperimentGraph } from "../../src/stern-gerlach-screen/model/Experiment
 import { InitialStateSetting } from "../../src/stern-gerlach-screen/model/InitialStateSetting.js";
 import { addAnalyzer, addCounter, addSource, seededRng, wire } from "./testUtilities.js";
 
-const { SPIN_HALF, SPIN_ONE, SU3 }: typeof SpinSystem = SpinSystem;
+const { SPIN_HALF, SPIN_ONE }: typeof SpinSystem = SpinSystem;
 const PLUS_Z: InitialStateSetting = InitialStateSetting.UNKNOWN_1; // spin-½ unknown #1 is |+z⟩
 const MINUS_Y: InitialStateSetting = InitialStateSetting.UNKNOWN_2; // spin-½ unknown #2 is |−y⟩
 const RANDOM: InitialStateSetting = InitialStateSetting.RANDOM;
@@ -177,30 +177,6 @@ describe("ExperimentEngine analytic path-sum", () => {
     expect(probOf(probs, yCounters[2] as Counter)).toBeCloseTo(0, 10);
   });
 
-  it("SU(3) λ₄ analyzer probabilities from the random (spin-1 Sy) mixture are ⅓ each", () => {
-    const graph = new ExperimentGraph();
-    const engine = new ExperimentEngine(graph, new OperatorTable());
-    const source = addSource(graph);
-    const analyzer = addAnalyzer(graph, AnalyzerType.LAMBDA_4);
-    const counters = [addCounter(graph), addCounter(graph), addCounter(graph)];
-    wire(graph, source, 0, analyzer);
-    counters.forEach((counter, k) => {
-      wire(graph, analyzer, k, counter);
-    });
-
-    const probs = engine.computeCounterProbabilities(RANDOM, { system: SU3, watch: false });
-    let total = 0;
-    for (const counter of counters) {
-      total += probOf(probs, counter);
-    }
-    expect(total).toBeCloseTo(1, 10);
-
-    // Hand check: λ₄ eigenvectors vs the three Sy(1) eigenstates average to ⅓ each.
-    expect(probOf(probs, counters[0] as Counter)).toBeCloseTo(1 / 3, 10);
-    expect(probOf(probs, counters[1] as Counter)).toBeCloseTo(1 / 3, 10);
-    expect(probOf(probs, counters[2] as Counter)).toBeCloseTo(1 / 3, 10);
-  });
-
   it("a dead-end output loses its probability; unreachable counters read 0", () => {
     const graph = new ExperimentGraph();
     const engine = new ExperimentEngine(graph, new OperatorTable());
@@ -330,7 +306,7 @@ describe("ExperimentEngine Monte-Carlo vs analytic", () => {
     // Force the merged branch: rand = 0.99 ≥ p(NONE) = ½.
     const psi = table.getUnknownState(SPIN_ONE, 0); // |1y⟩
     const result = engine.transitDevice(zAnalyzer, psi, { system: SPIN_ONE, watch: false }, () => 0.99);
-    const expected = table.getEigenvector(7, 2).projectOut(psi);
+    const expected = table.getEigenvector(3, 2).projectOut(psi);
     expect(result.newState.equalsEpsilon(expected, 1e-12)).toBe(true);
     expect(result.newState.magnitudeSquared()).toBeCloseTo(1, 12);
     expect(result.next).toBe(target);

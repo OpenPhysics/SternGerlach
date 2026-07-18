@@ -5,7 +5,7 @@
  * notation and guidance, the expected-value toggle, analytic Do-N batch buttons,
  * Reset Counts, plus watch and dead-end probability readouts. The quantum-system
  * chooser lives on the particle source (SourceNode) when Preferences enable
- * Spin 1 or SU(3). The initial-state chooser lives in StatePreparationAreaNode.
+ * Spin 1. The initial-state chooser lives in StatePreparationAreaNode.
  */
 
 import { DerivedProperty, DynamicProperty, PatternStringProperty } from "scenerystack/axon";

@@ -25,7 +25,7 @@ import { ExperimentDevice } from "./ExperimentDevice.js";
 export const NO_BLOCKED_OUTPUT = -1;
 
 export class Analyzer extends ExperimentDevice {
-  /** The observable this analyzer measures (Z / X / Y / n or λ₁-λ₈, depending on the system). */
+  /** The observable this analyzer measures (Z / X / Y / n). */
   public readonly typeProperty: Property<AnalyzerType>;
 
   /**

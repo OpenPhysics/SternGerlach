@@ -24,14 +24,14 @@
     "custom": "[Personnalisé]"
   },
   "experimentGuidance": {
-    "singleZ": "Avec |+z⟩ préparé (par défaut), le compteur UP devrait recevoir tous les atomes. Passez à Aléatoire et observez les deux compteurs converger vers 50/50.",
-    "singleX": "Un état préparé en Z mesuré selon X est 50/50. Observez la convergence des compteurs avec les valeurs attendues.",
-    "zThenX": "Après SGz, le faisceau + est |+z⟩. Le mesurer avec SGx doit à nouveau donner 50/50.",
-    "zThenZ": "Répéter la même base laisse l'état inchangé. Le second SGz ne doit jamais faire basculer un atome + vers −.",
-    "interferometer": "Sans Observer, recombiner les deux chemins SGx restaure l'état d'origine au SGz final. Avec Observer, l'interférence disparaît.",
-    "magnet": "Réglez le champ de l'aimant pour faire précesser le spin. Les comptes de l'analyseur X oscillent avec le champ.",
-    "recombination": "Fusionner certains chemins avant l'analyseur suivant peut restaurer la cohérence. Comparez Observer activé et désactivé.",
-    "custom": "Construisez votre appareil : glissez des dispositifs, reliez les ports, et essayez de bloquer une sortie pour filtrer une composante de spin."
+    "singleZ": "Commencez avec |+z⟩ (par défaut) : le compteur UP devrait recevoir tous les atomes. Passez à |+x⟩ ou Aléatoire pour voir d'autres statistiques.",
+    "singleX": "Avec |+z⟩ préparé, une mesure selon X est 50/50. Essayez ensuite |+x⟩ : UP devrait alors recevoir tous les atomes.",
+    "zThenX": "Avec |+z⟩ préparé, le premier SGz envoie tout vers UP. Ce faisceau est encore |+z⟩, donc SGx dessus donne 50/50.",
+    "zThenZ": "Avec |+z⟩ préparé, les deux SGz envoient tous les atomes vers UP — répéter la même base ne bascule jamais l'état.",
+    "interferometer": "Préparez |+z⟩. Sans Observer, recombiner les deux chemins SGx restaure |+z⟩ au SGz final. Activez Observer et l'interférence disparaît.",
+    "magnet": "Préparez |+z⟩, puis réglez le champ de l'aimant pour faire précesser le spin avant SGx. Les comptes devraient osciller avec le champ.",
+    "recombination": "Préparez |+z⟩. Fusionner certains chemins avant l'analyseur suivant peut restaurer la cohérence — comparez Observer activé et désactivé.",
+    "custom": "Préparez un état propre nommé près de la source, puis construisez votre appareil : glissez des dispositifs, reliez les ports, et essayez de bloquer une sortie."
   },
   "statePreparation": {
     "title": "État préparé",
@@ -156,21 +156,18 @@
     "imaginary": "Imaginaire",
     "howToUseTitle": "Comment utiliser cette simulation",
     "howToUseStep1": "Commencez par une expérience prédéfinie, ou passez le Système en mode Personnalisé et glissez des analyseurs, aimants et compteurs sur le tableau pour construire le vôtre.",
-    "howToUseStep2": "Réglez l'état initial près de la source : commencez par |+z⟩ (par défaut), puis essayez |−z⟩, |+x⟩, |−x⟩, Aléatoire ou un état mystère Inconnu.",
+    "howToUseStep2": "Réglez l'état initial près de la source : |+z⟩ est la valeur par défaut. Essayez ensuite |−z⟩, |+x⟩ ou |−x⟩ ; Aléatoire et Inconnu servent plus tard pour les mélanges et les mystères.",
     "howToUseStep3": "Tirez un seul atome pour observer sa trajectoire dans l'appareil, ou passez en mode Continu et activez Observer pour en voir plusieurs à la fois.",
     "howToUseStep4": "Activez Valeurs attendues et utilisez les boutons Faire N pour lancer de grandes séries : vérifiez si les statistiques des compteurs convergent vers la prédiction.",
     "howToUseStep5": "Une fois les bases maîtrisées, essayez de bloquer une sortie d'analyseur ou de modifier les angles de direction pour voir comment le résultat change."
   },
   "systems": {
     "spinHalf": "Spin ½",
-    "spinOne": "Spin 1",
-    "su3": "SU(3)"
+    "spinOne": "Spin 1"
   },
   "preferences": {
     "title": "Simulation",
     "spinOneEnable": "Activer le système Spin 1",
-    "spinOneEnableDescription": "Affiche un sélecteur Spin ½ / Spin 1 sur la source de particules. Désactivé par défaut (spin ½ uniquement).",
-    "su3Enable": "Activer le système SU(3)",
-    "su3EnableDescription": "Ajoute SU(3) (Gell-Mann λ₁–λ₈) comme système quantique supplémentaire sur le sélecteur de la source."
+    "spinOneEnableDescription": "Affiche un sélecteur Spin ½ / Spin 1 sur la source de particules. Désactivé par défaut (spin ½ uniquement)."
   }
 }

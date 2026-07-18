@@ -127,11 +127,7 @@ export class ExperimentAreaNode extends Node {
     this.addChild(this.overlayLayer);
 
     // System radios sit beside the source and outlive device-layer rebuilds.
-    this.systemChooser = new SourceSystemChooserNode(
-      model.systemProperty,
-      model.spinOneEnabledProperty,
-      model.su3EnabledProperty,
-    );
+    this.systemChooser = new SourceSystemChooserNode(model.systemProperty, model.spinOneEnabledProperty);
     this.addChild(this.systemChooser);
 
     // Devices and wires rebuild independently so a wiring drag never disposes its own port node.

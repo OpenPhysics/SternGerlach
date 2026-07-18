@@ -36,7 +36,6 @@ onReadyToLaunch(() => {
       tandem: Tandem.ROOT.createTandem("simScreen"),
       backgroundColorProperty: SternGerlachColors.backgroundColorProperty,
       spinOneEnabledProperty: simPreferences.spinOneEnabledProperty,
-      su3EnabledProperty: simPreferences.su3EnabledProperty,
     }),
   ];
 

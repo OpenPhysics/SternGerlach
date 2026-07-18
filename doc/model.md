@@ -33,7 +33,7 @@ in units of ħ (spin-½ analyzers report ±1 rather than ±ħ/2, matching SPINS)
 
 | Quantity | Symbol | Values |
 |---|---|---|
-| Quantum state | \|ψ⟩ | unit vector in ℂ² (spin-½) or ℂ³ (spin-1, SU(3)) |
+| Quantum state | \|ψ⟩ | unit vector in ℂ² (spin-½) or ℂ³ (spin-1) |
 | Measured spin component | Sn | eigenvalues +1, −1 (spin-½); +1, 0, −1 (spin-1) |
 | Analyzer direction | n̂(θ, φ) | θ ∈ [0, π], φ ∈ [0, 2π] (one *global* pair shared by all n̂ devices) |
 | Magnet field dial | n | integer 0–99; precession angle φ = 2π·n/72 (72 = one full turn) |
@@ -71,7 +71,7 @@ normalized to **detected** atoms, so they converge to each other even when mass 
 ## Initial states
 
 - **Random** (default): each atom is emitted in a randomly chosen eigenstate of a fixed basis —
-  Sz for spin-½, Sy for spin-1 and SU(3) — with equal probability. This is a *statistical
+  Sz for spin-½, Sy for spin-1 — with equal probability. This is a *statistical
   mixture*, not a superposition: it gives 50/50 through every analyzer direction for spin-½.
 - **Unknown #1–#4**: hard-coded mystery states for the classic lab exercise of determining an
   unknown state experimentally. They are deliberately never displayed.
@@ -79,12 +79,11 @@ normalized to **detected** atoms, so they converge to each other even when mass 
   rotates them into the computational Z basis). For spin-1, components are ordered by eigenvalue
   (+1, 0, −1).
 
-## The three systems
+## The two systems
 
 - **Spin ½** — 2-dimensional; analyzers split into 2 beams; observables Sx, Sy, Sz, Sn(θ, φ).
 - **Spin 1** — 3-dimensional; analyzers split into 3 beams (+1 top, 0 middle, −1 bottom).
-- **SU(3)** (hidden behind Preferences → Simulation) — an abstract 3-state system measured with
-  Gell-Mann-type observables λ₁–λ₈.
+  Offered when Preferences → Simulation enables Spin 1 (or via `?spinOne`).
 
 ## Simplifications and assumptions
 
@@ -92,11 +91,6 @@ normalized to **detected** atoms, so they converge to each other even when mass 
   beam deflection magnitudes, and gradients are not modeled. Only the quantum state matters.
 - **The n̂ direction is global** (SPINS parity): one (θ, φ) pair is shared by every n̂-type
   analyzer and magnet.
-- **"λ₈" is not the true Gell-Mann λ₈.** Inherited deliberately from SPINS: the eighth SU(3)
-  observable is the spin-1 Sz matrix diag(1, 0, −1), *not* the actual λ₈ = diag(1, 1, −2)/√3,
-  whose degenerate eigenspace the measurement engine cannot represent. Instructors using the
-  SU(3) mode for Gell-Mann algebra should be aware λ₈ outcomes will not match the textbook
-  operator (λ₁–λ₇ are exact).
 - **Recombination requires a common upstream device.** All wires into a device must come from the
   same source device — this is what makes the coherent-recombination rule well-defined. (The Java
   original permitted arbitrary merges but computed them incorrectly; this port forbids them.)

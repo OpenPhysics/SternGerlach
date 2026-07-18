@@ -5,7 +5,7 @@
  * SternGerlachNode: a black rounded box with a subtle entrance gradient, cyan
  * parabolic splitting curves from the input to each output hole (the middle
  * "0" output runs straight), dark exit holes, a white RichText label
- * (SG_Z, SG_n, λ₄ …), and an optional exit-blocker wall.
+ * (SG_Z, SG_n, …), and an optional exit-blocker wall.
  *
  * When Watch is on, a which-path light flashes at the output port each atom
  * leaves through (driven by analyzerExitEmitter, ~0.5 s fade).
@@ -30,11 +30,8 @@ const FLASH_RADIUS = 10;
 /** How long a which-path flash takes to fade out, seconds. */
 const FLASH_DURATION = 0.5;
 
-/** The display label for an analyzer/magnet type: SG with a subscript, or λ with one. */
+/** The display label for an analyzer/magnet type: SG with a subscript. */
 export function analyzerLabelMarkup(type: AnalyzerType): string {
-  if (type.code >= "1" && type.code <= "8") {
-    return `λ<sub>${type.code}</sub>`;
-  }
   return `SG<sub>${type.code}</sub>`;
 }
 

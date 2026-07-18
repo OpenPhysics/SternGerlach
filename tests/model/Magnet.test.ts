@@ -11,7 +11,7 @@ import { OperatorTable } from "../../src/common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 import { Magnet } from "../../src/stern-gerlach-screen/model/devices/Magnet.js";
 
-const { SPIN_HALF, SPIN_ONE, SU3 }: typeof SpinSystem = SpinSystem;
+const { SPIN_HALF, SPIN_ONE }: typeof SpinSystem = SpinSystem;
 
 describe("Magnet.computeU", () => {
   const table = new OperatorTable();
@@ -26,8 +26,6 @@ describe("Magnet.computeU", () => {
       [SPIN_ONE, AnalyzerType.X],
       [SPIN_ONE, AnalyzerType.Y],
       [SPIN_ONE, AnalyzerType.N],
-      [SU3, AnalyzerType.LAMBDA_4],
-      [SU3, AnalyzerType.LAMBDA_7],
     ];
     for (const [system, type] of cases) {
       for (const field of [0, 7, 18, 36, 55, 72, 99]) {

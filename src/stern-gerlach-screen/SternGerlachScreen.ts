@@ -21,8 +21,6 @@ import { SternGerlachScreenView } from "./view/SternGerlachScreenView.js";
 type SelfOptions = {
   /** Whether Spin 1 is offered as a system (from Preferences → Simulation). */
   spinOneEnabledProperty: TReadOnlyProperty<boolean>;
-  /** Whether SU(3) is offered as a system (from Preferences → Simulation). */
-  su3EnabledProperty: TReadOnlyProperty<boolean>;
 };
 
 // Require tandem to be explicit — accidental omission would break PhET-iO.
@@ -35,7 +33,6 @@ export class SternGerlachScreen extends Screen<SternGerlachModel, SternGerlachSc
       () =>
         new SternGerlachModel(undefined, {
           spinOneEnabledProperty: options.spinOneEnabledProperty,
-          su3EnabledProperty: options.su3EnabledProperty,
         }),
       // View factory — receives the model instance
       (model) =>

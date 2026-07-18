@@ -6,8 +6,7 @@
  *   2. entering real and imaginary parts for each basis ket,
  *   3. previewing the normalized result in the Z basis the analyzers use.
  *
- * The third component row is shown only for 3-state systems; the basis chooser
- * is hidden for SU(3), which takes amplitudes directly (Java getDataFromUser).
+ * The third component row is shown only for 3-state (spin-1) systems.
  */
 
 import {
@@ -23,7 +22,7 @@ import { PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, NumberSpinner } from "scenerystack/sun";
 import { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import type { OperatorTable } from "../../../common/quantum/OperatorTable.js";
-import { SpinSystem } from "../../../common/quantum/SpinSystem.js";
+import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
 import {
   amplitudeBasisLabels,
   basisLabels,
@@ -109,7 +108,6 @@ export class UserStateDialog extends SimDialog {
         spacing: 16,
         radioButtonOptions: { radius: 8 },
         accessibleName: a11y.controls.userStateBasisRadioGroupStringProperty,
-        visibleProperty: new DerivedProperty([systemProperty], (system) => system !== SpinSystem.SU3),
       },
     );
 

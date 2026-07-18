@@ -60,8 +60,8 @@ export function computationalProbabilities(state: ComplexVector, stateCount: num
 
 /**
  * Display labels for the computational Z-basis kets, in component order.
- * Spin-½ uses "+z" / "−z"; spin-1 / SU(3) uses "+1" / "0" / "−1" (m values).
- * Component order for 3-state matches OperatorTable op 7: (+1, 0, −1).
+ * Spin-½ uses "+z" / "−z"; spin-1 uses "+1" / "0" / "−1" (m values).
+ * Component order for 3-state matches OperatorTable op 3: (+1, 0, −1).
  */
 export function basisLabels(system: SpinSystem): readonly string[] {
   return system.stateCount === 2 ? ["+z", "−z"] : ["+1", "0", "−1"];

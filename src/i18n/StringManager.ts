@@ -170,7 +170,7 @@ export class StringManager {
   }
 
   /**
-   * Localized names of the quantum systems (spin-½, spin-1, SU(3)).
+   * Localized names of the quantum systems (spin-½, spin-1).
    */
   public getSystems() {
     return stringProperties.systems;

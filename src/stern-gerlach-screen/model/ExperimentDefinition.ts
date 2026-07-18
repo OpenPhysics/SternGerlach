@@ -6,9 +6,8 @@
  * the free-form builder edits, so one device-graph model serves both.
  *
  * The recipe is parametrized by the active SpinSystem: analyzers grow a third
- * output (and a third counter) under 3-state systems, and analyzer types fall
- * back to the system default where a preset's type is not available (e.g. Z
- * under SU(3) becomes λ₁).
+ * output (and a third counter) under spin-1. Analyzer types are Z/X/Y/N under
+ * both systems.
  *
  * Layout: model coordinates, source on the left, beam flowing +x; counters
  * for one analyzer stack in a column so the group reads like a histogram.
@@ -26,11 +25,6 @@ import { Wire } from "./Wire.js";
 
 /** Vertical spacing between stacked counters, model units. */
 const COUNTER_SPACING = 0.42;
-
-/** The analyzer type to use under `system`, falling back to the system default. */
-function typeFor(preferred: AnalyzerType, system: SpinSystem): AnalyzerType {
-  return system.analyzerTypes.includes(preferred) ? preferred : system.defaultType;
-}
 
 /**
  * Adds one counter per remaining unwired output of `analyzer`, stacked in a column at x,
@@ -100,7 +94,7 @@ export class ExperimentDefinition {
   private static singleAnalyzer(nameKey: string, type: AnalyzerType): ExperimentDefinition {
     return new ExperimentDefinition(nameKey, (graph, system) => {
       const source = new ParticleSource(new Vector2(0.4, 0));
-      const analyzer = new Analyzer(new Vector2(1.4, 0), typeFor(type, system));
+      const analyzer = new Analyzer(new Vector2(1.4, 0), type);
       graph.addDevice(source);
       graph.addDevice(analyzer);
       graph.addWire(new Wire(source, 0, analyzer));
@@ -112,8 +106,8 @@ export class ExperimentDefinition {
   private static chained(nameKey: string, firstType: AnalyzerType, secondType: AnalyzerType): ExperimentDefinition {
     return new ExperimentDefinition(nameKey, (graph, system) => {
       const source = new ParticleSource(new Vector2(0.35, 0.3));
-      const first = new Analyzer(new Vector2(1.15, 0.3), typeFor(firstType, system));
-      const second = new Analyzer(new Vector2(2.15, 0.7), typeFor(secondType, system));
+      const first = new Analyzer(new Vector2(1.15, 0.3), firstType);
+      const second = new Analyzer(new Vector2(2.15, 0.7), secondType);
       graph.addDevice(source);
       graph.addDevice(first);
       graph.addDevice(second);
@@ -132,9 +126,9 @@ export class ExperimentDefinition {
   private static interferometer(): ExperimentDefinition {
     return new ExperimentDefinition("interferometer", (graph, system) => {
       const source = new ParticleSource(new Vector2(0.3, 0.25));
-      const first = new Analyzer(new Vector2(1.0, 0.25), typeFor(AnalyzerType.Z, system));
-      const middle = new Analyzer(new Vector2(1.85, 0.55), typeFor(AnalyzerType.X, system));
-      const last = new Analyzer(new Vector2(2.7, 0.55), typeFor(AnalyzerType.Z, system));
+      const first = new Analyzer(new Vector2(1.0, 0.25), AnalyzerType.Z);
+      const middle = new Analyzer(new Vector2(1.85, 0.55), AnalyzerType.X);
+      const last = new Analyzer(new Vector2(2.7, 0.55), AnalyzerType.Z);
       graph.addDevice(source);
       graph.addDevice(first);
       graph.addDevice(middle);
@@ -157,9 +151,9 @@ export class ExperimentDefinition {
   private static magnetPrecession(): ExperimentDefinition {
     return new ExperimentDefinition("magnet", (graph, system) => {
       const source = new ParticleSource(new Vector2(0.35, 0.3));
-      const first = new Analyzer(new Vector2(1.05, 0.3), typeFor(AnalyzerType.Z, system));
-      const magnet = new Magnet(new Vector2(1.8, 0.6), typeFor(AnalyzerType.Y, system));
-      const last = new Analyzer(new Vector2(2.6, 0.6), typeFor(AnalyzerType.X, system));
+      const first = new Analyzer(new Vector2(1.05, 0.3), AnalyzerType.Z);
+      const magnet = new Magnet(new Vector2(1.8, 0.6), AnalyzerType.Y);
+      const last = new Analyzer(new Vector2(2.6, 0.6), AnalyzerType.X);
       graph.addDevice(source);
       graph.addDevice(first);
       graph.addDevice(magnet);
@@ -181,8 +175,8 @@ export class ExperimentDefinition {
   private static recombination(): ExperimentDefinition {
     return new ExperimentDefinition("recombination", (graph, system) => {
       const source = new ParticleSource(new Vector2(0.3, 0.25));
-      const first = new Analyzer(new Vector2(1.05, 0.25), typeFor(AnalyzerType.Z, system));
-      const second = new Analyzer(new Vector2(2.15, 0.55), typeFor(AnalyzerType.X, system));
+      const first = new Analyzer(new Vector2(1.05, 0.25), AnalyzerType.Z);
+      const second = new Analyzer(new Vector2(2.15, 0.55), AnalyzerType.X);
       graph.addDevice(source);
       graph.addDevice(first);
       graph.addDevice(second);

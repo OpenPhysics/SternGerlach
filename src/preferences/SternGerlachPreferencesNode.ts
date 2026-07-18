@@ -48,30 +48,10 @@ export class SternGerlachPreferencesNode extends VBox {
       maxWidth: 400,
     });
 
-    const su3Checkbox = new Checkbox(
-      preferencesModel.su3EnabledProperty,
-      new Text(prefStrings.su3EnableStringProperty, {
-        font: new PhetFont(14),
-        fill: PREFERENCES_TEXT_COLOR,
-      }),
-      {
-        checkboxColor: PREFERENCES_TEXT_COLOR,
-        checkboxColorBackground: PREFERENCES_CONTROL_BACKGROUND,
-        spacing: 8,
-        ...(tandem && { tandem: tandem.createTandem("su3Checkbox") }),
-      },
-    );
-
-    const su3Description = new Text(prefStrings.su3EnableDescriptionStringProperty, {
-      font: new PhetFont(12),
-      fill: PREFERENCES_TEXT_COLOR,
-      maxWidth: 400,
-    });
-
     super({
       align: "left",
       spacing: 8,
-      children: [header, spinOneCheckbox, spinOneDescription, su3Checkbox, su3Description],
+      children: [header, spinOneCheckbox, spinOneDescription],
     });
   }
 }

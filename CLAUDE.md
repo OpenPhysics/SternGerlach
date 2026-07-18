@@ -5,9 +5,9 @@ Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhys
 ## Project
 
 Single-screen SceneryStack simulation of the **Stern–Gerlach experiment**: build
-apparatus from analyzers, magnets, and counters; fire spin-½ / spin-1 / SU(3)
-atoms; compare Monte Carlo counts with analytic expectations. Model/view
-separation, color profiles, localization, and accessibility are fully wired.
+apparatus from analyzers, magnets, and counters; fire spin-½ / spin-1 atoms;
+compare Monte Carlo counts with analytic expectations. Model/view separation,
+color profiles, localization, and accessibility are fully wired.
 For multi-screen sims, see `doc/multi-screen.md`.
 
 ## Key files

@@ -1,7 +1,7 @@
 /**
  * Unit tests for OperatorTable — the port of Experiment.initVectors() and
  * SetPhi(). Verifies for every operator that the eigenvectors are orthonormal
- * eigenstates with the Java eigenvalue-order convention (+1, −1, 0), that
+ * eigenstates with the eigenvalue-order convention (+1, −1, 0), that
  * opSquared = op², that Sn(θ, φ) reduces to Sz / Sx at special angles, and
  * that the hard-coded unknown states and Random bases are normalized.
  */
@@ -13,9 +13,9 @@ import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 
 const EIGENVALUES = [1, -1, 0] as const;
 
-/** Eigenvector count per operator: op 10 (spin-½ Sn) defines only 2; all others define 3. */
+/** Eigenvector count per operator: op 6 (spin-½ Sn) defines only 2; all others define 3. */
 function eigenvectorCount(op: number): number {
-  return op === 10 ? 2 : 3;
+  return op === 6 ? 2 : 3;
 }
 
 describe("OperatorTable", () => {
@@ -54,22 +54,26 @@ describe("OperatorTable", () => {
     }
   });
 
-  it("operatorsSquared equals the operator squared, for all 12 operators", () => {
+  it("operatorsSquared equals the operator squared for every operator", () => {
     for (let op = 0; op < OPERATOR_COUNT; op++) {
       expect(table.getOperatorSquared(op).equalsEpsilon(table.getOperator(op).squared(), 1e-12), `op ${op}`).toBe(true);
     }
   });
 
+  it("OPERATOR_COUNT is 8 (spin-½ + spin-1 fixed ops and Sn pair)", () => {
+    expect(OPERATOR_COUNT).toBe(8);
+  });
+
   it("Sn(0, ·) ≡ Sz for both spin-½ and spin-1", () => {
     const rotated = new OperatorTable(0, 1.23);
-    expect(rotated.getOperator(10).equalsEpsilon(rotated.getOperator(2), 1e-12)).toBe(true);
-    expect(rotated.getOperator(11).equalsEpsilon(rotated.getOperator(7), 1e-12)).toBe(true);
+    expect(rotated.getOperator(6).equalsEpsilon(rotated.getOperator(2), 1e-12)).toBe(true);
+    expect(rotated.getOperator(7).equalsEpsilon(rotated.getOperator(3), 1e-12)).toBe(true);
   });
 
   it("Sn(π/2, 0) ≡ Sx for both spin-½ and spin-1", () => {
     const rotated = new OperatorTable(Math.PI / 2, 0);
-    expect(rotated.getOperator(10).equalsEpsilon(rotated.getOperator(0), 1e-12)).toBe(true);
-    expect(rotated.getOperator(11).equalsEpsilon(rotated.getOperator(8), 1e-12)).toBe(true);
+    expect(rotated.getOperator(6).equalsEpsilon(rotated.getOperator(0), 1e-12)).toBe(true);
+    expect(rotated.getOperator(7).equalsEpsilon(rotated.getOperator(4), 1e-12)).toBe(true);
   });
 
   it("setDirectionAngles updates θ/φ and keeps Sn eigenvectors consistent", () => {
@@ -77,7 +81,7 @@ describe("OperatorTable", () => {
     mutable.setDirectionAngles(1.0, 2.0);
     expect(mutable.theta).toBe(1.0);
     expect(mutable.phi).toBe(2.0);
-    for (const op of [10, 11]) {
+    for (const op of [6, 7]) {
       const h = mutable.getOperator(op);
       for (let k = 0; k < eigenvectorCount(op); k++) {
         const e = mutable.getEigenvector(op, k);
@@ -87,17 +91,14 @@ describe("OperatorTable", () => {
     }
   });
 
-  it("unknown initial states are normalized; SU(3) aliases the spin-1 set", () => {
-    for (const system of [SpinSystem.SPIN_HALF, SpinSystem.SPIN_ONE, SpinSystem.SU3]) {
+  it("unknown initial states are normalized for both spin systems", () => {
+    for (const system of [SpinSystem.SPIN_HALF, SpinSystem.SPIN_ONE]) {
       for (let i = 0; i < 4; i++) {
         expect(table.getUnknownState(system, i).magnitudeSquared(), `${system.name} unknown #${i + 1}`).toBeCloseTo(
           1,
           10,
         );
       }
-    }
-    for (let i = 0; i < 4; i++) {
-      expect(table.getUnknownState(SpinSystem.SU3, i)).toBe(table.getUnknownState(SpinSystem.SPIN_ONE, i));
     }
   });
 
@@ -106,31 +107,26 @@ describe("OperatorTable", () => {
     expect(table.getUnknownState(SpinSystem.SPIN_HALF, 1)).toBe(table.getEigenvector(1, 1));
   });
 
-  it("Random bases: Sz eigenstates for spin-½, spin-1 Sy eigenstates otherwise", () => {
+  it("Random bases: Sz eigenstates for spin-½, Sy eigenstates for spin-1", () => {
     const half = table.getRandomBasis(SpinSystem.SPIN_HALF);
     expect(half).toHaveLength(2);
     expect(half[0]).toBe(table.getEigenvector(2, 0));
     expect(half[1]).toBe(table.getEigenvector(2, 1));
 
-    for (const system of [SpinSystem.SPIN_ONE, SpinSystem.SU3]) {
-      const basis = table.getRandomBasis(system);
-      expect(basis).toHaveLength(3);
-      for (let i = 0; i < 3; i++) {
-        expect(basis[i]).toBe(table.getEigenvector(9, i));
-      }
+    const one = table.getRandomBasis(SpinSystem.SPIN_ONE);
+    expect(one).toHaveLength(3);
+    for (let i = 0; i < 3; i++) {
+      expect(one[i]).toBe(table.getEigenvector(5, i));
     }
   });
 
-  it("SpinSystem typeTable matches Experiment.java:246-261", () => {
-    const { SPIN_HALF, SPIN_ONE, SU3 } = SpinSystem;
-    expect(SPIN_HALF.analyzerTypes.map((t) => SPIN_HALF.opFor(t))).toEqual([2, 0, 1, 10]);
-    expect(SPIN_ONE.analyzerTypes.map((t) => SPIN_ONE.opFor(t))).toEqual([7, 8, 9, 11]);
-    expect(SU3.analyzerTypes.map((t) => SU3.opFor(t))).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  it("SpinSystem typeTable maps Z/X/Y/N onto contiguous operator indices", () => {
+    const { SPIN_HALF, SPIN_ONE } = SpinSystem;
+    expect(SPIN_HALF.analyzerTypes.map((t) => SPIN_HALF.opFor(t))).toEqual([2, 0, 1, 6]);
+    expect(SPIN_ONE.analyzerTypes.map((t) => SPIN_ONE.opFor(t))).toEqual([3, 4, 5, 7]);
     expect(SPIN_HALF.stateCount).toBe(2);
     expect(SPIN_ONE.stateCount).toBe(3);
-    expect(SU3.stateCount).toBe(3);
     expect(SPIN_HALF.defaultType.code).toBe("Z");
     expect(SPIN_ONE.defaultType.code).toBe("Z");
-    expect(SU3.defaultType.code).toBe("1");
   });
 });

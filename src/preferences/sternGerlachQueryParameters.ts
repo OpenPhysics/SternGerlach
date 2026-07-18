@@ -29,16 +29,6 @@ const sternGerlachQueryParameters = QueryStringMachine.getAll({
     defaultValue: false,
     public: true,
   },
-
-  /**
-   * Enables the SU(3) (Gell-Mann λ₁-λ₈) quantum system as an additional choice.
-   * Off by default; also toggleable at runtime in Preferences → Simulation.
-   */
-  su3: {
-    type: "boolean",
-    defaultValue: false,
-    public: true,
-  },
 });
 
 SternGerlachNamespace.register("sternGerlachQueryParameters", sternGerlachQueryParameters);

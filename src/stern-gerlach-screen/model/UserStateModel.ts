@@ -17,11 +17,11 @@ import { Complex } from "../../common/quantum/Complex.js";
 import { ComplexMatrix } from "../../common/quantum/ComplexMatrix.js";
 import { ComplexVector } from "../../common/quantum/ComplexVector.js";
 import type { OperatorTable } from "../../common/quantum/OperatorTable.js";
-import { SpinSystem } from "../../common/quantum/SpinSystem.js";
+import type { SpinSystem } from "../../common/quantum/SpinSystem.js";
 
-/** Operator indices of the Z / X / Y eigenbases per system dimension (Java EigenVector aliases). */
+/** Operator indices of the Z / X / Y eigenbases per system dimension. */
 const SPIN_HALF_OPS = { Z: 2, X: 0, Y: 1 };
-const SPIN_ONE_OPS = { Z: 7, X: 8, Y: 9 };
+const SPIN_ONE_OPS = { Z: 3, X: 4, Y: 5 };
 
 /** Maps a user "normal order" index (+1, 0, −1) to the operator table's order (+1, −1, 0). */
 const NORMAL_TO_TABLE = [0, 2, 1];
@@ -55,8 +55,8 @@ export class UserStateModel {
   }
 
   /**
-   * The user's amplitudes, normalized and rotated into the computational Z basis. SU(3) input is
-   * taken directly (no rotation, as in Java); spin-½ and spin-1 rotate from the chosen X/Y basis.
+   * The user's amplitudes, normalized and rotated into the computational Z basis.
+   * Spin-½ and spin-1 rotate from the chosen X/Y basis; Z-basis input is taken as-is.
    */
   public toZBasisVector(operatorTable: OperatorTable, system: SpinSystem): ComplexVector {
     const stateCount = system.stateCount;
@@ -73,7 +73,7 @@ export class UserStateModel {
     const value = raw.normalize();
 
     const basis = this.basisProperty.value;
-    if (basis === AnalyzerType.Z || system === SpinSystem.SU3) {
+    if (basis === AnalyzerType.Z) {
       return value;
     }
 

@@ -24,14 +24,14 @@
     "custom": "[Custom]"
   },
   "experimentGuidance": {
-    "singleZ": "With |+z⟩ prepared (the default), the UP counter should get every atom. Switch to Random and watch both counters converge to 50/50.",
-    "singleX": "A Z-prepared state measured along X is 50/50. Watch the counters converge when Expected Values is on.",
-    "zThenX": "After SGz, the UP beam is |+z⟩. Measuring that beam with SGx should again be 50/50.",
-    "zThenZ": "Repeating the same basis leaves the state unchanged. The second SGz should never flip an UP atom to DOWN.",
-    "interferometer": "With Watch off, recombining both SGx paths restores the original state at the final SGz. Turn Watch on and the interference vanishes.",
-    "magnet": "Dial the magnet field to precess the spin. The X-analyzer counts should oscillate with field strength.",
-    "recombination": "Merging selected paths before the next analyzer can restore coherence. Compare Watch on versus off.",
-    "custom": "Build your own apparatus: drag devices from the toolbox, wire ports, and try blocking an exit to filter a spin component."
+    "singleZ": "Start with |+z⟩ (the default): the UP counter should get every atom. Switch to |+x⟩ or Random to see other statistics.",
+    "singleX": "With |+z⟩ prepared, an X measurement is 50/50. Try |+x⟩ next — then UP should get every atom.",
+    "zThenX": "With |+z⟩ prepared, the first SGz sends everything UP. That beam is still |+z⟩, so SGx on it is 50/50.",
+    "zThenZ": "With |+z⟩ prepared, both SGz analyzers send every atom UP — repeating the same basis never flips the state.",
+    "interferometer": "Prepare |+z⟩. With Watch off, recombining both SGx paths restores |+z⟩ at the final SGz. Turn Watch on and interference vanishes.",
+    "magnet": "Prepare |+z⟩, then dial the magnet field to precess the spin before SGx. Counts should oscillate with field strength.",
+    "recombination": "Prepare |+z⟩. Merging selected paths before the next analyzer can restore coherence — compare Watch on versus off.",
+    "custom": "Prepare a named eigenstate near the source, then build your own apparatus: drag devices, wire ports, and try blocking an exit."
   },
   "statePreparation": {
     "title": "Prepared State",
@@ -156,21 +156,18 @@
     "imaginary": "Imaginary",
     "howToUseTitle": "How to Use This Simulation",
     "howToUseStep1": "Start with an experiment preset, or switch System to Custom and drag analyzers, magnets, and counters onto the board to build your own.",
-    "howToUseStep2": "Set the initial state near the source: start with |+z⟩ (the default), then try |−z⟩, |+x⟩, |−x⟩, Random, or a mystery Unknown state.",
+    "howToUseStep2": "Set the initial state near the source: |+z⟩ is the default. Try |−z⟩, |+x⟩, or |−x⟩ next; Random and Unknown are for mixture and mystery exercises later.",
     "howToUseStep3": "Fire a single atom to watch it travel through the apparatus, or switch to Continuous and turn on Watch to see many at once.",
     "howToUseStep4": "Turn on Expected Values and use the Do-N buttons to run large batches, then check whether the counter statistics converge to the prediction.",
     "howToUseStep5": "Once you have the basics, try blocking an analyzer exit or changing the direction angles to see how the outcome shifts."
   },
   "systems": {
     "spinHalf": "Spin ½",
-    "spinOne": "Spin 1",
-    "su3": "SU(3)"
+    "spinOne": "Spin 1"
   },
   "preferences": {
     "title": "Simulation",
     "spinOneEnable": "Enable Spin 1 system",
-    "spinOneEnableDescription": "Shows a Spin ½ / Spin 1 chooser on the particle source. Off by default (spin-½ only).",
-    "su3Enable": "Enable SU(3) system",
-    "su3EnableDescription": "Adds SU(3) (Gell-Mann λ₁–λ₈) as an additional quantum system on the source chooser."
+    "spinOneEnableDescription": "Shows a Spin ½ / Spin 1 chooser on the particle source. Off by default (spin-½ only)."
   }
 }

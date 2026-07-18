@@ -59,7 +59,7 @@ const DEFAULT_CUSTOM_SNAPSHOT: GraphSnapshot = {
 };
 
 export class SternGerlachModel implements TModel {
-  /** The quantum system being simulated. SU(3) joins the valid set via a preference (later milestone). */
+  /** The quantum system being simulated (spin-½ or spin-1). */
   public readonly systemProperty: Property<SpinSystem>;
 
   /** The selected preset experiment. */
@@ -104,9 +104,6 @@ export class SternGerlachModel implements TModel {
   /** Whether the Spin 1 system is offered (Preferences → Simulation). */
   public readonly spinOneEnabledProperty: TReadOnlyProperty<boolean>;
 
-  /** Whether the SU(3) system is offered (Preferences → Simulation). */
-  public readonly su3EnabledProperty: TReadOnlyProperty<boolean>;
-
   /** True while the free-form builder (CUSTOM) is active; gates all editing in the view. */
   public readonly isCustomProperty: TReadOnlyProperty<boolean>;
 
@@ -123,18 +120,15 @@ export class SternGerlachModel implements TModel {
 
   /**
    * @param rng - uniform [0,1) random source; tests inject a seeded one (default: dotRandom)
-   * @param options.su3EnabledProperty - whether SU(3) is a selectable system (default: off)
    * @param options.spinOneEnabledProperty - whether Spin 1 is a selectable system (default: off)
    */
   public constructor(
     rng: Rng = () => dotRandom.nextDouble(),
     options: {
-      su3EnabledProperty?: TReadOnlyProperty<boolean>;
       spinOneEnabledProperty?: TReadOnlyProperty<boolean>;
     } = {},
   ) {
     this.rng = rng;
-    this.su3EnabledProperty = options.su3EnabledProperty ?? new BooleanProperty(false);
     this.spinOneEnabledProperty = options.spinOneEnabledProperty ?? new BooleanProperty(false);
     this.systemProperty = new Property(SpinSystem.SPIN_HALF);
     this.experimentProperty = new Property(ExperimentDefinition.DEFAULT);
@@ -192,14 +186,9 @@ export class SternGerlachModel implements TModel {
       }
     });
 
-    // Disabling an advanced system while it is active falls back to spin-½.
+    // Disabling Spin 1 while it is active falls back to spin-½.
     this.spinOneEnabledProperty.lazyLink((enabled) => {
       if (!enabled && this.systemProperty.value === SpinSystem.SPIN_ONE) {
-        this.systemProperty.value = SpinSystem.SPIN_HALF;
-      }
-    });
-    this.su3EnabledProperty.lazyLink((enabled) => {
-      if (!enabled && this.systemProperty.value === SpinSystem.SU3) {
         this.systemProperty.value = SpinSystem.SPIN_HALF;
       }
     });
@@ -349,28 +338,25 @@ export class SternGerlachModel implements TModel {
   }
 
   /**
-   * Replicates the Java setSystem on the live custom graph: reset every analyzer/magnet to the
-   * system default type and, when entering a 2-state system, delete wires from the (now absent)
-   * third output port. Presets rebuild from scratch instead, so this only runs in CUSTOM mode.
+   * When switching systems in CUSTOM mode: keep analyzer/magnet types (both systems
+   * share Z/X/Y/N), but drop wires and blockers that use the spin-1-only third port
+   * when entering spin-½. Presets rebuild from scratch instead.
    */
   private applySetSystemSemantics(): void {
     const system = this.systemProperty.value;
+    if (system.stateCount !== 2) {
+      this.handleConfigurationChange();
+      return;
+    }
     this.rebuildingGraph = true;
     try {
-      for (const device of this.graph.devices) {
-        if (device instanceof Analyzer || device instanceof Magnet) {
-          device.typeProperty.value = system.defaultType;
-        }
+      for (const wire of this.graph.wires.filter((w) => w.outputIndex === 2)) {
+        this.graph.removeWire(wire);
       }
-      if (system.stateCount === 2) {
-        for (const wire of this.graph.wires.filter((w) => w.outputIndex === 2)) {
-          this.graph.removeWire(wire);
-        }
-        // A blocker on the (now absent) third output would be unrepresentable in the UI.
-        for (const device of this.graph.devices) {
-          if (device instanceof Analyzer && device.blockedOutputProperty.value >= system.stateCount) {
-            device.blockedOutputProperty.value = NO_BLOCKED_OUTPUT;
-          }
+      // A blocker on the (now absent) third output would be unrepresentable in the UI.
+      for (const device of this.graph.devices) {
+        if (device instanceof Analyzer && device.blockedOutputProperty.value >= system.stateCount) {
+          device.blockedOutputProperty.value = NO_BLOCKED_OUTPUT;
         }
       }
     } finally {
@@ -413,11 +399,10 @@ export class SternGerlachModel implements TModel {
   }
 
   /**
-   * Rebuilds the graph from a snapshot. The build may have been captured under a different
-   * system (leave Custom → switch system → return to Custom), so everything system-dependent
-   * is sanitized against the *current* system: invalid analyzer/magnet types fall back to the
-   * system default, wires from output ports the system doesn't have are dropped, and blockers
-   * on absent ports are cleared.
+   * Rebuilds the graph from a snapshot. The build may have been captured under spin-1 and
+   * restored under spin-½ (or the reverse), so port-dependent data is sanitized: wires from
+   * output ports the current system doesn't have are dropped, and blockers on absent ports
+   * are cleared. Analyzer/magnet types are kept as-is (both systems share Z/X/Y/N).
    */
   private restoreSnapshot(snapshot: GraphSnapshot): void {
     const system = this.systemProperty.value;
@@ -435,20 +420,19 @@ export class SternGerlachModel implements TModel {
     }
   }
 
-  /** Reconstructs a single device from its snapshot descriptor, sanitized for the given system. */
+  /** Reconstructs a single device from its snapshot; clears blockers on ports the system lacks. */
   private deviceFromSnapshot(snap: DeviceSnapshot, system: SpinSystem): ExperimentDevice {
     if (snap.kind === "source") {
       return new ParticleSource(snap.position.copy());
     }
-    const validType = (type: AnalyzerType) => (system.analyzerTypes.includes(type) ? type : system.defaultType);
     if (snap.kind === "analyzer") {
-      const analyzer = new Analyzer(snap.position.copy(), validType(snap.type));
+      const analyzer = new Analyzer(snap.position.copy(), snap.type);
       const blocked = snap.blockedOutput ?? NO_BLOCKED_OUTPUT;
       analyzer.blockedOutputProperty.value = blocked < system.stateCount ? blocked : NO_BLOCKED_OUTPUT;
       return analyzer;
     }
     if (snap.kind === "magnet") {
-      const magnet = new Magnet(snap.position.copy(), validType(snap.type));
+      const magnet = new Magnet(snap.position.copy(), snap.type);
       magnet.fieldNumberProperty.value = snap.field;
       return magnet;
     }

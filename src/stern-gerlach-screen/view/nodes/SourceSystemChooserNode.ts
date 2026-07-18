@@ -1,13 +1,13 @@
 /**
  * SourceSystemChooserNode.ts
  *
- * Quantum-system radios (Spin ½ / Spin 1 / SU(3)) shown next to the particle
- * source when Preferences enable advanced systems. Kept outside SourceNode so a
- * system switch can rebuild the device layer without disposing these radios
- * mid-click (which broke Voicing with "utterance is not an Utterance").
+ * Quantum-system radios (Spin ½ / Spin 1) shown next to the particle source when
+ * Preferences enable Spin 1. Kept outside SourceNode so a system switch can
+ * rebuild the device layer without disposing these radios mid-click (which
+ * broke Voicing with "utterance is not an Utterance").
  */
 
-import { DerivedProperty, type Property, type TReadOnlyProperty } from "scenerystack/axon";
+import type { Property, TReadOnlyProperty } from "scenerystack/axon";
 import { Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup } from "scenerystack/sun";
@@ -17,22 +17,13 @@ import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 
 export class SourceSystemChooserNode extends SimPanel {
-  public constructor(
-    systemProperty: Property<SpinSystem>,
-    spinOneEnabledProperty: TReadOnlyProperty<boolean>,
-    su3EnabledProperty: TReadOnlyProperty<boolean>,
-  ) {
+  public constructor(systemProperty: Property<SpinSystem>, spinOneEnabledProperty: TReadOnlyProperty<boolean>) {
     const strings = StringManager.getInstance();
     const systems = strings.getSystems();
     const a11y = strings.getA11yStrings();
 
     const radioFont = new PhetFont({ size: 12, weight: "bold" });
     const labelFill = SternGerlachColors.textColorProperty;
-
-    const visibleProperty = new DerivedProperty(
-      [spinOneEnabledProperty, su3EnabledProperty],
-      (spinOne, su3) => spinOne || su3,
-    );
 
     const radioGroup = new AquaRadioButtonGroup(
       systemProperty,
@@ -44,12 +35,6 @@ export class SourceSystemChooserNode extends SimPanel {
         {
           value: SpinSystem.SPIN_ONE,
           createNode: () => new Text(systems.spinOneStringProperty, { font: radioFont, fill: labelFill }),
-          options: { visibleProperty: spinOneEnabledProperty },
-        },
-        {
-          value: SpinSystem.SU3,
-          createNode: () => new Text(systems.su3StringProperty, { font: radioFont, fill: labelFill }),
-          options: { visibleProperty: su3EnabledProperty },
         },
       ],
       {
@@ -60,6 +45,6 @@ export class SourceSystemChooserNode extends SimPanel {
       },
     );
 
-    super(radioGroup, { xMargin: 8, yMargin: 8, visibleProperty });
+    super(radioGroup, { xMargin: 8, yMargin: 8, visibleProperty: spinOneEnabledProperty });
   }
 }

@@ -139,7 +139,7 @@ const SternGerlachColors = {
     projector: "#ffdd00",
   }),
 
-  /** Analyzer label text (SG_Z, λ₄, …). */
+  /** Analyzer label text (SG_Z, SG_n, …). */
   analyzerLabelFillProperty: new ProfileColorProperty(SternGerlachNamespace, "analyzerLabelFill", {
     default: "#e8f7ff",
     projector: "#ffffff",
