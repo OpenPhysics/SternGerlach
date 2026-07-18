@@ -7,8 +7,14 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { ComplexMatrix } from "../../src/common/quantum/ComplexMatrix.js";
 import { ComplexVector } from "../../src/common/quantum/ComplexVector.js";
-import { OPERATOR_COUNT, OperatorTable } from "../../src/common/quantum/OperatorTable.js";
+import {
+  DEFAULT_DIRECTION_PHI,
+  DEFAULT_DIRECTION_THETA,
+  OPERATOR_COUNT,
+  OperatorTable,
+} from "../../src/common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 
 const EIGENVALUES = [1, -1, 0] as const;
@@ -18,21 +24,32 @@ function eigenvectorCount(op: number): number {
   return op === 6 ? 2 : 3;
 }
 
+/** Angle-aware lookups: ops 6-7 require explicit (θ, φ); use the device defaults here. */
+function operatorOf(table: OperatorTable, op: number): ComplexMatrix {
+  return table.getOperator(op, DEFAULT_DIRECTION_THETA, DEFAULT_DIRECTION_PHI);
+}
+function operatorSquaredOf(table: OperatorTable, op: number): ComplexMatrix {
+  return table.getOperatorSquared(op, DEFAULT_DIRECTION_THETA, DEFAULT_DIRECTION_PHI);
+}
+function eigenvectorOf(table: OperatorTable, op: number, index: number): ComplexVector {
+  return table.getEigenvector(op, index, DEFAULT_DIRECTION_THETA, DEFAULT_DIRECTION_PHI);
+}
+
 describe("OperatorTable", () => {
   const table = new OperatorTable();
 
   it("every operator is Hermitian", () => {
     for (let op = 0; op < OPERATOR_COUNT; op++) {
-      const h = table.getOperator(op);
+      const h = operatorOf(table, op);
       expect(h.conjugateTranspose().equalsEpsilon(h, 1e-12), `op ${op} Hermitian`).toBe(true);
     }
   });
 
   it("every eigenvector satisfies H·e = λ·e with λ order (+1, −1, 0)", () => {
     for (let op = 0; op < OPERATOR_COUNT; op++) {
-      const h = table.getOperator(op);
+      const h = operatorOf(table, op);
       for (let k = 0; k < eigenvectorCount(op); k++) {
-        const e = table.getEigenvector(op, k);
+        const e = eigenvectorOf(table, op, k);
         const he = h.timesVector(e);
         const scaled = e.components.map((component) => component.timesScalar(EIGENVALUES[k]));
         const expected = new ComplexVector(scaled[0], scaled[1], scaled[2]);
@@ -46,7 +63,7 @@ describe("OperatorTable", () => {
       const count = eigenvectorCount(op);
       for (let a = 0; a < count; a++) {
         for (let b = 0; b < count; b++) {
-          const overlap = table.getEigenvector(op, a).innerProduct(table.getEigenvector(op, b));
+          const overlap = eigenvectorOf(table, op, a).innerProduct(eigenvectorOf(table, op, b));
           const expected = a === b ? 1 : 0;
           expect(overlap.magnitude(), `op ${op}: ⟨e${a}|e${b}⟩`).toBeCloseTo(expected, 10);
         }
@@ -56,7 +73,7 @@ describe("OperatorTable", () => {
 
   it("operatorsSquared equals the operator squared for every operator", () => {
     for (let op = 0; op < OPERATOR_COUNT; op++) {
-      expect(table.getOperatorSquared(op).equalsEpsilon(table.getOperator(op).squared(), 1e-12), `op ${op}`).toBe(true);
+      expect(operatorSquaredOf(table, op).equalsEpsilon(operatorOf(table, op).squared(), 1e-12), `op ${op}`).toBe(true);
     }
   });
 
@@ -65,26 +82,33 @@ describe("OperatorTable", () => {
   });
 
   it("Sn(0, ·) ≡ Sz for both spin-½ and spin-1", () => {
-    const rotated = new OperatorTable(0, 1.23);
-    expect(rotated.getOperator(6).equalsEpsilon(rotated.getOperator(2), 1e-12)).toBe(true);
-    expect(rotated.getOperator(7).equalsEpsilon(rotated.getOperator(3), 1e-12)).toBe(true);
+    expect(table.getOperator(6, 0, 1.23).equalsEpsilon(table.getOperator(2), 1e-12)).toBe(true);
+    expect(table.getOperator(7, 0, 1.23).equalsEpsilon(table.getOperator(3), 1e-12)).toBe(true);
   });
 
   it("Sn(π/2, 0) ≡ Sx for both spin-½ and spin-1", () => {
-    const rotated = new OperatorTable(Math.PI / 2, 0);
-    expect(rotated.getOperator(6).equalsEpsilon(rotated.getOperator(0), 1e-12)).toBe(true);
-    expect(rotated.getOperator(7).equalsEpsilon(rotated.getOperator(4), 1e-12)).toBe(true);
+    expect(table.getOperator(6, Math.PI / 2, 0).equalsEpsilon(table.getOperator(0), 1e-12)).toBe(true);
+    expect(table.getOperator(7, Math.PI / 2, 0).equalsEpsilon(table.getOperator(4), 1e-12)).toBe(true);
   });
 
-  it("setDirectionAngles updates θ/φ and keeps Sn eigenvectors consistent", () => {
-    const mutable = new OperatorTable();
-    mutable.setDirectionAngles(1.0, 2.0);
-    expect(mutable.theta).toBe(1.0);
-    expect(mutable.phi).toBe(2.0);
+  it("direction lookups are pure: interleaved (θ, φ) queries never disturb each other", () => {
+    const pure = new OperatorTable();
+    const before = pure.getEigenvector(6, 1, Math.PI / 2, 0);
+    // Query the same op at different angles in between — the Java-era mutable table
+    // would have returned this second query's eigenvectors for the first angles too.
+    pure.getEigenvector(6, 0, 0.7, 1.3);
+    pure.getOperator(7, 0.2, 0.9);
+    const after = pure.getEigenvector(6, 1, Math.PI / 2, 0);
+    expect(after.equalsEpsilon(before, 1e-15)).toBe(true);
+  });
+
+  it("Sn eigenvectors satisfy the eigen-equation at arbitrary angles", () => {
+    const theta = 1.0;
+    const phi = 2.0;
     for (const op of [6, 7]) {
-      const h = mutable.getOperator(op);
+      const h = table.getOperator(op, theta, phi);
       for (let k = 0; k < eigenvectorCount(op); k++) {
-        const e = mutable.getEigenvector(op, k);
+        const e = table.getEigenvector(op, k, theta, phi);
         const scaled = e.components.map((component) => component.timesScalar(EIGENVALUES[k]));
         expect(h.timesVector(e).equalsEpsilon(new ComplexVector(scaled[0], scaled[1], scaled[2]), 1e-12)).toBe(true);
       }

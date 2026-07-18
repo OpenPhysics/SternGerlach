@@ -20,6 +20,10 @@
  *    The Random initial state is averaged ½/⅓ over its fixed basis. Unlike
  *    Java, the walk is watch-aware, which keeps Do-N valid under Watch.
  *
+ * Every eigenvector/operator lookup passes the owning device's (θ, φ)
+ * explicitly (OperatorTable direction lookups are pure), so the recursive
+ * walk stays correct when several n̂ devices carry different angles.
+ *
  * The RNG is injected (production: dotRandom; tests: seeded), never global.
  */
 
@@ -56,6 +60,13 @@ export type TransitResult = {
 export type EngineOptions = {
   system: SpinSystem;
   watch: boolean;
+};
+
+/** An analyzer's operator index plus its own n̂ angles (ignored by the fixed operators). */
+type MeasurementOp = {
+  op: number;
+  theta: number;
+  phi: number;
 };
 
 // Branches with probability below this are numerically absent; also guards the
@@ -117,13 +128,26 @@ export class ExperimentEngine {
 
     assert?.(device instanceof Analyzer, `cannot transit through ${device.id}`);
     const analyzer = device as Analyzer;
-    const op = options.system.opFor(analyzer.typeProperty.value);
-    this.operatorTable.setDirectionAngles(analyzer.thetaProperty.value, analyzer.phiProperty.value);
+    const ref = this.measurementOpFor(analyzer, options.system);
 
     if (options.system.stateCount === 2) {
-      return this.transitTwoState(analyzer, op, state, options, rng);
+      return this.transitTwoState(analyzer, ref, state, options, rng);
     }
-    return this.transitThreeState(analyzer, op, state, options, rng);
+    return this.transitThreeState(analyzer, ref, state, options, rng);
+  }
+
+  /** The operator index and this analyzer's own n̂ angles, bundled for eigenvector lookups. */
+  private measurementOpFor(analyzer: Analyzer, system: SpinSystem): MeasurementOp {
+    return {
+      op: system.opFor(analyzer.typeProperty.value),
+      theta: analyzer.thetaProperty.value,
+      phi: analyzer.phiProperty.value,
+    };
+  }
+
+  /** Eigenvector lookup carrying the analyzer's own angles (pure — safe across recursion). */
+  private eigen(ref: MeasurementOp, index: number): ComplexVector {
+    return this.operatorTable.getEigenvector(ref.op, index, ref.theta, ref.phi);
   }
 
   /** Effective next device for an analyzer output, treating blocked exits as dead ends. */
@@ -137,7 +161,7 @@ export class ExperimentEngine {
   /** 2-state analyzer hop (NextComp lines 485-515). */
   private transitTwoState(
     analyzer: Analyzer,
-    op: number,
+    ref: MeasurementOp,
     state: ComplexVector,
     options: EngineOptions,
     rng: Rng,
@@ -148,21 +172,21 @@ export class ExperimentEngine {
     // Both outputs feed the same device and nobody is watching: coherent pass-through.
     // The exit port is sampled Born-weighted for display only; the state is untouched.
     if (nextAt0 === nextAt1 && !options.watch) {
-      const displayIndex = rng() < this.operatorTable.getEigenvector(op, 0).dotProdSquared(state) ? 0 : 1;
+      const displayIndex = rng() < this.eigen(ref, 0).dotProdSquared(state) ? 0 : 1;
       return { outputIndex: displayIndex, newState: state, next: nextAt0 };
     }
 
-    const up = this.operatorTable.getEigenvector(op, 0);
+    const up = this.eigen(ref, 0);
     if (rng() < up.dotProdSquared(state)) {
       return { outputIndex: 0, newState: up, next: nextAt0 };
     }
-    return { outputIndex: 1, newState: this.operatorTable.getEigenvector(op, 1), next: nextAt1 };
+    return { outputIndex: 1, newState: this.eigen(ref, 1), next: nextAt1 };
   }
 
   /** 3-state analyzer hop (NextComp lines 517-604), with the verbatim i/j/k pairing logic. */
   private transitThreeState(
     analyzer: Analyzer,
-    op: number,
+    ref: MeasurementOp,
     state: ComplexVector,
     options: EngineOptions,
     rng: Rng,
@@ -173,7 +197,7 @@ export class ExperimentEngine {
       // All 3 outputs go to the same place: full coherent pass-through. The exit port is
       // sampled Born-weighted for display only; the state is untouched.
       return {
-        outputIndex: this.sampleDisplayIndex(op, state, [0, 1, 2], rng),
+        outputIndex: this.sampleDisplayIndex(ref, state, [0, 1, 2], rng),
         newState: state,
         next: nexts[0] as ExperimentDevice | null,
       };
@@ -181,7 +205,7 @@ export class ExperimentEngine {
     const { i, j, k, twoTheSame } = grouping;
 
     const rand = rng();
-    const eigenK = this.operatorTable.getEigenvector(op, k);
+    const eigenK = this.eigen(ref, k);
     const prob = eigenK.dotProdSquared(state);
 
     let newState: ComplexVector;
@@ -193,14 +217,14 @@ export class ExperimentEngine {
       // The merged pair (i, j) is taken coherently: remove the k component and renormalize.
       // Which of the two merged ports the particle is DRAWN leaving is Born-sampled.
       newState = eigenK.projectOut(state);
-      outputIndex = this.sampleDisplayIndex(op, state, [i, j], rng);
+      outputIndex = this.sampleDisplayIndex(ref, state, [i, j], rng);
     } else {
-      const eigenJ = this.operatorTable.getEigenvector(op, j);
+      const eigenJ = this.eigen(ref, j);
       if (rand - prob < eigenJ.dotProdSquared(state)) {
         newState = eigenJ;
         outputIndex = j;
       } else {
-        newState = this.operatorTable.getEigenvector(op, i);
+        newState = this.eigen(ref, i);
         outputIndex = i;
       }
     }
@@ -212,8 +236,13 @@ export class ExperimentEngine {
    * Born-weighted by the state's overlap with each port's eigenvector. Display-only: callers
    * pass the state through unchanged, and all candidate ports lead to the same device.
    */
-  private sampleDisplayIndex(op: number, state: ComplexVector, candidates: readonly number[], rng: Rng): number {
-    const weights = candidates.map((index) => this.operatorTable.getEigenvector(op, index).dotProdSquared(state));
+  private sampleDisplayIndex(
+    ref: MeasurementOp,
+    state: ComplexVector,
+    candidates: readonly number[],
+    rng: Rng,
+  ): number {
+    const weights = candidates.map((index) => this.eigen(ref, index).dotProdSquared(state));
     const total = weights.reduce((sum, w) => sum + w, 0);
     if (total < PROBABILITY_EPSILON) {
       return candidates[0] as number;
@@ -302,8 +331,7 @@ export class ExperimentEngine {
 
     assert?.(device instanceof Analyzer, `cannot propagate through ${device.id}`);
     const analyzer = device as Analyzer;
-    const op = options.system.opFor(analyzer.typeProperty.value);
-    this.operatorTable.setDirectionAngles(analyzer.thetaProperty.value, analyzer.phiProperty.value);
+    const ref = this.measurementOpFor(analyzer, options.system);
 
     if (options.system.stateCount === 2) {
       const nextAt0 = this.nextOf(analyzer, 0);
@@ -314,7 +342,7 @@ export class ExperimentEngine {
         return;
       }
       for (const k of [0, 1]) {
-        const eigen = this.operatorTable.getEigenvector(op, k);
+        const eigen = this.eigen(ref, k);
         this.visit(this.nextOf(analyzer, k), eigen, probability * eigen.dotProdSquared(state), options, result);
       }
       return;
@@ -328,24 +356,21 @@ export class ExperimentEngine {
     }
     if (grouping.twoTheSame) {
       const { i, k } = grouping;
-      const eigenK = this.operatorTable.getEigenvector(op, k);
+      const eigenK = this.eigen(ref, k);
       const probK = eigenK.dotProdSquared(state);
+      // Compute the merged-branch state before recursing so both branches derive from
+      // this analyzer's own basis regardless of what the recursion touches.
+      const projected = 1 - probK > PROBABILITY_EPSILON ? eigenK.projectOut(state) : null;
       this.visit(nexts[k] as ExperimentDevice | null, eigenK, probability * probK, options, result);
 
       // Merged branch: probability 1 − |⟨k|ψ⟩|², state = ProjectOut (BranchProb lines 941-944).
-      if (1 - probK > PROBABILITY_EPSILON) {
-        this.visit(
-          nexts[i] as ExperimentDevice | null,
-          eigenK.projectOut(state),
-          probability * (1 - probK),
-          options,
-          result,
-        );
+      if (projected !== null) {
+        this.visit(nexts[i] as ExperimentDevice | null, projected, probability * (1 - probK), options, result);
       }
       return;
     }
     for (const k of [0, 1, 2]) {
-      const eigen = this.operatorTable.getEigenvector(op, k);
+      const eigen = this.eigen(ref, k);
       this.visit(
         nexts[k] as ExperimentDevice | null,
         eigen,

@@ -15,6 +15,7 @@
 
 import type { Emitter, TReadOnlyProperty } from "scenerystack/axon";
 import { Multilink } from "scenerystack/axon";
+import { StringUtils } from "scenerystack/phetcommon";
 import type { TColor } from "scenerystack/scenery";
 import { Line, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
@@ -110,11 +111,12 @@ export class CounterNode extends Node {
       countText.left = halfWidth + 7;
       countText.centerY = -8;
 
-      percentText.string = total > 0 ? percentPattern.replace("{{percent}}", (100 * fraction).toFixed(1)) : "";
+      percentText.string =
+        total > 0 ? StringUtils.fillIn(percentPattern, { percent: (100 * fraction).toFixed(1) }) : "";
       percentText.left = halfWidth + 7;
       percentText.top = countText.bottom + 1;
 
-      sampleText.string = total > 0 ? samplePattern.replace("{{total}}", `${total}`) : "";
+      sampleText.string = total > 0 ? StringUtils.fillIn(samplePattern, { total }) : "";
       sampleText.left = halfWidth + 7;
       sampleText.top = percentText.bottom + 1;
     };

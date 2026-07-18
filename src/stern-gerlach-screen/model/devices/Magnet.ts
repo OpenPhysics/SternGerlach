@@ -20,7 +20,11 @@ import { Range, Vector2 } from "scenerystack/dot";
 import { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import { Complex } from "../../../common/quantum/Complex.js";
 import { ComplexMatrix } from "../../../common/quantum/ComplexMatrix.js";
-import type { OperatorTable } from "../../../common/quantum/OperatorTable.js";
+import {
+  DEFAULT_DIRECTION_PHI,
+  DEFAULT_DIRECTION_THETA,
+  type OperatorTable,
+} from "../../../common/quantum/OperatorTable.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
 import { MAGNET_FIELD_NUMBER_MAX, MAGNET_HALF_HEIGHT, MAGNET_HALF_WIDTH } from "../../../SimConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
@@ -49,8 +53,8 @@ export class Magnet extends ExperimentDevice {
       numberType: "Integer",
       range: new Range(0, MAGNET_FIELD_NUMBER_MAX),
     });
-    this.thetaProperty = new NumberProperty(Math.PI / 2);
-    this.phiProperty = new NumberProperty(Math.PI / 4);
+    this.thetaProperty = new NumberProperty(DEFAULT_DIRECTION_THETA);
+    this.phiProperty = new NumberProperty(DEFAULT_DIRECTION_PHI);
     this.cachedU = null;
     this.cachedKey = "";
   }
@@ -78,15 +82,16 @@ export class Magnet extends ExperimentDevice {
    */
   public computeU(operatorTable: OperatorTable, system: SpinSystem): ComplexMatrix {
     const op = system.opFor(this.typeProperty.value);
-    const key = `${op}|${this.fieldNumberProperty.value}|${this.thetaProperty.value}|${this.phiProperty.value}`;
+    const theta = this.thetaProperty.value;
+    const phi = this.phiProperty.value;
+    const key = `${op}|${this.fieldNumberProperty.value}|${theta}|${phi}`;
     if (this.cachedU === null || key !== this.cachedKey) {
-      operatorTable.setDirectionAngles(this.thetaProperty.value, this.phiProperty.value);
-      const phi = (2 * Math.PI * this.fieldNumberProperty.value) / 72;
-      const h = operatorTable.getOperator(op);
-      const hSquared = operatorTable.getOperatorSquared(op);
+      const precession = (2 * Math.PI * this.fieldNumberProperty.value) / 72;
+      const h = operatorTable.getOperator(op, theta, phi);
+      const hSquared = operatorTable.getOperatorSquared(op, theta, phi);
       this.cachedU = ComplexMatrix.identity()
-        .plus(h.timesScalar(new Complex(0, -Math.sin(phi))))
-        .plus(hSquared.timesScalar(new Complex(Math.cos(phi) - 1, 0)));
+        .plus(h.timesScalar(new Complex(0, -Math.sin(precession))))
+        .plus(hSquared.timesScalar(new Complex(Math.cos(precession) - 1, 0)));
       this.cachedKey = key;
     }
     return this.cachedU;

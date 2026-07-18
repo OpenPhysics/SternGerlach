@@ -17,6 +17,7 @@
 import { NumberProperty, Property } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
+import { DEFAULT_DIRECTION_PHI, DEFAULT_DIRECTION_THETA } from "../../../common/quantum/OperatorTable.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
 import { ANALYZER_HALF_HEIGHT, ANALYZER_HALF_WIDTH, ANALYZER_PORT_SPACING_RATIO } from "../../../SimConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
@@ -44,8 +45,8 @@ export class Analyzer extends ExperimentDevice {
     super("analyzer", position, true);
     this.typeProperty = new Property(initialType);
     this.blockedOutputProperty = new NumberProperty(NO_BLOCKED_OUTPUT, { numberType: "Integer" });
-    this.thetaProperty = new NumberProperty(Math.PI / 2);
-    this.phiProperty = new NumberProperty(Math.PI / 4);
+    this.thetaProperty = new NumberProperty(DEFAULT_DIRECTION_THETA);
+    this.phiProperty = new NumberProperty(DEFAULT_DIRECTION_PHI);
   }
 
   public override get halfWidth(): number {

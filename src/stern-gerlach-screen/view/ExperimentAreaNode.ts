@@ -337,6 +337,7 @@ export class ExperimentAreaNode extends Node {
     });
     visual.addInputListener(moveListener);
     visual.cursor = "pointer";
+    container.disposeEmitter.addListener(() => moveListener.dispose());
     // Remember this listener so a device dragged out of the toolbox can hand its press off to it.
     this.deviceDragListeners.set(device, { listener: moveListener, visual });
 
@@ -355,6 +356,7 @@ export class ExperimentAreaNode extends Node {
       end: () => this.snapToGrid(device),
     });
     container.addInputListener(keyboardDrag);
+    container.disposeEmitter.addListener(() => keyboardDrag.dispose());
 
     if (device.isDeletable) {
       container.addInputListener({

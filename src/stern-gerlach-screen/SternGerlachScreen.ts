@@ -9,7 +9,7 @@
  * LabScreen.ts) and add each screen to the screens array in src/main.ts.
  */
 import type { TReadOnlyProperty } from "scenerystack/axon";
-import { optionize } from "scenerystack/phet-core";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
@@ -27,24 +27,23 @@ type SelfOptions = {
 type SternGerlachScreenOptions = ScreenOptions & SelfOptions & { tandem: Tandem };
 
 export class SternGerlachScreen extends Screen<SternGerlachModel, SternGerlachScreenView> {
-  public constructor(options: SternGerlachScreenOptions) {
+  public constructor(providedOptions: SternGerlachScreenOptions) {
+    // Consume SelfOptions here so only ScreenOptions reach the parent Screen.
+    const { spinOneEnabledProperty, ...screenOptions } = providedOptions;
     super(
       // Model factory — called once when the screen is first shown
-      () =>
-        new SternGerlachModel(undefined, {
-          spinOneEnabledProperty: options.spinOneEnabledProperty,
-        }),
+      () => new SternGerlachModel(undefined, { spinOneEnabledProperty }),
       // View factory — receives the model instance
       (model) =>
         new SternGerlachScreenView(model, {
-          tandem: options.tandem.createTandem("view"),
+          tandem: providedOptions.tandem.createTandem("view"),
         }),
-      optionize<SternGerlachScreenOptions, SelfOptions, ScreenOptions>()(
+      optionize<ScreenOptions & { tandem: Tandem }, EmptySelfOptions, ScreenOptions>()(
         {
           backgroundColorProperty: SternGerlachColors.backgroundColorProperty,
           createKeyboardHelpNode: () => new SternGerlachKeyboardHelpContent(),
         },
-        options,
+        screenOptions,
       ),
     );
   }

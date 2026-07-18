@@ -88,47 +88,33 @@ export function ketTerms(state: ComplexVector, system: SpinSystem, digits = 2): 
   const terms: KetTerm[] = [];
   for (let i = 0; i < system.stateCount; i++) {
     const amp = state.components[i] as Complex;
-    if (amp.magnitudeSquared() < 1e-8) {
-      continue;
-    }
-    const label = labels[i] as string;
-    const re = round(amp.re, digits);
-    const im = round(amp.im, digits);
-    const almostReal = Math.abs(im) < 5 * 10 ** -(digits + 1);
-    const almostOne = almostReal && Math.abs(Math.abs(re) - 1) < 5 * 10 ** -(digits + 1);
-    const negative = almostReal ? re < 0 : amp.re < 0 && Math.abs(amp.im) < 5 * 10 ** -(digits + 1);
-
-    if (almostOne) {
-      terms.push({
-        coefficient: "",
-        sign: terms.length === 0 ? (negative ? "−" : "") : negative ? "−" : "+",
-        label,
-      });
-      continue;
-    }
-
-    // For the leading term, fold a pure-real minus into the coefficient; later terms use sign.
-    if (terms.length === 0) {
-      terms.push({
-        coefficient: formatAmplitude(amp, digits),
-        sign: "",
-        label,
-      });
-    } else if (almostReal && re < 0) {
-      terms.push({
-        coefficient: formatReal(Math.abs(re), digits),
-        sign: "−",
-        label,
-      });
-    } else {
-      terms.push({
-        coefficient: formatAmplitude(amp, digits),
-        sign: "+",
-        label,
-      });
+    if (amp.magnitudeSquared() >= 1e-8) {
+      terms.push(ketTerm(amp, labels[i] as string, terms.length === 0, digits));
     }
   }
   return terms;
+}
+
+/** One signed ket term for an amplitude that survived the near-zero cut. */
+function ketTerm(amp: Complex, label: string, isLeading: boolean, digits: number): KetTerm {
+  const epsilon = 5 * 10 ** -(digits + 1);
+  const re = round(amp.re, digits);
+  const im = round(amp.im, digits);
+  const almostReal = Math.abs(im) < epsilon;
+  const almostOne = almostReal && Math.abs(Math.abs(re) - 1) < epsilon;
+  const negative = almostReal && re < 0;
+
+  if (almostOne) {
+    return { coefficient: "", sign: negative ? "−" : isLeading ? "" : "+", label };
+  }
+  // For the leading term, fold a pure-real minus into the coefficient; later terms use sign.
+  if (isLeading) {
+    return { coefficient: formatAmplitude(amp, digits), sign: "", label };
+  }
+  if (negative) {
+    return { coefficient: formatReal(Math.abs(re), digits), sign: "−", label };
+  }
+  return { coefficient: formatAmplitude(amp, digits), sign: "+", label };
 }
 
 /**

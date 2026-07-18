@@ -5,14 +5,15 @@
  * screen, and starts the main event loop.
  *
  * !! CRITICAL IMPORT ORDER !!
- * brand.js MUST be the first import. It triggers the full bootstrap chain:
+ * brand.js MUST be the first import. Each file in the chain imports the next,
+ * so the execution order is:
  *
- *   brand.ts → splash.ts → assert.ts → init.ts
+ *   init.ts → assert.ts → splash.ts → brand.ts
  *
  * SceneryStack requires this exact load order. Never reorder these imports.
  */
 
-// brand.js MUST be first — triggers: init.ts → assert.ts → splash.ts → brand.ts
+// brand.js MUST be first — runs the bootstrap chain: init → assert → splash → brand
 import "./brand.js";
 
 import { onReadyToLaunch, PreferencesModel, Sim } from "scenerystack/sim";
@@ -60,17 +61,12 @@ onReadyToLaunch(() => {
       },
     }),
 
-    // Optional: fill in credits shown in Help → About
+    // Credits shown in Help → About
     credits: {
-      leadDesign: "",
-      softwareDevelopment: "",
-      team: "",
-      qualityAssurance: "",
+      leadDesign: "Martin Veillette",
+      softwareDevelopment: "Martin Veillette",
     },
   });
 
   sim.start();
 });
-// hook test
-// test
-// test

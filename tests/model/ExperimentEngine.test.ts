@@ -441,3 +441,102 @@ describe("ExperimentDefinition pedagogical presets", () => {
     expect(probOf(probs, graph.getNext(last, 1) as Counter)).toBeCloseTo(0.25, 10);
   });
 });
+
+// Regression: each analyzer/magnet owns its n̂ angles, so the analytic walk must never let a
+// downstream device's angles bleed into an upstream device's eigenbasis. The pre-fix engine
+// (mutable OperatorTable direction state) returned P(down) = sin²(θ₂/2) here instead of ½ and
+// lost 0.38 of total probability.
+describe("ExperimentEngine multiple n̂ devices with different angles", () => {
+  it("an upstream N analyzer's branch probabilities are independent of a downstream N analyzer", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    const source = addSource(graph);
+    const first = addAnalyzer(graph, AnalyzerType.N);
+    first.thetaProperty.value = Math.PI / 2; // n̂ = x̂: |+z⟩ splits 50/50
+    first.phiProperty.value = 0;
+    const second = addAnalyzer(graph, AnalyzerType.N);
+    second.thetaProperty.value = 0.7;
+    second.phiProperty.value = 1.3;
+    const secondUp = addCounter(graph);
+    const secondDown = addCounter(graph);
+    const firstDown = addCounter(graph);
+    wire(graph, source, 0, first);
+    wire(graph, first, 0, second);
+    wire(graph, second, 0, secondUp);
+    wire(graph, second, 1, secondDown);
+    wire(graph, first, 1, firstDown);
+
+    const probs = engine.computeCounterProbabilities(PLUS_Z, { system: SPIN_HALF, watch: false });
+    const total = [...probs.values()].reduce((sum, p) => sum + p, 0);
+    expect(probOf(probs, firstDown)).toBeCloseTo(0.5, 10);
+    expect(probOf(probs, secondUp) + probOf(probs, secondDown)).toBeCloseTo(0.5, 10);
+    expect(total).toBeCloseTo(1, 10);
+  });
+
+  it("spin-1: chained N analyzers at different angles conserve total probability", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    const source = addSource(graph);
+    const first = addAnalyzer(graph, AnalyzerType.N);
+    first.thetaProperty.value = 1.1;
+    first.phiProperty.value = 0.4;
+    const second = addAnalyzer(graph, AnalyzerType.N);
+    second.thetaProperty.value = 2.3;
+    second.phiProperty.value = 5.1;
+    const counters = [addCounter(graph), addCounter(graph), addCounter(graph), addCounter(graph), addCounter(graph)];
+    wire(graph, source, 0, first);
+    wire(graph, first, 0, second);
+    for (let output = 0; output < 3; output++) {
+      wire(graph, second, output, counters[output] as Counter);
+    }
+    wire(graph, first, 1, counters[3] as Counter);
+    wire(graph, first, 2, counters[4] as Counter);
+
+    const probs = engine.computeCounterProbabilities(RANDOM, { system: SPIN_ONE, watch: false });
+    const total = [...probs.values()].reduce((sum, p) => sum + p, 0);
+    expect(total).toBeCloseTo(1, 10);
+  });
+
+  it("10k seeded particles through two different-angle N analyzers agree with the analytic engine", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    const source = addSource(graph);
+    const first = addAnalyzer(graph, AnalyzerType.N);
+    first.thetaProperty.value = Math.PI / 2;
+    first.phiProperty.value = 0;
+    const second = addAnalyzer(graph, AnalyzerType.N);
+    second.thetaProperty.value = 0.7;
+    second.phiProperty.value = 1.3;
+    const counters = [addCounter(graph), addCounter(graph), addCounter(graph)];
+    wire(graph, source, 0, first);
+    wire(graph, first, 0, second);
+    wire(graph, second, 0, counters[0] as Counter);
+    wire(graph, second, 1, counters[1] as Counter);
+    wire(graph, first, 1, counters[2] as Counter);
+
+    const options = { system: SPIN_HALF, watch: false };
+    const analytic = engine.computeCounterProbabilities(PLUS_Z, options);
+
+    const rng = seededRng(7);
+    const totals = new Map<Counter, number>();
+    const shots = 10000;
+    for (let shot = 0; shot < shots; shot++) {
+      let state = engine.sampleInitialState(PLUS_Z, SPIN_HALF, rng);
+      let device = graph.getNext(source, 0);
+      while (device !== null && !(device instanceof Counter)) {
+        const result = engine.transitDevice(device, state, options, rng);
+        state = result.newState;
+        device = result.next;
+      }
+      if (device !== null) {
+        totals.set(device, (totals.get(device) ?? 0) + 1);
+      }
+    }
+
+    for (const counter of counters) {
+      const measured = (totals.get(counter as Counter) ?? 0) / shots;
+      const expected = analytic.get(counter as Counter) ?? 0;
+      expect(Math.abs(measured - expected)).toBeLessThan(0.02);
+    }
+  });
+});
