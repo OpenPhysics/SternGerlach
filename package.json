@@ -3,14 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "A SceneryStack single-screen simulation template.",
+  "description": "Interactive Stern\u2013Gerlach experiment: assemble analyzers, magnets, and counters; fire spin-\u00bd / spin-1 atoms; compare Monte Carlo counts with analytic quantum predictions.",
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/OpenPhysics/SternGerlach.git"
   },
   "keywords": [
-    "template",
+    "stern-gerlach",
+    "quantum",
+    "spin",
     "simulation",
     "SceneryStack",
     "interactive",
@@ -43,7 +45,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",
     "@types/node": "^26.1.1",
-    "happy-dom": "^20.10.6",
+    "happy-dom": "^20.11.0",
     "jsdom": "^29.1.1",
     "png-to-ico": "^3.0.2",
     "sharp": "^0.35.3",

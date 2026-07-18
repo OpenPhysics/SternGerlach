@@ -1,18 +1,18 @@
 # Stern Gerlach
 
-A single-screen interactive simulation of the Stern–Gerlach experiment, built with
-[SceneryStack](https://scenerystack.org/), Vite 8, TypeScript 6, and Biome 2. This
-repository currently holds the framework scaffold, forked from
-[OpenPhysics/TemplateSingleSim](https://github.com/OpenPhysics/TemplateSingleSim).
+An interactive simulation of the Stern–Gerlach experiment built with
+[SceneryStack](https://scenerystack.org/). Assemble analyzers, magnets, and counters;
+fire spin-½ or spin-1 atoms; and compare Monte Carlo counts with analytic quantum
+predictions.
 
 ## Features
 
-- Single-screen SceneryStack scaffold with model/view separation
-- English and French localization via `StringManager`
-- Default and projector color profiles
-- Progressive Web App (installable, offline-capable)
-- Git hooks for Biome pre-commit checks
-- Shared GitHub Actions CI via `OpenPhysics/Baton`
+- Build sequential Stern–Gerlach apparatus from analyzers, magnets, and counters
+- Fire spin-½ or spin-1 atoms one at a time or as a continuous beam
+- Exact Born-rule measurement and unitary magnet precession (SPINS-faithful model)
+- Monte Carlo counts with analytic expected-value overlays on counters
+- Watch / which-path mode to destroy interference in recombined paths
+- English, Spanish, and French UI, projector color profile, and installable PWA
 
 ## Quick Start
 
@@ -36,15 +36,13 @@ npm start        # dev server → http://localhost:5173
 | `npm run icons` | Regenerate PNG icons from `public/icons/icon.svg` |
 | `npm run clean` | Remove `dist/` |
 
-New sims start at `version: "0.0.0"` in `package.json`. Bump only when cutting a release (for example `npm version patch` and a matching git tag). Keep `name` in kebab-case; it is separate from the SceneryStack sim identifier in `src/init.ts`.
-
 ## Tech Stack
 
 | Tool | Version | Purpose |
 |---|---|---|
 | [SceneryStack](https://scenerystack.org/) | ^3.0.0 | Simulation framework |
 | [Vite](https://vitejs.dev/) | ^8 | Build tool + dev server |
-| [TypeScript](https://www.typescriptlang.org/) | ^6 | Type-safe JavaScript |
+| [TypeScript](https://www.typescriptlang.org/) | ^7 | Type-safe JavaScript |
 | [Biome](https://biomejs.dev/) | ^2.5 | Linting + formatting |
 | [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) | ^1 | PWA + service worker |
 
