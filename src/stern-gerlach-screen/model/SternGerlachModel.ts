@@ -3,10 +3,13 @@
  *
  * The top-level model: the experiment graph (populated from the selected
  * preset), the quantum engine, the animated particle system, and the user
- * settings (system, initial state, watch, expected values, θ/φ).
+ * settings (system, initial state, watch, expected values). Each analyzer and
+ * magnet owns its own n̂ direction angles (θ, φ) — a deliberate departure from
+ * the Java SPINS applet, which shared one global direction across every
+ * n̂-type device.
  *
- * Configuration changes — preset, system, initial state, watch, direction
- * angles, analyzer types, magnet fields, or graph structure — clear the
+ * Configuration changes — preset, system, initial state, watch, analyzer
+ * types/angles, magnet fields/angles, or graph structure — clear the
  * counters, remove in-flight particles, and recompute the analytic counter
  * probabilities, matching the original SPINS behavior of never mixing
  * statistics from different configurations.
@@ -15,7 +18,7 @@
 import { BooleanProperty, DerivedProperty, NumberProperty, Property, type TReadOnlyProperty } from "scenerystack/axon";
 import { dotRandom, Vector2 } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
-import { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
+import type { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
 import type { ComplexVector } from "../../common/quantum/ComplexVector.js";
 import { OperatorTable } from "../../common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../common/quantum/SpinSystem.js";
@@ -62,7 +65,7 @@ export class SternGerlachModel implements TModel {
   /** The selected preset experiment. */
   public readonly experimentProperty: Property<ExperimentDefinition>;
 
-  /** What the source emits: Random mixture (default), an Unknown mystery state, or the user state. */
+  /** What the source emits: named eigenstate (default |+z⟩), Unknown, User, or Random mixture. */
   public readonly initialStateProperty: Property<InitialStateSetting>;
 
   /** The user-defined initial state (amplitudes + basis), used when initialState is USER. */
@@ -73,12 +76,6 @@ export class SternGerlachModel implements TModel {
 
   /** Whether counters show their green analytic expected-value line. */
   public readonly expectedValuesVisibleProperty: BooleanProperty;
-
-  /** Global polar angle θ for every n̂-type device, radians (Java parity: one global pair). */
-  public readonly thetaProperty: NumberProperty;
-
-  /** Global azimuthal angle φ for every n̂-type device, radians. */
-  public readonly phiProperty: NumberProperty;
 
   /** Sum of all counter counts — the denominator for histogram bars and percents. */
   public readonly totalDetectedProperty: NumberProperty;
@@ -104,6 +101,9 @@ export class SternGerlachModel implements TModel {
   /** Play/pause + elapsed time for the animation. Starts playing. */
   public readonly timer: TimeModel;
 
+  /** Whether the Spin 1 system is offered (Preferences → Simulation). */
+  public readonly spinOneEnabledProperty: TReadOnlyProperty<boolean>;
+
   /** Whether the SU(3) system is offered (Preferences → Simulation). */
   public readonly su3EnabledProperty: TReadOnlyProperty<boolean>;
 
@@ -123,26 +123,29 @@ export class SternGerlachModel implements TModel {
 
   /**
    * @param rng - uniform [0,1) random source; tests inject a seeded one (default: dotRandom)
-   * @param su3EnabledProperty - whether SU(3) is a selectable system (default: always off)
+   * @param options.su3EnabledProperty - whether SU(3) is a selectable system (default: off)
+   * @param options.spinOneEnabledProperty - whether Spin 1 is a selectable system (default: off)
    */
   public constructor(
     rng: Rng = () => dotRandom.nextDouble(),
-    su3EnabledProperty: TReadOnlyProperty<boolean> = new BooleanProperty(false),
+    options: {
+      su3EnabledProperty?: TReadOnlyProperty<boolean>;
+      spinOneEnabledProperty?: TReadOnlyProperty<boolean>;
+    } = {},
   ) {
     this.rng = rng;
-    this.su3EnabledProperty = su3EnabledProperty;
+    this.su3EnabledProperty = options.su3EnabledProperty ?? new BooleanProperty(false);
+    this.spinOneEnabledProperty = options.spinOneEnabledProperty ?? new BooleanProperty(false);
     this.systemProperty = new Property(SpinSystem.SPIN_HALF);
     this.experimentProperty = new Property(ExperimentDefinition.DEFAULT);
-    this.initialStateProperty = new Property(InitialStateSetting.RANDOM);
+    this.initialStateProperty = new Property(InitialStateSetting.PLUS_Z);
     this.userStateModel = new UserStateModel();
     this.watchProperty = new BooleanProperty(false);
     this.expectedValuesVisibleProperty = new BooleanProperty(false);
-    this.thetaProperty = new NumberProperty(Math.PI / 2);
-    this.phiProperty = new NumberProperty(Math.PI / 4);
     this.totalDetectedProperty = new NumberProperty(0);
     this.deadEndProbabilityProperty = new NumberProperty(0);
 
-    this.operatorTable = new OperatorTable(this.thetaProperty.value, this.phiProperty.value);
+    this.operatorTable = new OperatorTable();
     this.graph = new ExperimentGraph();
     this.engine = new ExperimentEngine(this.graph, this.operatorTable);
     this.particleSystem = new ParticleSystem(
@@ -189,7 +192,12 @@ export class SternGerlachModel implements TModel {
       }
     });
 
-    // Disabling SU(3) while it is active falls the system back to spin-½ (Java parity).
+    // Disabling an advanced system while it is active falls back to spin-½.
+    this.spinOneEnabledProperty.lazyLink((enabled) => {
+      if (!enabled && this.systemProperty.value === SpinSystem.SPIN_ONE) {
+        this.systemProperty.value = SpinSystem.SPIN_HALF;
+      }
+    });
     this.su3EnabledProperty.lazyLink((enabled) => {
       if (!enabled && this.systemProperty.value === SpinSystem.SU3) {
         this.systemProperty.value = SpinSystem.SPIN_HALF;
@@ -210,22 +218,6 @@ export class SternGerlachModel implements TModel {
     for (const property of this.userStateModel.properties) {
       property.lazyLink(onUserStateChange);
     }
-
-    // The global direction angles reshape the Sn operators. Statistics are only invalidated
-    // when some device actually measures/precesses along n̂ — otherwise changing the angles
-    // is unobservable and the accumulated counts stay valid.
-    const applyAngles = () => {
-      this.operatorTable.setDirectionAngles(this.thetaProperty.value, this.phiProperty.value);
-      const usesDirectionAngles = this.graph.devices.some(
-        (device) =>
-          (device instanceof Analyzer || device instanceof Magnet) && device.typeProperty.value === AnalyzerType.N,
-      );
-      if (usesDirectionAngles) {
-        this.handleConfigurationChange();
-      }
-    };
-    this.thetaProperty.lazyLink(applyAngles);
-    this.phiProperty.lazyLink(applyAngles);
 
     this.rebuildGraph();
   }
@@ -272,8 +264,6 @@ export class SternGerlachModel implements TModel {
     this.expectedValuesVisibleProperty.reset();
     this.initialStateProperty.reset();
     this.userStateModel.reset();
-    this.thetaProperty.reset();
-    this.phiProperty.reset();
     this.systemProperty.reset();
     this.experimentProperty.reset();
     this.graph.getSource()?.reset();
@@ -328,6 +318,13 @@ export class SternGerlachModel implements TModel {
     const setting = this.initialStateProperty.value;
     if (setting.isUser) {
       return this.currentUserState();
+    }
+    if (setting.eigenstate) {
+      return this.operatorTable.getPreparedEigenstate(
+        this.systemProperty.value,
+        setting.eigenstate.type,
+        setting.eigenstate.index,
+      );
     }
     if (setting.unknownIndex !== null) {
       // Mystery states stay hidden — revealing them would spoil the guessing game.
@@ -474,16 +471,24 @@ export class SternGerlachModel implements TModel {
     if (device instanceof Analyzer) {
       device.typeProperty.lazyLink(onChange);
       device.blockedOutputProperty.lazyLink(onChange);
+      device.thetaProperty.lazyLink(onChange);
+      device.phiProperty.lazyLink(onChange);
       this.deviceListeners.set(device, () => {
         device.typeProperty.unlink(onChange);
         device.blockedOutputProperty.unlink(onChange);
+        device.thetaProperty.unlink(onChange);
+        device.phiProperty.unlink(onChange);
       });
     } else if (device instanceof Magnet) {
       device.typeProperty.lazyLink(onChange);
       device.fieldNumberProperty.lazyLink(onChange);
+      device.thetaProperty.lazyLink(onChange);
+      device.phiProperty.lazyLink(onChange);
       this.deviceListeners.set(device, () => {
         device.typeProperty.unlink(onChange);
         device.fieldNumberProperty.unlink(onChange);
+        device.thetaProperty.unlink(onChange);
+        device.phiProperty.unlink(onChange);
       });
     } else if (device instanceof ParticleSource) {
       // Source mode/rate changes do not invalidate statistics.

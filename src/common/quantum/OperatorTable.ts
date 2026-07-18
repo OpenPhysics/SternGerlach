@@ -24,6 +24,7 @@
  */
 
 import { assert } from "scenerystack/assert";
+import { AnalyzerType } from "./AnalyzerType.js";
 import { Complex } from "./Complex.js";
 import { ComplexMatrix } from "./ComplexMatrix.js";
 import { ComplexVector } from "./ComplexVector.js";
@@ -302,6 +303,21 @@ export class OperatorTable {
     assert?.(index >= 0 && index < 4, `invalid unknown-state index: ${index}`);
     // The map covers every SpinSystem and each entry holds exactly 4 states.
     return (this.unknownStates.get(system) as readonly ComplexVector[])[index] as ComplexVector;
+  }
+
+  /**
+   * Eigenstate of Sz or Sx for a named preparation (+Z/−Z/+X/−X). For SU(3), Z maps to λ₃
+   * and X to λ₁ (the embedded Pauli matrices), matching how those directions appear in the
+   * Gell-Mann set.
+   */
+  public getPreparedEigenstate(system: SpinSystem, type: AnalyzerType, index: 0 | 1): ComplexVector {
+    const op =
+      system === SpinSystem.SU3
+        ? type === AnalyzerType.X
+          ? system.opFor(AnalyzerType.LAMBDA_1)
+          : system.opFor(AnalyzerType.LAMBDA_3)
+        : system.opFor(type);
+    return this.getEigenvector(op, index);
   }
 
   /**

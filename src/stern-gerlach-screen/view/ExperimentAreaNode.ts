@@ -1,11 +1,11 @@
 /**
  * ExperimentAreaNode.ts
  *
- * The light experiment board (quantum-measurement style): owns the
- * ModelViewTransform2 (inverted y, MODEL_VIEW_SCALE px per model unit) and
- * stacked layers — wires < devices < particles < wiring overlay. Device nodes
- * rebuild when devices are added/removed; wire nodes rebuild when wires change,
- * so an in-progress wiring drag never disposes the port it started from.
+ * The experiment board: owns the ModelViewTransform2 (inverted y,
+ * MODEL_VIEW_SCALE px per model unit) and stacked layers — wires < devices <
+ * particles < wiring overlay. Device nodes rebuild when devices are
+ * added/removed; wire nodes rebuild when wires change, so an in-progress
+ * wiring drag never disposes the port it started from.
  *
  * In builder (CUSTOM) mode, devices are draggable (pointer + keyboard),
  * deletable, and their output ports can be dragged to input ports to wire the
@@ -13,15 +13,25 @@
  * profile.
  */
 
-import { PatternStringProperty, Property } from "scenerystack/axon";
+import { DerivedProperty, PatternStringProperty, Property, type TReadOnlyProperty } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { PressListenerEvent, TColor } from "scenerystack/scenery";
-import { DragListener, KeyboardDragListener, Node, Path, Rectangle, RichText, Text } from "scenerystack/scenery";
+import {
+  DragListener,
+  FireListener,
+  KeyboardDragListener,
+  Node,
+  Path,
+  Rectangle,
+  RichText,
+  Text,
+} from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { RectangularRadioButtonGroup } from "scenerystack/sun";
-import type { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
+import { RectangularPushButton, RectangularRadioButtonGroup } from "scenerystack/sun";
+import { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS, LIGHT_SURFACE_TEXT_FILL } from "../../common/SimButtonOptions.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import {
   EXPERIMENT_AREA_HEIGHT,
@@ -39,11 +49,13 @@ import { ParticleSource, SourceMode } from "../model/devices/ParticleSource.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
 import { Wire } from "../model/Wire.js";
 import { BeamCanvasNode } from "./BeamCanvasNode.js";
+import { AnglesDialog } from "./dialogs/AnglesDialog.js";
 import { AnalyzerNode, analyzerLabelMarkup } from "./nodes/AnalyzerNode.js";
 import { CounterNode } from "./nodes/CounterNode.js";
 import { MagnetNode, magnetLabelMarkup } from "./nodes/MagnetNode.js";
 import { PortNode } from "./nodes/PortNode.js";
 import { SourceNode } from "./nodes/SourceNode.js";
+import { SourceSystemChooserNode } from "./nodes/SourceSystemChooserNode.js";
 import { WireNode } from "./nodes/WireNode.js";
 import { ParticleLayerNode } from "./ParticleLayerNode.js";
 
@@ -66,6 +78,12 @@ export class ExperimentAreaNode extends Node {
   private readonly particleLayer: ParticleLayerNode;
   private readonly beamLayer: BeamCanvasNode;
   private readonly overlayLayer: Node;
+
+  /** Persistent system chooser (not rebuilt with devices — see SourceSystemChooserNode). */
+  private readonly systemChooser: SourceSystemChooserNode;
+
+  /** Unhooks the chooser from the previous source's positionProperty. */
+  private unlinkSystemChooser: (() => void) | null = null;
 
   // Analyzer nodes currently on the board, so their which-path flashes can be faded each frame.
   private analyzerNodes: AnalyzerNode[] = [];
@@ -107,6 +125,14 @@ export class ExperimentAreaNode extends Node {
     this.addChild(this.particleLayer);
     this.addChild(this.beamLayer);
     this.addChild(this.overlayLayer);
+
+    // System radios sit beside the source and outlive device-layer rebuilds.
+    this.systemChooser = new SourceSystemChooserNode(
+      model.systemProperty,
+      model.spinOneEnabledProperty,
+      model.su3EnabledProperty,
+    );
+    this.addChild(this.systemChooser);
 
     // Devices and wires rebuild independently so a wiring drag never disposes its own port node.
     model.graph.devices.elementAddedEmitter.addListener(() => this.rebuildDevices());
@@ -174,6 +200,30 @@ export class ExperimentAreaNode extends Node {
     for (const device of this.model.graph.devices) {
       this.deviceLayer.addChild(this.createDeviceNode(device, editable));
     }
+    this.syncSystemChooser();
+  }
+
+  /**
+   * Pins the system chooser to the left of the current source. The chooser itself is not
+   * disposed on rebuild — only its position tracking is rewired to the new source instance.
+   */
+  private syncSystemChooser(): void {
+    this.unlinkSystemChooser?.();
+    this.unlinkSystemChooser = null;
+
+    const source = this.model.graph.getSource();
+    if (!source) {
+      return;
+    }
+
+    const layout = () => {
+      const viewPos = this.mvt.modelToViewPosition(source.positionProperty.value);
+      const halfWidth = source.halfWidth * MODEL_VIEW_SCALE;
+      this.systemChooser.right = viewPos.x - halfWidth - 10;
+      this.systemChooser.centerY = viewPos.y;
+    };
+    source.positionProperty.link(layout);
+    this.unlinkSystemChooser = () => source.positionProperty.unlink(layout);
   }
 
   /** Recreates all wire nodes from the current graph. */
@@ -198,15 +248,18 @@ export class ExperimentAreaNode extends Node {
       visual.dispose();
     });
 
-    // Exit-blocker radios sit on every analyzer (presets and Custom).
+    // Exit-blocker radios sit on every analyzer (presets and Custom); builder-only rows
+    // (type selector, direction button) stack below it when present.
+    let belowVisual: Node = visual;
     if (device instanceof Analyzer) {
-      const blockerSelector = this.createBlockerSelector(device, visual, editable);
+      const blockerSelector = this.createBlockerSelector(device, visual);
       container.addChild(blockerSelector);
       container.disposeEmitter.addListener(() => blockerSelector.dispose());
+      belowVisual = blockerSelector;
     }
 
     if (editable) {
-      this.makeEditable(device, container, visual);
+      this.makeEditable(device, container, visual, belowVisual);
     }
     return container;
   }
@@ -268,7 +321,7 @@ export class ExperimentAreaNode extends Node {
   }
 
   /** Adds builder-mode interactivity to a device container: drag-to-move, delete, and wiring ports. */
-  private makeEditable(device: ExperimentDevice, container: Node, visual: Node): void {
+  private makeEditable(device: ExperimentDevice, container: Node, visual: Node, typeSelectorAnchor: Node): void {
     const system = () => this.model.systemProperty.value;
 
     // Drag to move (pointer). Ports sit on top and consume presses, so this only moves the body.
@@ -340,15 +393,23 @@ export class ExperimentAreaNode extends Node {
     // Type selector for analyzers and magnets (the valid types depend on the system).
     // Magnets are labeled by field direction (B_z), analyzers by measurement (SG_z).
     if (device instanceof Analyzer || device instanceof Magnet) {
+      const a11y = StringManager.getInstance().getA11yStrings().builder;
       const markup = device instanceof Magnet ? magnetLabelMarkup : analyzerLabelMarkup;
-      const selector = this.createTypeSelector(device.typeProperty, visual, markup);
+      const typeAccessibleName =
+        device instanceof Magnet ? a11y.magnetTypeRadioGroupStringProperty : a11y.analyzerTypeComboBoxStringProperty;
+      const selector = this.createTypeSelector(device.typeProperty, typeSelectorAnchor, markup, typeAccessibleName);
       container.addChild(selector);
       container.disposeEmitter.addListener(() => selector.dispose());
+
+      // Own n̂ direction control, visible only while this device's type is n̂.
+      const directionButton = this.createDirectionButton(device, selector);
+      container.addChild(directionButton);
+      container.disposeEmitter.addListener(() => directionButton.dispose());
     }
   }
 
   /** Compact radio group that blocks one analyzer exit (or none). */
-  private createBlockerSelector(analyzer: Analyzer, visual: Node, editable: boolean): Node {
+  private createBlockerSelector(analyzer: Analyzer, visual: Node): Node {
     const a11y = StringManager.getInstance().getA11yStrings();
     const controls = StringManager.getInstance().getControls();
     const system = this.model.systemProperty.value;
@@ -401,18 +462,17 @@ export class ExperimentAreaNode extends Node {
       accessibleName: a11y.controls.blockerRadioGroupStringProperty,
     });
     group.centerX = 0;
-    // Sit above the type selector in builder mode, otherwise just below the body.
-    group.top = visual.bottom + (editable ? 28 : 4);
+    group.top = visual.bottom + 4;
     return group;
   }
 
   /** A flat radio group letting the user pick an analyzer/magnet type (builder mode). */
   private createTypeSelector(
     typeProperty: Property<AnalyzerType>,
-    visual: Node,
+    anchor: Node,
     labelMarkup: (type: AnalyzerType) => string,
+    accessibleName: TReadOnlyProperty<string>,
   ): Node {
-    const a11y = StringManager.getInstance().getA11yStrings();
     const group = new RectangularRadioButtonGroup(
       typeProperty,
       this.model.systemProperty.value.analyzerTypes.map((type) => ({
@@ -433,12 +493,46 @@ export class ExperimentAreaNode extends Node {
           xMargin: 5,
           yMargin: 3,
         },
-        accessibleName: a11y.builder.analyzerTypeComboBoxStringProperty,
+        accessibleName,
       },
     );
     group.centerX = 0;
-    group.top = visual.bottom + 4;
+    group.top = anchor.bottom + 4;
     return group;
+  }
+
+  /**
+   * A small button, anchored just below the type selector, that opens a dialog for this
+   * device's own n̂ direction (θ, φ). Only visible while the device's type is set to n̂ — each
+   * analyzer/magnet owns its angles independently, so this dialog only ever touches one device.
+   */
+  private createDirectionButton(device: Analyzer | Magnet, anchor: Node): Node {
+    const strings = StringManager.getInstance();
+    const controls = strings.getControls();
+    const a11y = strings.getA11yStrings();
+
+    const dialog = new AnglesDialog(device.thetaProperty, device.phiProperty);
+    const isDirectionType = new DerivedProperty([device.typeProperty], (type) => type === AnalyzerType.N);
+
+    const button = new RectangularPushButton({
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+      baseColor: SternGerlachColors.controlSurfaceColorProperty,
+      content: new Text(controls.anglesStringProperty, {
+        font: new PhetFont(10),
+        fill: LIGHT_SURFACE_TEXT_FILL,
+      }),
+      listener: () => dialog.show(),
+      visibleProperty: isDirectionType,
+      accessibleName: a11y.controls.anglesButtonStringProperty,
+    });
+    button.centerX = 0;
+    button.top = anchor.bottom + 4;
+
+    button.disposeEmitter.addListener(() => {
+      dialog.dispose();
+      isDirectionType.dispose();
+    });
+    return button;
   }
 
   /** A small × button that deletes the device (builder mode). */
@@ -460,8 +554,8 @@ export class ExperimentAreaNode extends Node {
     button.right = visual.right + 6;
     button.bottom = visual.top - 2;
     button.addInputListener(
-      new DragListener({
-        press: () => this.model.graph.removeDevice(device),
+      new FireListener({
+        fire: () => this.model.graph.removeDevice(device),
       }),
     );
     return button;
@@ -612,18 +706,18 @@ export class ExperimentAreaNode extends Node {
     );
   }
 
-  /** Accessible name for a builder-mode device container. */
-  private deviceAccessibleName(device: ExperimentDevice): string {
+  /** Accessible name for a builder-mode device container (live StringProperty for locale switches). */
+  private deviceAccessibleName(device: ExperimentDevice): TReadOnlyProperty<string> {
     const a11y = StringManager.getInstance().getA11yStrings().builder;
     if (device instanceof ParticleSource) {
-      return a11y.sourceDeviceStringProperty.value;
+      return a11y.sourceDeviceStringProperty;
     }
     if (device instanceof Analyzer) {
-      return a11y.analyzerDeviceStringProperty.value;
+      return a11y.analyzerDeviceStringProperty;
     }
     if (device instanceof Magnet) {
-      return a11y.magnetDeviceStringProperty.value;
+      return a11y.magnetDeviceStringProperty;
     }
-    return a11y.counterDeviceStringProperty.value;
+    return a11y.counterDeviceStringProperty;
   }
 }

@@ -3,7 +3,7 @@
  *
  * Content for the keyboard-help dialog (the "?" button in the navigation bar).
  * Covers basic navigation, combo boxes and sliders, firing atoms, and builder-mode
- * drag / wire interactions.
+ * drag / wire / delete interactions.
  */
 
 import {
@@ -12,7 +12,6 @@ import {
   KeyboardHelpIconFactory,
   KeyboardHelpSection,
   KeyboardHelpSectionRow,
-  MoveDraggableItemsKeyboardHelpSection,
   SliderControlsKeyboardHelpSection,
   TextKeyNode,
   TwoColumnKeyboardHelpContent,
@@ -27,11 +26,16 @@ function fireAtomsSection(): KeyboardHelpSection {
   ]);
 }
 
-function builderSection(): MoveDraggableItemsKeyboardHelpSection {
+function builderSection(): KeyboardHelpSection {
   const a11y = StringManager.getInstance().getA11yStrings().keyboardHelp;
-  return new MoveDraggableItemsKeyboardHelpSection({
-    headingStringProperty: a11y.buildHeadingStringProperty,
-  });
+  const deleteOrBackspace = KeyboardHelpIconFactory.iconOrIcon(TextKeyNode.delete(), TextKeyNode.backspace());
+  return new KeyboardHelpSection(a11y.buildHeadingStringProperty, [
+    KeyboardHelpSectionRow.labelWithIcon(
+      a11y.moveDeviceStringProperty,
+      KeyboardHelpIconFactory.arrowOrWasdKeysRowIcon(),
+    ),
+    KeyboardHelpSectionRow.labelWithIcon(a11y.deleteDeviceStringProperty, deleteOrBackspace),
+  ]);
 }
 
 function wireSection(): KeyboardHelpSection {

@@ -1,9 +1,10 @@
 /**
  * AnglesDialog.ts
  *
- * A modal dialog exposing the global direction angles θ (polar) and φ
- * (azimuthal) that define every n̂-type analyzer and magnet. Following the Java
- * SPINS applet, these angles are global model state shared by all n̂ devices.
+ * A modal dialog exposing the direction angles θ (polar) and φ (azimuthal)
+ * that define one n̂-type analyzer or magnet's own measurement/precession
+ * axis. Each device owns its angles independently, so one dialog instance is
+ * bound to a single device's thetaProperty/phiProperty.
  */
 
 import type { NumberProperty, TReadOnlyProperty } from "scenerystack/axon";

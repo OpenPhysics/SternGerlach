@@ -27,19 +27,17 @@ function presetByKey(nameKey: string): ExperimentDefinition {
 }
 
 describe("SternGerlachModel", () => {
-  it("builds the default preset: source, one Z analyzer, two counters with ½/½ expected", () => {
+  it("builds the default preset: source, one Z analyzer, two counters with |+z⟩ → (1, 0)", () => {
     const model = new SternGerlachModel(seededRng(7));
+    expect(model.initialStateProperty.value).toBe(InitialStateSetting.PLUS_Z);
     expect(model.graph.getSource()).not.toBeNull();
-    const counters = model.graph.getCounters();
-    expect(counters).toHaveLength(2);
-    for (const counter of counters) {
-      expect(counter.probabilityProperty.value).toBeCloseTo(0.5, 10);
-    }
+    const [up, down] = model.graph.getCounters();
+    expect(up?.probabilityProperty.value).toBeCloseTo(1, 10);
+    expect(down?.probabilityProperty.value).toBeCloseTo(0, 10);
   });
 
   it("doN(1000) with |+z⟩ into a Z analyzer puts all 1000 counts in the up counter", () => {
     const model = new SternGerlachModel(seededRng(11));
-    model.initialStateProperty.value = InitialStateSetting.UNKNOWN_1; // |+z⟩
     model.doN(1000);
     const [up, down] = model.graph.getCounters();
     expect(up?.countProperty.value).toBe(1000);
@@ -50,6 +48,7 @@ describe("SternGerlachModel", () => {
   it("doN follows the analytic distribution for the Z→X chain preset", () => {
     const model = new SternGerlachModel(seededRng(23));
     model.experimentProperty.value = presetByKey("zThenX");
+    // |+z⟩ → Z → X: all mass takes the UP branch of Z, then splits ½/½ at X.
     model.doN(20000);
     const counters = model.graph.getCounters();
     expect(model.totalDetectedProperty.value).toBe(20000);
@@ -84,7 +83,6 @@ describe("SternGerlachModel", () => {
 
   it("tracks dead-end probability when an analyzer exit is blocked", () => {
     const model = new SternGerlachModel(seededRng(9));
-    model.initialStateProperty.value = InitialStateSetting.UNKNOWN_1; // |+z⟩
     expect(model.deadEndProbabilityProperty.value).toBeCloseTo(0, 10);
 
     const analyzer = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer;
@@ -97,7 +95,6 @@ describe("SternGerlachModel", () => {
 
   it("single-fire particles fly the graph and land in counters (seeded, |+z⟩ → Z)", () => {
     const model = new SternGerlachModel(seededRng(5));
-    model.initialStateProperty.value = InitialStateSetting.UNKNOWN_1;
     for (let shot = 0; shot < 5; shot++) {
       model.fireSingleParticle();
       // Fly until the particle lands (generous frame budget).
@@ -154,11 +151,21 @@ describe("SternGerlachModel", () => {
 
   it("disabling SU(3) while it is active falls the system back to spin-½", () => {
     const su3Enabled = new BooleanProperty(true);
-    const model = new SternGerlachModel(seededRng(37), su3Enabled);
+    const model = new SternGerlachModel(seededRng(37), { su3EnabledProperty: su3Enabled });
     model.systemProperty.value = SpinSystem.SU3;
     expect(model.systemProperty.value).toBe(SpinSystem.SU3);
 
     su3Enabled.value = false;
+    expect(model.systemProperty.value).toBe(SpinSystem.SPIN_HALF);
+  });
+
+  it("disabling Spin 1 while it is active falls the system back to spin-½", () => {
+    const spinOneEnabled = new BooleanProperty(true);
+    const model = new SternGerlachModel(seededRng(39), { spinOneEnabledProperty: spinOneEnabled });
+    model.systemProperty.value = SpinSystem.SPIN_ONE;
+    expect(model.systemProperty.value).toBe(SpinSystem.SPIN_ONE);
+
+    spinOneEnabled.value = false;
     expect(model.systemProperty.value).toBe(SpinSystem.SPIN_HALF);
   });
 
@@ -221,7 +228,7 @@ describe("SternGerlachModel", () => {
 
   it("restoring an SU(3) custom build under spin-1/2 sanitizes types instead of crashing", () => {
     const su3Enabled = new BooleanProperty(true);
-    const model = new SternGerlachModel(seededRng(31), su3Enabled);
+    const model = new SternGerlachModel(seededRng(31), { su3EnabledProperty: su3Enabled });
 
     // Build a custom experiment under SU(3): source → λ4 analyzer → counter.
     model.experimentProperty.value = ExperimentDefinition.CUSTOM;
@@ -285,21 +292,18 @@ describe("SternGerlachModel", () => {
     expect(analyzer.blockedOutputProperty.value).toBe(-1);
   });
 
-  it("changing direction angles only clears counts when an n-type device exists", () => {
+  it("changing a device's direction angles clears counts", () => {
     const model = new SternGerlachModel(seededRng(43));
     model.doN(100);
     expect(model.totalDetectedProperty.value).toBe(100);
 
-    // No n̂ device on the default board: the angles are unobservable, counts survive.
-    model.thetaProperty.value = Math.PI / 3;
-    expect(model.totalDetectedProperty.value).toBe(100);
-
-    // With an n̂ analyzer the angles shape the physics, so changing them clears counts.
     const analyzer = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer;
-    analyzer.typeProperty.value = AnalyzerType.N;
+    analyzer.thetaProperty.value = Math.PI / 3;
+    expect(model.totalDetectedProperty.value).toBe(0);
+
     model.doN(100);
     expect(model.totalDetectedProperty.value).toBe(100);
-    model.phiProperty.value = Math.PI / 5;
+    analyzer.phiProperty.value = Math.PI / 5;
     expect(model.totalDetectedProperty.value).toBe(0);
   });
 
@@ -313,7 +317,7 @@ describe("SternGerlachModel", () => {
     model.reset();
     expect(model.experimentProperty.value).toBe(ExperimentDefinition.DEFAULT);
     expect(model.watchProperty.value).toBe(false);
-    expect(model.initialStateProperty.value).toBe(InitialStateSetting.RANDOM);
+    expect(model.initialStateProperty.value).toBe(InitialStateSetting.PLUS_Z);
     expect(model.totalDetectedProperty.value).toBe(0);
     expect(model.graph.getCounters()).toHaveLength(2);
     expect(model.graph.getCounters()[0]).not.toBe(originalCounters[0]);

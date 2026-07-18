@@ -34,10 +34,18 @@ export class Analyzer extends ExperimentDevice {
    */
   public readonly blockedOutputProperty: NumberProperty;
 
+  /** Polar angle θ of this analyzer's own n̂ direction, radians. Only meaningful when type is N. */
+  public readonly thetaProperty: NumberProperty;
+
+  /** Azimuthal angle φ of this analyzer's own n̂ direction, radians. Only meaningful when type is N. */
+  public readonly phiProperty: NumberProperty;
+
   public constructor(position: Vector2, initialType: AnalyzerType = AnalyzerType.Z) {
     super("analyzer", position, true);
     this.typeProperty = new Property(initialType);
     this.blockedOutputProperty = new NumberProperty(NO_BLOCKED_OUTPUT, { numberType: "Integer" });
+    this.thetaProperty = new NumberProperty(Math.PI / 2);
+    this.phiProperty = new NumberProperty(Math.PI / 4);
   }
 
   public override get halfWidth(): number {

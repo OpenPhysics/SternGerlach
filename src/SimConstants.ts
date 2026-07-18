@@ -13,8 +13,6 @@
  *  - Layout / chrome values are in screen pixels.
  *  - Colour strings live in SternGerlachColors.ts, not here.
  *  - Computed expressions (e.g. `2 * Math.PI`) may stay inline.
- *
- * Remove the example constants below and replace them with the sim's own.
  */
 
 import SternGerlachNamespace from "./SternGerlachNamespace.js";
@@ -29,7 +27,7 @@ export const PANEL_CORNER_RADIUS = 6;
 
 // ── Experiment-board view layout (screen pixels) ──────────────────────────────
 
-/** Size of the light experiment board. */
+/** Size of the experiment board. */
 export const EXPERIMENT_AREA_WIDTH = 745;
 export const EXPERIMENT_AREA_HEIGHT = 540;
 

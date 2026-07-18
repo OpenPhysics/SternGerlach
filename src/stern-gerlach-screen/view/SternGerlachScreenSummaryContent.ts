@@ -13,6 +13,7 @@ import { ScreenSummaryContent } from "scenerystack/sim";
 import { SpinSystem } from "../../common/quantum/SpinSystem.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { ExperimentDefinition } from "../model/ExperimentDefinition.js";
+import { InitialStateSetting } from "../model/InitialStateSetting.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
 
 export class SternGerlachScreenSummaryContent extends ScreenSummaryContent {
@@ -48,8 +49,29 @@ export class SternGerlachScreenSummaryContent extends ScreenSummaryContent {
     });
 
     const initialStateName = new DerivedProperty(
-      [model.initialStateProperty, unknownLabel, controls.randomStringProperty, controls.userStateStringProperty],
-      (setting, unknown, random, user) => {
+      [
+        model.initialStateProperty,
+        unknownLabel,
+        controls.plusZStringProperty,
+        controls.minusZStringProperty,
+        controls.plusXStringProperty,
+        controls.minusXStringProperty,
+        controls.randomStringProperty,
+        controls.userStateStringProperty,
+      ],
+      (setting, unknown, plusZ, minusZ, plusX, minusX, random, user) => {
+        if (setting === InitialStateSetting.PLUS_Z) {
+          return plusZ;
+        }
+        if (setting === InitialStateSetting.MINUS_Z) {
+          return minusZ;
+        }
+        if (setting === InitialStateSetting.PLUS_X) {
+          return plusX;
+        }
+        if (setting === InitialStateSetting.MINUS_X) {
+          return minusX;
+        }
         if (setting.unknownIndex !== null) {
           return unknown;
         }

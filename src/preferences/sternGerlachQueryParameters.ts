@@ -20,8 +20,19 @@ import SternGerlachNamespace from "../SternGerlachNamespace.js";
 
 const sternGerlachQueryParameters = QueryStringMachine.getAll({
   /**
-   * Enables the SU(3) (Gell-Mann λ₁-λ₈) quantum system as a third choice in the
-   * main UI. Off by default; also toggleable at runtime in Preferences → Simulation.
+   * Enables Spin 1 as a second quantum-system choice (next to spin-½). Off by
+   * default; also toggleable at runtime in Preferences → Simulation. When off,
+   * the sim stays on spin-½ and hides the system radio group.
+   */
+  spinOne: {
+    type: "boolean",
+    defaultValue: false,
+    public: true,
+  },
+
+  /**
+   * Enables the SU(3) (Gell-Mann λ₁-λ₈) quantum system as an additional choice.
+   * Off by default; also toggleable at runtime in Preferences → Simulation.
    */
   su3: {
     type: "boolean",

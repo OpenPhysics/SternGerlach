@@ -19,6 +19,8 @@ import { SternGerlachKeyboardHelpContent } from "./view/SternGerlachKeyboardHelp
 import { SternGerlachScreenView } from "./view/SternGerlachScreenView.js";
 
 type SelfOptions = {
+  /** Whether Spin 1 is offered as a system (from Preferences → Simulation). */
+  spinOneEnabledProperty: TReadOnlyProperty<boolean>;
   /** Whether SU(3) is offered as a system (from Preferences → Simulation). */
   su3EnabledProperty: TReadOnlyProperty<boolean>;
 };
@@ -30,7 +32,11 @@ export class SternGerlachScreen extends Screen<SternGerlachModel, SternGerlachSc
   public constructor(options: SternGerlachScreenOptions) {
     super(
       // Model factory — called once when the screen is first shown
-      () => new SternGerlachModel(undefined, options.su3EnabledProperty),
+      () =>
+        new SternGerlachModel(undefined, {
+          spinOneEnabledProperty: options.spinOneEnabledProperty,
+          su3EnabledProperty: options.su3EnabledProperty,
+        }),
       // View factory — receives the model instance
       (model) =>
         new SternGerlachScreenView(model, {

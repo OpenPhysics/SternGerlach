@@ -11,8 +11,8 @@
  * 0-99 dial of the original applet.
  *
  * The propagator is cached and lazily recomputed whenever the field number,
- * type, operator table angles, or system changes (the cache key covers all of
- * these through the operator index and θ/φ).
+ * type, this magnet's own direction angles, or system changes (the cache key
+ * covers all of these through the operator index and θ/φ).
  */
 
 import { NumberProperty, Property } from "scenerystack/axon";
@@ -32,6 +32,12 @@ export class Magnet extends ExperimentDevice {
   /** Field-strength dial, integer 0-99; φ = 2π·number/72, so 72 is a full revolution. */
   public readonly fieldNumberProperty: NumberProperty;
 
+  /** Polar angle θ of this magnet's own n̂ direction, radians. Only meaningful when type is N. */
+  public readonly thetaProperty: NumberProperty;
+
+  /** Azimuthal angle φ of this magnet's own n̂ direction, radians. Only meaningful when type is N. */
+  public readonly phiProperty: NumberProperty;
+
   // Cached propagator plus the inputs it was computed from.
   private cachedU: ComplexMatrix | null;
   private cachedKey: string;
@@ -43,6 +49,8 @@ export class Magnet extends ExperimentDevice {
       numberType: "Integer",
       range: new Range(0, MAGNET_FIELD_NUMBER_MAX),
     });
+    this.thetaProperty = new NumberProperty(Math.PI / 2);
+    this.phiProperty = new NumberProperty(Math.PI / 4);
     this.cachedU = null;
     this.cachedKey = "";
   }
@@ -70,8 +78,9 @@ export class Magnet extends ExperimentDevice {
    */
   public computeU(operatorTable: OperatorTable, system: SpinSystem): ComplexMatrix {
     const op = system.opFor(this.typeProperty.value);
-    const key = `${op}|${this.fieldNumberProperty.value}|${operatorTable.theta}|${operatorTable.phi}`;
+    const key = `${op}|${this.fieldNumberProperty.value}|${this.thetaProperty.value}|${this.phiProperty.value}`;
     if (this.cachedU === null || key !== this.cachedKey) {
+      operatorTable.setDirectionAngles(this.thetaProperty.value, this.phiProperty.value);
       const phi = (2 * Math.PI * this.fieldNumberProperty.value) / 72;
       const h = operatorTable.getOperator(op);
       const hSquared = operatorTable.getOperatorSquared(op);

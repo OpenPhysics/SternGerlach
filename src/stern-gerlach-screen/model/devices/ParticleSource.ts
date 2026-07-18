@@ -5,12 +5,11 @@
  * (CONTINUOUS mode, rate set by emissionRateProperty). Exactly one source
  * exists per experiment and it cannot be deleted.
  *
- * The source itself only records the firing request via firedEmitter — the
- * ParticleSystem listens and creates the actual particle, so the source stays
- * free of engine dependencies.
+ * Emission is driven by SternGerlachModel.fireSingleParticle() (SINGLE) and
+ * ParticleSystem.step() (CONTINUOUS) — this device only holds mode/rate state.
  */
 
-import { Emitter, EnumerationProperty, NumberProperty } from "scenerystack/axon";
+import { EnumerationProperty, NumberProperty } from "scenerystack/axon";
 import { Range, Vector2 } from "scenerystack/dot";
 import { Enumeration, EnumerationValue } from "scenerystack/phet-core";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
@@ -34,16 +33,12 @@ export class ParticleSource extends ExperimentDevice {
   /** Beam intensity in particles per second, used in CONTINUOUS mode ("None" … "Lots"). */
   public readonly emissionRateProperty: NumberProperty;
 
-  /** Fires once per fire() call; the ParticleSystem listens and spawns a particle. */
-  public readonly firedEmitter: Emitter;
-
   public constructor(position: Vector2) {
     super("source", position, false);
     this.sourceModeProperty = new EnumerationProperty(SourceMode.SINGLE);
     this.emissionRateProperty = new NumberProperty(CONTINUOUS_RATE_RANGE.defaultValue, {
       range: new Range(CONTINUOUS_RATE_RANGE.min, CONTINUOUS_RATE_RANGE.max),
     });
-    this.firedEmitter = new Emitter();
   }
 
   public override get halfWidth(): number {
@@ -65,11 +60,6 @@ export class ParticleSource extends ExperimentDevice {
 
   public override getOutputPortOffset(_outputIndex: number, _system: SpinSystem): Vector2 {
     return new Vector2(this.halfWidth, 0);
-  }
-
-  /** Requests a single particle emission (SINGLE mode fire button). */
-  public fire(): void {
-    this.firedEmitter.emit();
   }
 
   /** Restores mode and rate to their defaults. */

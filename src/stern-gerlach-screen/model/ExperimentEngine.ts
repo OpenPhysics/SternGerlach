@@ -72,9 +72,9 @@ export class ExperimentEngine {
   }
 
   /**
-   * Samples the state a freshly fired particle carries. USER returns the user-defined vector
-   * (already rotated into the Z basis); Unknown settings return the hard-coded state; RANDOM
-   * picks uniformly from the fixed basis (Experiment.run 410-424).
+   * Samples the state a freshly fired particle carries. Named eigenstates and USER return a
+   * definite vector; Unknown settings return the hard-coded mystery state; RANDOM picks
+   * uniformly from the fixed basis (Experiment.run 410-424).
    */
   public sampleInitialState(
     setting: InitialStateSetting,
@@ -84,6 +84,9 @@ export class ExperimentEngine {
   ): ComplexVector {
     if (setting.isUser && userState) {
       return userState;
+    }
+    if (setting.eigenstate) {
+      return this.operatorTable.getPreparedEigenstate(system, setting.eigenstate.type, setting.eigenstate.index);
     }
     if (setting.unknownIndex !== null) {
       return this.operatorTable.getUnknownState(system, setting.unknownIndex);
@@ -115,6 +118,7 @@ export class ExperimentEngine {
     assert?.(device instanceof Analyzer, `cannot transit through ${device.id}`);
     const analyzer = device as Analyzer;
     const op = options.system.opFor(analyzer.typeProperty.value);
+    this.operatorTable.setDirectionAngles(analyzer.thetaProperty.value, analyzer.phiProperty.value);
 
     if (options.system.stateCount === 2) {
       return this.transitTwoState(analyzer, op, state, options, rng);
@@ -245,11 +249,22 @@ export class ExperimentEngine {
       return result;
     }
 
-    // USER is a definite state; Unknown is a single hard-coded state; RANDOM averages over its
-    // fixed basis with equal weights (ComputeProb lines 829-864).
+    // Named eigenstates / USER / Unknown are definite; RANDOM averages over its fixed basis
+    // with equal weights (ComputeProb lines 829-864).
     let initialStates: Array<{ state: ComplexVector; weight: number }>;
     if (setting.isUser && userState) {
       initialStates = [{ state: userState, weight: 1 }];
+    } else if (setting.eigenstate) {
+      initialStates = [
+        {
+          state: this.operatorTable.getPreparedEigenstate(
+            options.system,
+            setting.eigenstate.type,
+            setting.eigenstate.index,
+          ),
+          weight: 1,
+        },
+      ];
     } else if (setting.unknownIndex !== null) {
       initialStates = [{ state: this.operatorTable.getUnknownState(options.system, setting.unknownIndex), weight: 1 }];
     } else {
@@ -288,6 +303,7 @@ export class ExperimentEngine {
     assert?.(device instanceof Analyzer, `cannot propagate through ${device.id}`);
     const analyzer = device as Analyzer;
     const op = options.system.opFor(analyzer.typeProperty.value);
+    this.operatorTable.setDirectionAngles(analyzer.thetaProperty.value, analyzer.phiProperty.value);
 
     if (options.system.stateCount === 2) {
       const nextAt0 = this.nextOf(analyzer, 0);

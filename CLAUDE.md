@@ -4,7 +4,11 @@ Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhys
 
 ## Project
 
-Single-screen SceneryStack simulation of the **Stern–Gerlach experiment**. This is the framework scaffold (forked from `OpenPhysics/TemplateSingleSim`) — model/view separation, color profiles, localization, accessibility, and reusable common components are wired up, ready for the physics to be built on top. For multi-screen sims, see `doc/multi-screen.md`.
+Single-screen SceneryStack simulation of the **Stern–Gerlach experiment**: build
+apparatus from analyzers, magnets, and counters; fire spin-½ / spin-1 / SU(3)
+atoms; compare Monte Carlo counts with analytic expectations. Model/view
+separation, color profiles, localization, and accessibility are fully wired.
+For multi-screen sims, see `doc/multi-screen.md`.
 
 ## Key files
 
@@ -77,20 +81,21 @@ otherwise defaults to black text on the sim's dark default-mode panels. `SIM_COM
 themes a `ComboBox`'s button/list chrome to the light control surface below; pair item labels
 with `LIGHT_SURFACE_TEXT_FILL` (not `SternGerlachColors.textColorProperty`, which is for panel-fill text).
 
-`SternGerlachColors.ts` backs this with a "light control surfaces" section —
+`SternGerlachColors.ts` backs this with a "control surfaces" section —
 `controlSurfaceColorProperty`, `controlSurfaceDisabledColorProperty`,
-`controlSurfaceTextColorProperty` — identical white/dark-text values in both default and
-projector profiles, so any component that must stay light regardless of theme (combo boxes,
-flat buttons, editable fields) keeps readable contrast automatically.
+`controlSurfaceTextColorProperty`, `controlSurfaceHighlightColorProperty` —
+profile-aware fills/text so combo boxes, flat buttons, and editable fields keep
+readable contrast in both default and projector modes.
 
 ## Accessibility
 
-This template is the **canonical accessibility reference** for OpenPhysics sims. It ships with
-the three required layers wired up: PDOM names, a `SternGerlachScreenSummaryContent`, and an explicit
-`pdomOrder` + `SternGerlachKeyboardHelpContent`. A11y strings live under the `a11y` key in each locale
-JSON, exposed via `StringManager.getA11yStrings()`. When building a real sim, make
-`currentDetailsContent` a live `DerivedProperty` over model state and add `accessibleName`s to
-every interactive node. Full convention and checklist: [../Baton/ACCESSIBILITY.md](../Baton/ACCESSIBILITY.md).
+This sim is an OpenPhysics accessibility reference. It ships with the three
+required layers: PDOM names, a `SternGerlachScreenSummaryContent` with a live
+`currentDetailsContent` `DerivedProperty` over model state, and an explicit
+`pdomOrder` + `SternGerlachKeyboardHelpContent`. A11y strings live under the
+`a11y` key in each locale JSON, exposed via `StringManager.getA11yStrings()`.
+Add `accessibleName`s (preferably live `StringProperty`s) to every interactive
+node. Full convention and checklist: [../Baton/ACCESSIBILITY.md](../Baton/ACCESSIBILITY.md).
 
 ## Multi-screen sims
 

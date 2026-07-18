@@ -16,6 +16,7 @@ import { PhetFont } from "scenerystack/scenery-phet";
 import { NumberSpinner } from "scenerystack/sun";
 import type { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SimButtonOptions.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import { MAGNET_FIELD_NUMBER_MAX, MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
@@ -66,12 +67,23 @@ export class MagnetNode extends Node {
       new Property(new Range(0, MAGNET_FIELD_NUMBER_MAX)),
       {
         accessibleName: a11y.controls.magnetFieldSpinnerStringProperty,
+        accessibleHelpText: a11y.controls.magnetFieldSpinnerHelpStringProperty,
         arrowsPosition: "leftRight",
         numberDisplayOptions: {
           align: "center",
-          textOptions: { font: new PhetFont(13) },
+          textOptions: {
+            font: new PhetFont(13),
+            fill: SternGerlachColors.controlSurfaceTextColorProperty,
+          },
+          backgroundFill: SternGerlachColors.controlSurfaceColorProperty,
+          backgroundStroke: SternGerlachColors.panelBorderColorProperty,
           xMargin: 4,
           yMargin: 2,
+        },
+        arrowButtonOptions: {
+          ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+          baseColor: SternGerlachColors.controlSurfaceColorProperty,
+          arrowFill: SternGerlachColors.controlSurfaceTextColorProperty,
         },
       },
     );

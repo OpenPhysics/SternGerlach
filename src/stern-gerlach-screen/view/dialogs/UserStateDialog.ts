@@ -1,12 +1,13 @@
 /**
  * UserStateDialog.ts
  *
- * A modal dialog for entering the user-defined initial state: a basis chooser
- * (Z / X / Y) and, per state component, real- and imaginary-part spinners. The
- * third component's row is shown only for 3-state systems (spin-1, SU(3)); the
- * basis chooser is hidden for SU(3), which takes the amplitudes directly (Java
- * getDataFromUser parity). The model normalizes and rotates the entry into the
- * Z basis when a particle is fired.
+ * Modal for preparing a custom initial state. Walks the user through:
+ *   1. choosing the basis the amplitudes are typed in (Z / X / Y),
+ *   2. entering real and imaginary parts for each basis ket,
+ *   3. previewing the normalized result in the Z basis the analyzers use.
+ *
+ * The third component row is shown only for 3-state systems; the basis chooser
+ * is hidden for SU(3), which takes amplitudes directly (Java getDataFromUser).
  */
 
 import {
@@ -17,11 +18,18 @@ import {
   type TReadOnlyProperty,
 } from "scenerystack/axon";
 import { Range } from "scenerystack/dot";
-import { GridBox, type Node, Text, VBox } from "scenerystack/scenery";
+import { GridBox, HSeparator, type Node, RichText, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, NumberSpinner } from "scenerystack/sun";
 import { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
+import type { OperatorTable } from "../../../common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../../common/quantum/SpinSystem.js";
+import {
+  amplitudeBasisLabels,
+  basisLabels,
+  computationalProbabilities,
+  ketMarkup,
+} from "../../../common/quantum/StateDisplay.js";
 import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SimButtonOptions.js";
 import { SimDialog } from "../../../common/SimDialog.js";
 import { StringManager } from "../../../i18n/StringManager.js";
@@ -41,13 +49,13 @@ function amplitudeSpinner(property: NumberProperty, accessibleName: TReadOnlyPro
       decimalPlaces: 2,
       align: "center",
       textOptions: {
-        font: new PhetFont(13),
+        font: new PhetFont(14),
         fill: SternGerlachColors.controlSurfaceTextColorProperty,
       },
       backgroundFill: SternGerlachColors.controlSurfaceColorProperty,
       backgroundStroke: SternGerlachColors.panelBorderColorProperty,
-      xMargin: 4,
-      yMargin: 2,
+      xMargin: 6,
+      yMargin: 3,
     },
     arrowButtonOptions: {
       ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
@@ -58,49 +66,74 @@ function amplitudeSpinner(property: NumberProperty, accessibleName: TReadOnlyPro
 }
 
 export class UserStateDialog extends SimDialog {
-  public constructor(userState: UserStateModel, systemProperty: TReadOnlyProperty<SpinSystem>) {
+  public constructor(
+    userState: UserStateModel,
+    systemProperty: TReadOnlyProperty<SpinSystem>,
+    operatorTable: OperatorTable,
+  ) {
     const strings = StringManager.getInstance();
     const dialogs = strings.getDialogs();
+    const stateStrings = strings.getStatePreparation();
     const a11y = strings.getA11yStrings();
 
     const labelFont = new PhetFont(14);
+    const boldFont = new PhetFont({ size: 14, weight: "bold" });
     const labelFill = SternGerlachColors.textColorProperty;
+    const mutedFill = SternGerlachColors.accentColorProperty;
+
+    const intro = new RichText(dialogs.userStateIntroStringProperty, {
+      font: new PhetFont(13),
+      fill: labelFill,
+      lineWrap: 420,
+      leading: 3,
+    });
+
+    const basisLabel = new Text(dialogs.userStateBasisPromptStringProperty, {
+      font: boldFont,
+      fill: labelFill,
+      maxWidth: 420,
+    });
 
     const basisGroup = new AquaRadioButtonGroup(
       userState.basisProperty,
-      [AnalyzerType.Z, AnalyzerType.X, AnalyzerType.Y].map((type) => ({
+      [
+        { type: AnalyzerType.Z, label: dialogs.basisZStringProperty },
+        { type: AnalyzerType.X, label: dialogs.basisXStringProperty },
+        { type: AnalyzerType.Y, label: dialogs.basisYStringProperty },
+      ].map(({ type, label }) => ({
         value: type,
-        createNode: () => new Text(type.code, { font: labelFont, fill: labelFill }),
+        createNode: () => new Text(label, { font: labelFont, fill: labelFill, maxWidth: 140 }),
       })),
       {
         orientation: "horizontal",
-        spacing: 14,
-        radioButtonOptions: { radius: 7 },
+        spacing: 16,
+        radioButtonOptions: { radius: 8 },
         accessibleName: a11y.controls.userStateBasisRadioGroupStringProperty,
-        // SU(3) takes amplitudes directly, so no basis rotation is offered.
         visibleProperty: new DerivedProperty([systemProperty], (system) => system !== SpinSystem.SU3),
       },
     );
 
-    const grid = new GridBox({ xSpacing: 8, ySpacing: 6 });
+    const ketLabels: Text[] = [];
+    const grid = new GridBox({ xSpacing: 14, ySpacing: 10 });
     grid.addChild(
-      new Text(dialogs.realStringProperty, { font: labelFont, fill: labelFill, layoutOptions: { column: 1, row: 0 } }),
+      new Text(dialogs.realStringProperty, { font: boldFont, fill: labelFill, layoutOptions: { column: 1, row: 0 } }),
     );
     grid.addChild(
       new Text(dialogs.imaginaryStringProperty, {
-        font: labelFont,
+        font: boldFont,
         fill: labelFill,
         layoutOptions: { column: 2, row: 0 },
       }),
     );
 
     for (let index = 0; index < 3; index++) {
-      const rowNode = new Text(`ψ${["₀", "₁", "₂"][index]}`, {
-        font: labelFont,
-        fill: labelFill,
+      const ketLabel = new Text(`|ψ${index}⟩`, {
+        font: new PhetFont({ size: 16, weight: "bold" }),
+        fill: mutedFill,
         layoutOptions: { column: 0, row: index + 1 },
       });
-      // 1-based for humans, matching the output-port numbering.
+      ketLabels.push(ketLabel);
+
       const reAccessible = new PatternStringProperty(a11y.controls.userStateRealPatternStringProperty, {
         index: index + 1,
       });
@@ -112,20 +145,86 @@ export class UserStateDialog extends SimDialog {
       reSpinner.layoutOptions = { column: 1, row: index + 1 };
       imSpinner.layoutOptions = { column: 2, row: index + 1 };
 
-      // The third component exists only for 3-state systems.
       if (index === 2) {
         const visible = new DerivedProperty([systemProperty], (system) => system.stateCount === 3);
-        for (const node of [rowNode, reSpinner, imSpinner] as Node[]) {
+        for (const node of [ketLabel, reSpinner, imSpinner] as Node[]) {
           node.setVisibleProperty(visible);
         }
       }
 
-      grid.addChild(rowNode);
+      grid.addChild(ketLabel);
       grid.addChild(reSpinner);
       grid.addChild(imSpinner);
     }
 
-    const content = new VBox({ spacing: 16, align: "left", children: [basisGroup, grid] });
+    const refreshKetLabels = () => {
+      const system = systemProperty.value;
+      const labels = amplitudeBasisLabels(system, userState.basisProperty.value.code);
+      for (let i = 0; i < ketLabels.length; i++) {
+        const label = labels[i];
+        const node = ketLabels[i];
+        if (label !== undefined && node) {
+          node.string = `|${label}⟩`;
+        }
+      }
+    };
+    userState.basisProperty.link(refreshKetLabels);
+    systemProperty.link(refreshKetLabels);
+
+    const previewHeading = new Text(dialogs.userStatePreviewHeadingStringProperty, {
+      font: boldFont,
+      fill: labelFill,
+      maxWidth: 420,
+    });
+
+    const previewKet = new RichText("|ψ⟩ = |+z⟩", {
+      font: new PhetFont(15),
+      fill: mutedFill,
+      align: "left",
+      lineWrap: 420,
+      leading: 4,
+    });
+
+    const previewProbs = new Text("", {
+      font: new PhetFont(13),
+      fill: labelFill,
+      maxWidth: 420,
+    });
+
+    const updatePreview = () => {
+      const system = systemProperty.value;
+      const state = userState.toZBasisVector(operatorTable, system);
+      previewKet.string = ketMarkup(state, system);
+      const probs = computationalProbabilities(state, system.stateCount);
+      const labels = basisLabels(system);
+      previewProbs.string = probs
+        .map((p, i) =>
+          stateStrings.probabilityPatternStringProperty.value
+            .replace("{{label}}", labels[i] as string)
+            .replace("{{percent}}", (100 * p).toFixed(0)),
+        )
+        .join("      ");
+    };
+
+    userState.basisProperty.link(updatePreview);
+    systemProperty.link(updatePreview);
+    for (const property of userState.properties) {
+      property.link(updatePreview);
+    }
+    stateStrings.probabilityPatternStringProperty.link(updatePreview);
+
+    const content = new VBox({
+      spacing: 14,
+      align: "left",
+      children: [
+        intro,
+        new VBox({ spacing: 8, align: "left", children: [basisLabel, basisGroup] }),
+        new HSeparator(),
+        grid,
+        new HSeparator(),
+        new VBox({ spacing: 6, align: "left", children: [previewHeading, previewKet, previewProbs] }),
+      ],
+    });
 
     super(content, {
       title: new Text(dialogs.userStateTitleStringProperty, {

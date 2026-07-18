@@ -1,7 +1,7 @@
 {
   "title": "Stern Gerlach",
   "screens": {
-    "sim": "Sim"
+    "sim": "Stern Gerlach"
   },
   "experiments": {
     "singleZ": "Analyseur unique (Z)",
@@ -24,10 +24,10 @@
     "custom": "[Personnalisé]"
   },
   "experimentGuidance": {
-    "singleZ": "Avec un faisceau aléatoire, les deux compteurs convergent vers 50/50. Choisissez ensuite l'état utilisateur |+z⟩ comme état initial et prédisez : quel compteur doit s'activer ?",
+    "singleZ": "Avec |+z⟩ préparé (par défaut), le compteur UP devrait recevoir tous les atomes. Passez à Aléatoire et observez les deux compteurs converger vers 50/50.",
     "singleX": "Un état préparé en Z mesuré selon X est 50/50. Observez la convergence des compteurs avec les valeurs attendues.",
-    "zThenX": "Après SGz, le faisceau UP est |+z⟩. Le mesurer avec SGx doit à nouveau donner 50/50.",
-    "zThenZ": "Répéter la même base laisse l'état inchangé. Le second SGz ne doit jamais faire basculer un atome UP vers DOWN.",
+    "zThenX": "Après SGz, le faisceau + est |+z⟩. Le mesurer avec SGx doit à nouveau donner 50/50.",
+    "zThenZ": "Répéter la même base laisse l'état inchangé. Le second SGz ne doit jamais faire basculer un atome + vers −.",
     "interferometer": "Sans Observer, recombiner les deux chemins SGx restaure l'état d'origine au SGz final. Avec Observer, l'interférence disparaît.",
     "magnet": "Réglez le champ de l'aimant pour faire précesser le spin. Les comptes de l'analyseur X oscillent avec le champ.",
     "recombination": "Fusionner certains chemins avant l'analyseur suivant peut restaurer la cohérence. Comparez Observer activé et désactivé.",
@@ -37,7 +37,7 @@
     "title": "État préparé",
     "unknownHidden": "État mystère — tirez des atomes pour l'inférer à partir des compteurs.",
     "randomMixture": "Mélange aléatoire : chaque état de base est équiprobable.",
-    "probabilityPattern": "P({{label}})={{percent}}%"
+    "probabilityPattern": "P({{label}}) = {{percent}}%"
   },
   "counters": {
     "percentPattern": "{{percent}}%",
@@ -60,14 +60,19 @@
     "resetCounts": "Réinitialiser les compteurs",
     "doNPattern": "Faire {{count}}",
     "watch": "Observer",
-    "fieldStrength": "Champ",
+    "fieldStrength": "Champ (0–99)",
     "angles": "Angles…",
     "theta": "θ",
     "phi": "φ",
     "initialState": "État initial",
+    "plusZ": "|+z⟩",
+    "minusZ": "|−z⟩",
+    "plusX": "|+x⟩",
+    "minusX": "|−x⟩",
     "random": "Aléatoire",
     "unknownPattern": "Inconnu n°{{number}}",
-    "userState": "État de l'utilisateur…",
+    "userState": "Personnalisé…",
+    "editAmplitudes": "Modifier les amplitudes…",
     "apparatus": "Appareil",
     "guidance": "À essayer",
     "deadEndPattern": "Perdu (filtres/impasses) : {{percent}}%",
@@ -78,9 +83,9 @@
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "L'aire de jeu montre un affichage de l'état préparé, une source de particules reliée, à travers des analyseurs de Stern–Gerlach et des aimants, à des compteurs, avec des bloqueurs de sortie optionnels. Les points magenta animés représentent les atomes en vol. En mode Personnalisé, vous pouvez ajouter des appareils, les déplacer et relier les ports.",
-      "controlArea": "La zone de contrôle comporte un sélecteur d'expériences avec notation et conseils, un sélecteur de système quantique, un sélecteur d'état initial, des cases Observer et Valeurs attendues, des commandes d'angle, des boutons Faire N et Réinitialiser les compteurs. Tout réinitialiser ramène la simulation à son état initial.",
-      "interactionHint": "Choisissez une expérience et un système, sélectionnez un état initial, bloquez éventuellement une sortie d'analyseur, puis tirez des atomes et comparez les statistiques aux valeurs attendues."
+      "playArea": "L'aire de jeu montre un panneau d'état initial près de la source de particules, reliée, à travers des analyseurs de Stern–Gerlach et des aimants, à des compteurs, avec des bloqueurs de sortie optionnels. Lorsque c'est activé dans les Préférences, un sélecteur de système quantique apparaît sur la source. Les points magenta animés représentent les atomes en vol. En mode Personnalisé, vous pouvez ajouter des appareils, les déplacer et relier les ports.",
+      "controlArea": "La zone de contrôle comporte un sélecteur d'expériences avec notation et conseils, des cases Observer et Valeurs attendues, des boutons Faire N et Réinitialiser les compteurs. Tout réinitialiser ramène la simulation à son état initial.",
+      "interactionHint": "Choisissez une expérience, réglez l'état initial près de la source, bloquez éventuellement une sortie d'analyseur, puis tirez des atomes et comparez les statistiques aux valeurs attendues."
     },
     "currentDetailsPattern": "{{experiment}}, système {{system}}. État initial : {{initialState}}. Atomes détectés : {{total}}. Observation {{watchStatus}}. Probabilité perdue : {{deadEnd}}%.",
     "currentDetailsBuilderSuffix": " Le mode Personnalisé est actif.",
@@ -95,24 +100,27 @@
       "resetCountsButton": "Remettre tous les compteurs à zéro",
       "doNButtonPattern": "Tirer {{count}} atomes à la fois",
       "watchCheckbox": "Observer le chemin pris par chaque atome",
-      "magnetFieldSpinner": "Intensité du champ de l'aimant",
+      "magnetFieldSpinner": "Cadran du champ de l'aimant",
+      "magnetFieldSpinnerHelp": "Règle le cadran de précession de 0 à 99 ; une rotation complète du spin s'effectue tous les 72 pas. Il s'agit d'une position de cadran, et non d'une intensité de champ physique en tesla ou en gauss.",
       "anglesButton": "Ouvrir les commandes d'angle de direction",
       "thetaControl": "Angle polaire thêta",
       "phiControl": "Angle azimutal phi",
-      "systemRadioGroup": "Système quantique",
+      "systemRadioGroup": "Système quantique sur la source de particules",
       "analyzerToolboxItem": "Ajouter un analyseur au tableau",
       "magnetToolboxItem": "Ajouter un aimant au tableau",
       "counterToolboxItem": "Ajouter un compteur au tableau",
       "initialStateComboBox": "État initial",
-      "editUserStateButton": "Modifier l'état initial défini par l'utilisateur",
-      "userStateBasisRadioGroup": "Base d'entrée pour l'état défini par l'utilisateur",
-      "userStateRealPattern": "Partie réelle du composant {{index}}",
-      "userStateImagPattern": "Partie imaginaire du composant {{index}}",
-      "statePreparationRegion": "Affichage de l'état préparé",
-      "blockerRadioGroup": "Bloquer une sortie d'analyseur"
+      "editUserStateButton": "Modifier les amplitudes de l'état préparé personnalisé",
+      "userStateBasisRadioGroup": "Base utilisée pour saisir les amplitudes personnalisées",
+      "userStateRealPattern": "Partie réelle de l'amplitude {{index}}",
+      "userStateImagPattern": "Partie imaginaire de l'amplitude {{index}}",
+      "statePreparationRegion": "Préparation de l'état initial",
+      "blockerRadioGroup": "Bloquer une sortie d'analyseur",
+      "howToUseButton": "Ouvrir le guide d'utilisation"
     },
     "builder": {
       "analyzerTypeComboBox": "Direction de mesure de l'analyseur",
+      "magnetTypeRadioGroup": "Direction du champ de l'aimant",
       "deleteDeviceButton": "Supprimer cet appareil",
       "sourceDevice": "Source de particules",
       "analyzerDevice": "Analyseur de Stern–Gerlach",
@@ -136,10 +144,22 @@
   },
   "dialogs": {
     "anglesTitle": "Angles de direction",
-    "userStateTitle": "État défini par l'utilisateur",
+    "userStateTitle": "Préparer un état personnalisé",
+    "userStateIntro": "Choisissez une base, puis réglez l'amplitude complexe de chaque ket de la base. Les valeurs sont normalisées automatiquement et converties dans la base Z utilisée par les analyseurs.",
+    "userStateBasisPrompt": "Saisir les amplitudes dans cette base :",
+    "basisZ": "Z  (|+z⟩, |−z⟩)",
+    "basisX": "X  (|+x⟩, |−x⟩)",
+    "basisY": "Y  (|+y⟩, |−y⟩)",
+    "userStatePreviewHeading": "Résultat dans la base Z :",
     "basis": "Base",
-    "real": "Re",
-    "imaginary": "Im"
+    "real": "Réelle",
+    "imaginary": "Imaginaire",
+    "howToUseTitle": "Comment utiliser cette simulation",
+    "howToUseStep1": "Commencez par une expérience prédéfinie, ou passez le Système en mode Personnalisé et glissez des analyseurs, aimants et compteurs sur le tableau pour construire le vôtre.",
+    "howToUseStep2": "Réglez l'état initial près de la source : commencez par |+z⟩ (par défaut), puis essayez |−z⟩, |+x⟩, |−x⟩, Aléatoire ou un état mystère Inconnu.",
+    "howToUseStep3": "Tirez un seul atome pour observer sa trajectoire dans l'appareil, ou passez en mode Continu et activez Observer pour en voir plusieurs à la fois.",
+    "howToUseStep4": "Activez Valeurs attendues et utilisez les boutons Faire N pour lancer de grandes séries : vérifiez si les statistiques des compteurs convergent vers la prédiction.",
+    "howToUseStep5": "Une fois les bases maîtrisées, essayez de bloquer une sortie d'analyseur ou de modifier les angles de direction pour voir comment le résultat change."
   },
   "systems": {
     "spinHalf": "Spin ½",
@@ -148,7 +168,9 @@
   },
   "preferences": {
     "title": "Simulation",
+    "spinOneEnable": "Activer le système Spin 1",
+    "spinOneEnableDescription": "Affiche un sélecteur Spin ½ / Spin 1 sur la source de particules. Désactivé par défaut (spin ½ uniquement).",
     "su3Enable": "Activer le système SU(3)",
-    "su3EnableDescription": "Ajoute SU(3) (Gell-Mann λ₁–λ₈) comme troisième système quantique."
+    "su3EnableDescription": "Ajoute SU(3) (Gell-Mann λ₁–λ₈) comme système quantique supplémentaire sur le sélecteur de la source."
   }
 }

@@ -1,7 +1,7 @@
 {
   "title": "Stern Gerlach",
   "screens": {
-    "sim": "Sim"
+    "sim": "Stern Gerlach"
   },
   "experiments": {
     "singleZ": "Single Analyzer (Z)",
@@ -24,7 +24,7 @@
     "custom": "[Custom]"
   },
   "experimentGuidance": {
-    "singleZ": "With a Random beam, both counters converge to 50/50. Then set Initial State to User State |+z⟩ and predict: which counter should fire?",
+    "singleZ": "With |+z⟩ prepared (the default), the UP counter should get every atom. Switch to Random and watch both counters converge to 50/50.",
     "singleX": "A Z-prepared state measured along X is 50/50. Watch the counters converge when Expected Values is on.",
     "zThenX": "After SGz, the UP beam is |+z⟩. Measuring that beam with SGx should again be 50/50.",
     "zThenZ": "Repeating the same basis leaves the state unchanged. The second SGz should never flip an UP atom to DOWN.",
@@ -37,7 +37,7 @@
     "title": "Prepared State",
     "unknownHidden": "Mystery state — fire atoms to infer it from the counters.",
     "randomMixture": "Random mixture: each basis state is equally likely.",
-    "probabilityPattern": "P({{label}})={{percent}}%"
+    "probabilityPattern": "P({{label}}) = {{percent}}%"
   },
   "counters": {
     "percentPattern": "{{percent}}%",
@@ -60,14 +60,19 @@
     "resetCounts": "Reset Counts",
     "doNPattern": "Do {{count}}",
     "watch": "Watch",
-    "fieldStrength": "Field",
+    "fieldStrength": "Field (0–99)",
     "angles": "Angles…",
     "theta": "θ",
     "phi": "φ",
     "initialState": "Initial State",
+    "plusZ": "|+z⟩",
+    "minusZ": "|−z⟩",
+    "plusX": "|+x⟩",
+    "minusX": "|−x⟩",
     "random": "Random",
     "unknownPattern": "Unknown #{{number}}",
-    "userState": "User State…",
+    "userState": "Custom…",
+    "editAmplitudes": "Edit amplitudes…",
     "apparatus": "Apparatus",
     "guidance": "Try this",
     "deadEndPattern": "Lost to filters/dead ends: {{percent}}%",
@@ -78,9 +83,9 @@
   },
   "a11y": {
     "screenSummary": {
-      "playArea": "The play area shows a prepared-state readout, a particle source wired through Stern–Gerlach analyzers and magnets to particle counters on a light experiment board, and optional exit blockers. Animated magenta dots represent atoms in flight. In Custom mode you can add devices, drag them into place, and wire output ports to input ports.",
-      "controlArea": "The control area has an experiment preset chooser with apparatus notation and guidance, a quantum-system selector, an initial-state chooser, watch and expected-value toggles, direction-angle controls, analytic Do-N batch buttons, and Reset Counts. Reset All returns the simulation to its starting state.",
-      "interactionHint": "Choose an experiment and system, pick an initial state, optionally block an analyzer exit, then fire atoms through the analyzers and compare counter statistics with the expected values."
+      "playArea": "The play area shows an initial-state panel near the particle source, wired through Stern–Gerlach analyzers and magnets to particle counters on the experiment board, with optional exit blockers. When enabled in Preferences, a quantum-system chooser appears on the source. Animated magenta dots represent atoms in flight. In Custom mode you can add devices, drag them into place, and wire output ports to input ports.",
+      "controlArea": "The control area has an experiment preset chooser with apparatus notation and guidance, watch and expected-value toggles, analytic Do-N batch buttons, and Reset Counts. Reset All returns the simulation to its starting state.",
+      "interactionHint": "Choose an experiment, set the initial state near the source, optionally block an analyzer exit, then fire atoms through the analyzers and compare counter statistics with the expected values."
     },
     "currentDetailsPattern": "{{experiment}}, {{system}} system. Initial state: {{initialState}}. Atoms detected: {{total}}. Watch is {{watchStatus}}. Lost probability: {{deadEnd}}%.",
     "currentDetailsBuilderSuffix": " Builder mode is active.",
@@ -95,24 +100,27 @@
       "resetCountsButton": "Reset all counters to zero",
       "doNButtonPattern": "Fire {{count}} atoms at once",
       "watchCheckbox": "Watch which path each atom takes",
-      "magnetFieldSpinner": "Magnet field strength",
+      "magnetFieldSpinner": "Magnet field dial",
+      "magnetFieldSpinnerHelp": "Sets the precession dial from 0 to 99; a full spin rotation completes every 72 steps. This is a dial position, not a physical field strength in tesla or gauss.",
       "anglesButton": "Open direction-angle controls",
       "thetaControl": "Polar angle theta",
       "phiControl": "Azimuthal angle phi",
-      "systemRadioGroup": "Quantum system",
+      "systemRadioGroup": "Quantum system on the particle source",
       "analyzerToolboxItem": "Add an analyzer to the board",
       "magnetToolboxItem": "Add a magnet to the board",
       "counterToolboxItem": "Add a counter to the board",
       "initialStateComboBox": "Initial state",
-      "editUserStateButton": "Edit the user-defined initial state",
-      "userStateBasisRadioGroup": "Input basis for the user-defined state",
-      "userStateRealPattern": "Real part of component {{index}}",
-      "userStateImagPattern": "Imaginary part of component {{index}}",
-      "statePreparationRegion": "Prepared-state readout",
-      "blockerRadioGroup": "Block an analyzer exit"
+      "editUserStateButton": "Edit the custom prepared-state amplitudes",
+      "userStateBasisRadioGroup": "Basis used to enter the custom amplitudes",
+      "userStateRealPattern": "Real part of amplitude {{index}}",
+      "userStateImagPattern": "Imaginary part of amplitude {{index}}",
+      "statePreparationRegion": "Initial-state preparation",
+      "blockerRadioGroup": "Block an analyzer exit",
+      "howToUseButton": "Open how-to-use guide"
     },
     "builder": {
       "analyzerTypeComboBox": "Analyzer measurement direction",
+      "magnetTypeRadioGroup": "Magnet field direction",
       "deleteDeviceButton": "Delete this device",
       "sourceDevice": "Particle source",
       "analyzerDevice": "Stern–Gerlach analyzer",
@@ -136,10 +144,22 @@
   },
   "dialogs": {
     "anglesTitle": "Direction Angles",
-    "userStateTitle": "User-Defined State",
+    "userStateTitle": "Prepare a Custom State",
+    "userStateIntro": "Choose a basis, then set the complex amplitude of each basis ket. Values are normalized automatically and converted into the Z basis used by the analyzers.",
+    "userStateBasisPrompt": "Enter amplitudes in this basis:",
+    "basisZ": "Z  (|+z⟩, |−z⟩)",
+    "basisX": "X  (|+x⟩, |−x⟩)",
+    "basisY": "Y  (|+y⟩, |−y⟩)",
+    "userStatePreviewHeading": "Result in the Z basis:",
     "basis": "Basis",
-    "real": "Re",
-    "imaginary": "Im"
+    "real": "Real",
+    "imaginary": "Imaginary",
+    "howToUseTitle": "How to Use This Simulation",
+    "howToUseStep1": "Start with an experiment preset, or switch System to Custom and drag analyzers, magnets, and counters onto the board to build your own.",
+    "howToUseStep2": "Set the initial state near the source: start with |+z⟩ (the default), then try |−z⟩, |+x⟩, |−x⟩, Random, or a mystery Unknown state.",
+    "howToUseStep3": "Fire a single atom to watch it travel through the apparatus, or switch to Continuous and turn on Watch to see many at once.",
+    "howToUseStep4": "Turn on Expected Values and use the Do-N buttons to run large batches, then check whether the counter statistics converge to the prediction.",
+    "howToUseStep5": "Once you have the basics, try blocking an analyzer exit or changing the direction angles to see how the outcome shifts."
   },
   "systems": {
     "spinHalf": "Spin ½",
@@ -148,7 +168,9 @@
   },
   "preferences": {
     "title": "Simulation",
+    "spinOneEnable": "Enable Spin 1 system",
+    "spinOneEnableDescription": "Shows a Spin ½ / Spin 1 chooser on the particle source. Off by default (spin-½ only).",
     "su3Enable": "Enable SU(3) system",
-    "su3EnableDescription": "Adds SU(3) (Gell-Mann λ₁–λ₈) as a third quantum system."
+    "su3EnableDescription": "Adds SU(3) (Gell-Mann λ₁–λ₈) as an additional quantum system on the source chooser."
   }
 }

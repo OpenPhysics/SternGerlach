@@ -2,7 +2,7 @@
  * StateDisplay.ts
  *
  * Pure helpers for presenting a ComplexVector: Bloch-sphere coordinates for
- * spin-½, Born probabilities in a chosen basis, and a compact ket markup string.
+ * spin-½, Born probabilities in a chosen basis, and a readable ket equation.
  */
 
 import type { Complex } from "./Complex.js";
@@ -12,7 +12,17 @@ import type { SpinSystem } from "./SpinSystem.js";
 /** Cartesian Bloch vector (x, y, z) for a pure spin-½ state. */
 export type BlochVector = { x: number; y: number; z: number };
 
-/** Formats a complex amplitude for RichText, e.g. "0.71", "−0.50i", "0.50+0.50i". */
+/** One term of a ket expansion, ready for layout (coefficient + basis label). */
+export type KetTerm = {
+  /** Coefficient markup, empty when the amplitude is ≈ ±1 (sign absorbed into `sign`). */
+  readonly coefficient: string;
+  /** "+" or "−" for every term after the first; "" for the leading term when positive. */
+  readonly sign: "" | "+" | "−";
+  /** Basis ket without bars, e.g. "+z" or "−1". */
+  readonly label: string;
+};
+
+/** Formats a complex amplitude for display, e.g. "0.71", "−0.50i", "0.50 + 0.50i". */
 export function formatAmplitude(c: Complex, digits = 2): string {
   const re = round(c.re, digits);
   const im = round(c.im, digits);
@@ -22,8 +32,8 @@ export function formatAmplitude(c: Complex, digits = 2): string {
   if (Math.abs(re) < 5 * 10 ** -(digits + 1)) {
     return `${formatReal(im, digits)}i`;
   }
-  const imPart = im >= 0 ? `+${formatReal(im, digits)}i` : `${formatReal(im, digits)}i`;
-  return `${formatReal(re, digits)}${imPart}`;
+  const imAbs = formatReal(Math.abs(im), digits);
+  return im >= 0 ? `${formatReal(re, digits)} + ${imAbs}i` : `${formatReal(re, digits)} − ${imAbs}i`;
 }
 
 /**
@@ -49,31 +59,96 @@ export function computationalProbabilities(state: ComplexVector, stateCount: num
 }
 
 /**
- * Display labels for the computational Z-basis components, in component order.
- * The 3-state order is (+1, 0, −1): component 1 is the m = 0 amplitude and
- * component 2 is m = −1 (see the OperatorTable op 7 eigenvectors).
+ * Display labels for the computational Z-basis kets, in component order.
+ * Spin-½ uses "+z" / "−z"; spin-1 / SU(3) uses "+1" / "0" / "−1" (m values).
+ * Component order for 3-state matches OperatorTable op 7: (+1, 0, −1).
  */
 export function basisLabels(system: SpinSystem): readonly string[] {
-  return system.stateCount === 2 ? ["+", "−"] : ["+", "0", "−"];
+  return system.stateCount === 2 ? ["+z", "−z"] : ["+1", "0", "−1"];
 }
 
 /**
- * RichText ket markup for a state in the Z basis, e.g.
- * `|ψ⟩ = (0.71)|+⟩ + (0.71)|−⟩`.
+ * Labels for amplitudes entered in a chosen measurement basis (dialog rows).
+ * Spin-½: |+z⟩/|−z⟩, |+x⟩/|−x⟩, |+y⟩/|−y⟩; spin-1: |+1⟩, |0⟩, |−1⟩.
  */
-export function ketMarkup(state: ComplexVector, system: SpinSystem, digits = 2): string {
+export function amplitudeBasisLabels(system: SpinSystem, basisCode: string): readonly string[] {
+  if (system.stateCount === 2) {
+    const axis = basisCode.toLowerCase();
+    return [`+${axis}`, `−${axis}`];
+  }
+  return ["+1", "0", "−1"];
+}
+
+/**
+ * Breaks a state into signed ket terms for structured layout. Near-zero amplitudes
+ * are omitted; a lone ≈±1 amplitude yields a bare ket (no coefficient).
+ */
+export function ketTerms(state: ComplexVector, system: SpinSystem, digits = 2): KetTerm[] {
   const labels = basisLabels(system);
-  const parts: string[] = [];
+  const terms: KetTerm[] = [];
   for (let i = 0; i < system.stateCount; i++) {
     const amp = state.components[i] as Complex;
     if (amp.magnitudeSquared() < 1e-8) {
       continue;
     }
-    const formatted = formatAmplitude(amp, digits);
-    const prefix = parts.length === 0 ? "" : formatted.startsWith("-") ? " " : " + ";
-    parts.push(`${prefix}(${formatted})|${labels[i]}⟩`);
+    const label = labels[i] as string;
+    const re = round(amp.re, digits);
+    const im = round(amp.im, digits);
+    const almostReal = Math.abs(im) < 5 * 10 ** -(digits + 1);
+    const almostOne = almostReal && Math.abs(Math.abs(re) - 1) < 5 * 10 ** -(digits + 1);
+    const negative = almostReal ? re < 0 : amp.re < 0 && Math.abs(amp.im) < 5 * 10 ** -(digits + 1);
+
+    if (almostOne) {
+      terms.push({
+        coefficient: "",
+        sign: terms.length === 0 ? (negative ? "−" : "") : negative ? "−" : "+",
+        label,
+      });
+      continue;
+    }
+
+    // For the leading term, fold a pure-real minus into the coefficient; later terms use sign.
+    if (terms.length === 0) {
+      terms.push({
+        coefficient: formatAmplitude(amp, digits),
+        sign: "",
+        label,
+      });
+    } else if (almostReal && re < 0) {
+      terms.push({
+        coefficient: formatReal(Math.abs(re), digits),
+        sign: "−",
+        label,
+      });
+    } else {
+      terms.push({
+        coefficient: formatAmplitude(amp, digits),
+        sign: "+",
+        label,
+      });
+    }
   }
-  return parts.length === 0 ? "|ψ⟩ = 0" : `|ψ⟩ = ${parts.join("")}`;
+  return terms;
+}
+
+/**
+ * RichText ket equation in the Z basis. Pure eigenstates render as `|ψ⟩ = |+z⟩`;
+ * superpositions stack terms on separate lines for readability.
+ */
+export function ketMarkup(state: ComplexVector, system: SpinSystem, digits = 2): string {
+  const terms = ketTerms(state, system, digits);
+  if (terms.length === 0) {
+    return "|ψ⟩ = 0";
+  }
+  const lines = terms.map((term, index) => {
+    const ket = `|${term.label}⟩`;
+    const body = term.coefficient === "" ? ket : `${term.coefficient} ${ket}`;
+    if (index === 0) {
+      return term.sign === "−" ? `|ψ⟩ = −${body}` : `|ψ⟩ = ${body}`;
+    }
+    return `${term.sign} ${body}`;
+  });
+  return lines.join("<br>");
 }
 
 function round(value: number, digits: number): number {

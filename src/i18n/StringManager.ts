@@ -88,9 +88,8 @@ export class StringManager {
    * Returns the reactive `a11y` string tree used by the parallel DOM:
    *   - `screenSummary.*` — play-area / control-area overview and an interaction
    *     hint, read by `SternGerlachScreenSummaryContent`.
-   *   - `currentDetails` — a paragraph describing the simulation's current state.
-   *     In a real sim, derive a live version from model Properties (see
-   *     LunarLander's ScreenSummaryContent for the canonical pattern).
+   *   - `currentDetails*` — pattern strings composed into a live
+   *     `DerivedProperty` over model state (see `SternGerlachScreenSummaryContent`).
    *
    * Add `accessibleName` / `accessibleHelpText` strings for individual controls
    * to the `a11y` group too, then read them through this same nested tree.

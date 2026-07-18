@@ -28,6 +28,26 @@ export class SternGerlachPreferencesNode extends VBox {
       fill: PREFERENCES_TEXT_COLOR,
     });
 
+    const spinOneCheckbox = new Checkbox(
+      preferencesModel.spinOneEnabledProperty,
+      new Text(prefStrings.spinOneEnableStringProperty, {
+        font: new PhetFont(14),
+        fill: PREFERENCES_TEXT_COLOR,
+      }),
+      {
+        checkboxColor: PREFERENCES_TEXT_COLOR,
+        checkboxColorBackground: PREFERENCES_CONTROL_BACKGROUND,
+        spacing: 8,
+        ...(tandem && { tandem: tandem.createTandem("spinOneCheckbox") }),
+      },
+    );
+
+    const spinOneDescription = new Text(prefStrings.spinOneEnableDescriptionStringProperty, {
+      font: new PhetFont(12),
+      fill: PREFERENCES_TEXT_COLOR,
+      maxWidth: 400,
+    });
+
     const su3Checkbox = new Checkbox(
       preferencesModel.su3EnabledProperty,
       new Text(prefStrings.su3EnableStringProperty, {
@@ -45,12 +65,13 @@ export class SternGerlachPreferencesNode extends VBox {
     const su3Description = new Text(prefStrings.su3EnableDescriptionStringProperty, {
       font: new PhetFont(12),
       fill: PREFERENCES_TEXT_COLOR,
+      maxWidth: 400,
     });
 
     super({
       align: "left",
       spacing: 8,
-      children: [header, su3Checkbox, su3Description],
+      children: [header, spinOneCheckbox, spinOneDescription, su3Checkbox, su3Description],
     });
   }
 }

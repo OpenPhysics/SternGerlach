@@ -7,6 +7,11 @@
  * None…Lots intensity slider (CONTINUOUS mode), and an AquaRadioButtonGroup
  * to switch between the two modes.
  *
+ * The quantum-system chooser (Spin ½ / Spin 1 / SU(3)) lives on ExperimentAreaNode
+ * as a persistent overlay — it must not be disposed mid-click when changing
+ * system rebuilds the device layer (that disposed the radios before Voicing
+ * finished and tripped "utterance is not an Utterance").
+ *
  * Local origin: the device's center (the body's center); the nozzle tip is
  * the model output port on the right edge.
  */
@@ -16,6 +21,7 @@ import { Dimension2, Range } from "scenerystack/dot";
 import { Circle, LinearGradient, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, HSlider, RoundPushButton } from "scenerystack/sun";
+import { FLAT_BUTTON_APPEARANCE_OPTIONS } from "../../../common/SimButtonOptions.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import { CONTINUOUS_RATE_RANGE, MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
@@ -60,6 +66,7 @@ export class SourceNode extends Node {
 
     // SINGLE mode: the magenta fire button, centered on the body.
     const fireButton = new RoundPushButton({
+      ...FLAT_BUTTON_APPEARANCE_OPTIONS,
       radius: 17,
       baseColor: SternGerlachColors.particleColorProperty,
       content: new Circle(5, { fill: SternGerlachColors.analyzerLabelFillProperty }),
@@ -69,7 +76,7 @@ export class SourceNode extends Node {
     });
     this.addChild(fireButton);
 
-    // CONTINUOUS mode: the None … Lots intensity slider, below the body.
+    // CONTINUOUS mode: the None … Lots intensity slider, above the body.
     const rateSlider = new HSlider(
       source.emissionRateProperty,
       new Range(CONTINUOUS_RATE_RANGE.min, CONTINUOUS_RATE_RANGE.max),
@@ -91,10 +98,10 @@ export class SourceNode extends Node {
     );
     const sliderWrapper = new Node({ children: [rateSlider] });
     sliderWrapper.centerX = 0;
-    sliderWrapper.top = halfHeight + 8;
+    sliderWrapper.bottom = -halfHeight - 8;
     this.addChild(sliderWrapper);
 
-    // Mode selector below everything — labels keep Single vs Continuous visually distinct.
+    // Mode selector below the body — labels keep Single vs Continuous visually distinct.
     const radioFont = new PhetFont({ size: 12, weight: "bold" });
     const modeRadioGroup = new AquaRadioButtonGroup(
       source.sourceModeProperty as Property<SourceMode>,
@@ -116,7 +123,7 @@ export class SourceNode extends Node {
       },
     );
     modeRadioGroup.centerX = 0;
-    modeRadioGroup.top = halfHeight + 44;
+    modeRadioGroup.top = halfHeight + 8;
     this.addChild(modeRadioGroup);
 
     const modeListener = (mode: SourceMode) => {

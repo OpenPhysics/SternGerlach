@@ -22,7 +22,11 @@ export class AnalyzerType extends EnumerationValue {
   public static readonly X = new AnalyzerType("X");
   public static readonly Y = new AnalyzerType("Y");
 
-  /** Arbitrary direction n̂(θ, φ); the angles are global model state (Java parity). */
+  /**
+   * Arbitrary direction n̂(θ, φ). Each analyzer/magnet set to this type owns its own θ, φ —
+   * a departure from the Java SPINS applet, which shared one global direction across every
+   * n̂-type device.
+   */
   public static readonly N = new AnalyzerType("n");
 
   public static readonly LAMBDA_1 = new AnalyzerType("1");

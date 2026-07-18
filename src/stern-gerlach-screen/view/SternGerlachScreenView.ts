@@ -8,10 +8,11 @@
 
 import { Vector2 } from "scenerystack/dot";
 import { Node, Rectangle } from "scenerystack/scenery";
-import { ResetAllButton } from "scenerystack/scenery-phet";
+import { InfoButton, ResetAllButton, SceneryPhetConstants } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
-import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SimButtonOptions.js";
+import { FLAT_BUTTON_APPEARANCE_OPTIONS } from "../../common/SimButtonOptions.js";
+import { StringManager } from "../../i18n/StringManager.js";
 import { SCREEN_VIEW_MARGIN } from "../../SimConstants.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 import { Analyzer } from "../model/devices/Analyzer.js";
@@ -19,10 +20,14 @@ import { Counter } from "../model/devices/Counter.js";
 import { Magnet } from "../model/devices/Magnet.js";
 import type { SternGerlachModel } from "../model/SternGerlachModel.js";
 import { DeviceToolboxNode } from "./DeviceToolboxNode.js";
+import { HowToUseDialog } from "./dialogs/HowToUseDialog.js";
 import { ExperimentAreaNode } from "./ExperimentAreaNode.js";
 import { ExperimentControlPanel } from "./ExperimentControlPanel.js";
 import { StatePreparationAreaNode } from "./StatePreparationAreaNode.js";
 import { SternGerlachScreenSummaryContent } from "./SternGerlachScreenSummaryContent.js";
+
+/** Gap between the control panel and toolbox, and between toolbox and Reset All. */
+const RIGHT_COLUMN_GAP = 6;
 
 export class SternGerlachScreenView extends ScreenView {
   private readonly experimentAreaNode: ExperimentAreaNode;
@@ -45,10 +50,11 @@ export class SternGerlachScreenView extends ScreenView {
     this.experimentAreaNode.top = SCREEN_VIEW_MARGIN;
     this.addChild(this.experimentAreaNode);
 
-    // ── Prepared-state readout (Bloch / ket / probabilities) ──────────────────
-    const statePrep = new StatePreparationAreaNode(model);
-    statePrep.left = this.experimentAreaNode.left + 14;
-    statePrep.top = this.experimentAreaNode.top + 14;
+    // ── Initial-state panel (chooser + Bloch/ket readout), near the source ────
+    const statePrep = new StatePreparationAreaNode(model, this);
+    statePrep.left = this.experimentAreaNode.left + 8;
+    // Sit just above the beam line so the panel reads as attached to the source.
+    statePrep.bottom = this.experimentAreaNode.top + 200;
     this.addChild(statePrep);
 
     // ── Control panel (combo box list drops into this view, above everything) ──
@@ -75,14 +81,12 @@ export class SternGerlachScreenView extends ScreenView {
         clickCreate: () => model.graph.addDevice(newCounter(this.spawnPosition(model))),
       },
     });
-    // Sits clear of the board in the right column, in the gap between the control panel and Reset All.
     toolbox.right = controlPanel.right;
-    toolbox.top = controlPanel.bottom + 6;
     this.addChild(toolbox);
 
     // ── Reset All button ──────────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
-      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
+      ...FLAT_BUTTON_APPEARANCE_OPTIONS,
       listener: () => {
         model.reset();
         this.reset();
@@ -92,10 +96,33 @@ export class SternGerlachScreenView extends ScreenView {
     });
     this.addChild(resetAllButton);
 
+    // Keep the toolbox in the right-column gap between the control panel and Reset All.
+    const layoutRightColumn = () => {
+      const desiredTop = controlPanel.bottom + RIGHT_COLUMN_GAP;
+      const maxTop = resetAllButton.top - toolbox.height - RIGHT_COLUMN_GAP;
+      toolbox.top = maxTop < desiredTop ? Math.max(SCREEN_VIEW_MARGIN, maxTop) : desiredTop;
+    };
+    layoutRightColumn();
+    controlPanel.boundsProperty.lazyLink(layoutRightColumn);
+    toolbox.boundsProperty.lazyLink(layoutRightColumn);
+
+    // ── Info button: how-to-use dialog, to the left of Reset All ───────────────
+    const a11y = StringManager.getInstance().getA11yStrings();
+    const howToUseDialog = new HowToUseDialog();
+    const infoButton = new InfoButton({
+      ...FLAT_BUTTON_APPEARANCE_OPTIONS,
+      radius: SceneryPhetConstants.DEFAULT_BUTTON_RADIUS,
+      listener: () => howToUseDialog.show(),
+      accessibleName: a11y.controls.howToUseButtonStringProperty,
+      right: resetAllButton.left - 12,
+      centerY: resetAllButton.centerY,
+    });
+    this.addChild(infoButton);
+
     // ── Accessibility: keyboard / reading traversal order ─────────────────────
     this.addChild(
       new Node({
-        pdomOrder: [statePrep, this.experimentAreaNode, controlPanel, toolbox, resetAllButton],
+        pdomOrder: [statePrep, this.experimentAreaNode, controlPanel, toolbox, infoButton, resetAllButton],
       }),
     );
   }
