@@ -170,9 +170,13 @@ export class SternGerlachModel implements TModel {
     this.graph.changedEmitter.addListener(() => this.handleConfigurationChange());
 
     // Selecting a preset rebuilds the board; leaving CUSTOM first stashes the current build.
-    this.experimentProperty.lazyLink((_value, oldValue) => {
+    // Presets may also declare a default initial state (e.g. Unknown #1 for the mystery lab).
+    this.experimentProperty.lazyLink((value, oldValue) => {
       if (oldValue === ExperimentDefinition.CUSTOM) {
         this.customSnapshot = this.captureSnapshot();
+      }
+      if (value.defaultInitialState !== null) {
+        this.initialStateProperty.value = value.defaultInitialState;
       }
       this.rebuildGraph();
     });

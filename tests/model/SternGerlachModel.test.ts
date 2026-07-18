@@ -11,6 +11,7 @@ import { AnalyzerType } from "../../src/common/quantum/AnalyzerType.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 import { Analyzer } from "../../src/stern-gerlach-screen/model/devices/Analyzer.js";
 import { Counter } from "../../src/stern-gerlach-screen/model/devices/Counter.js";
+import { Magnet } from "../../src/stern-gerlach-screen/model/devices/Magnet.js";
 import { SourceMode } from "../../src/stern-gerlach-screen/model/devices/ParticleSource.js";
 import { ExperimentDefinition } from "../../src/stern-gerlach-screen/model/ExperimentDefinition.js";
 import { InitialStateSetting } from "../../src/stern-gerlach-screen/model/InitialStateSetting.js";
@@ -34,6 +35,24 @@ describe("SternGerlachModel", () => {
     const [up, down] = model.graph.getCounters();
     expect(up?.probabilityProperty.value).toBeCloseTo(1, 10);
     expect(down?.probabilityProperty.value).toBeCloseTo(0, 10);
+  });
+
+  it("unknownLab preset selects Unknown #1 and builds a Z→X chain", () => {
+    const model = new SternGerlachModel(seededRng(13));
+    model.experimentProperty.value = presetByKey("unknownLab");
+    expect(model.initialStateProperty.value).toBe(InitialStateSetting.UNKNOWN_1);
+    const analyzers = model.graph.devices.filter((d) => d instanceof Analyzer) as Analyzer[];
+    expect(analyzers).toHaveLength(2);
+    expect(analyzers[0]?.typeProperty.value).toBe(AnalyzerType.Z);
+    expect(analyzers[1]?.typeProperty.value).toBe(AnalyzerType.X);
+  });
+
+  it("magnetIdentity preset starts the magnet dial at 72 (one full turn)", () => {
+    const model = new SternGerlachModel(seededRng(17));
+    model.experimentProperty.value = presetByKey("magnetIdentity");
+    const magnet = model.graph.devices.find((d) => d instanceof Magnet);
+    expect(magnet).toBeDefined();
+    expect((magnet as Magnet).fieldNumberProperty.value).toBe(72);
   });
 
   it("doN(1000) with |+z⟩ into a Z analyzer puts all 1000 counts in the up counter", () => {

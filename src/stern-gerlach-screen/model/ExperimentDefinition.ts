@@ -21,10 +21,14 @@ import { Counter } from "./devices/Counter.js";
 import { Magnet } from "./devices/Magnet.js";
 import { ParticleSource } from "./devices/ParticleSource.js";
 import type { ExperimentGraph } from "./ExperimentGraph.js";
+import { InitialStateSetting } from "./InitialStateSetting.js";
 import { Wire } from "./Wire.js";
 
 /** Vertical spacing between stacked counters, model units. */
 const COUNTER_SPACING = 0.42;
+
+/** DOWN / −1 output port index (spin-½ and spin-1). */
+const OUTPUT_DOWN = 1;
 
 /**
  * Adds one counter per remaining unwired output of `analyzer`, stacked in a column at x,
@@ -70,6 +74,12 @@ export class ExperimentDefinition {
   /** Key into the `experimentGuidance` string group (prediction / observation prompt). */
   public readonly guidanceKey: string;
 
+  /**
+   * When non-null, selecting this preset also sets the model's initial state
+   * (e.g. Unknown #1 for the mystery-state lab).
+   */
+  public readonly defaultInitialState: InitialStateSetting | null;
+
   private readonly builder: (graph: ExperimentGraph, system: SpinSystem) => void;
 
   public constructor(
@@ -77,10 +87,12 @@ export class ExperimentDefinition {
     builder: (graph: ExperimentGraph, system: SpinSystem) => void,
     notationKey: string = nameKey,
     guidanceKey: string = nameKey,
+    defaultInitialState: InitialStateSetting | null = null,
   ) {
     this.nameKey = nameKey;
     this.notationKey = notationKey;
     this.guidanceKey = guidanceKey;
+    this.defaultInitialState = defaultInitialState;
     this.builder = builder;
   }
 
@@ -103,11 +115,42 @@ export class ExperimentDefinition {
   }
 
   /** Source → first analyzer; its UP output feeds a second analyzer; counters everywhere else. */
-  private static chained(nameKey: string, firstType: AnalyzerType, secondType: AnalyzerType): ExperimentDefinition {
-    return new ExperimentDefinition(nameKey, (graph, system) => {
+  private static chained(
+    nameKey: string,
+    firstType: AnalyzerType,
+    secondType: AnalyzerType,
+    defaultInitialState: InitialStateSetting | null = null,
+  ): ExperimentDefinition {
+    return new ExperimentDefinition(
+      nameKey,
+      (graph, system) => {
+        const source = new ParticleSource(new Vector2(0.35, 0.3));
+        const first = new Analyzer(new Vector2(1.15, 0.3), firstType);
+        const second = new Analyzer(new Vector2(2.15, 0.7), secondType);
+        graph.addDevice(source);
+        graph.addDevice(first);
+        graph.addDevice(second);
+        graph.addWire(new Wire(source, 0, first));
+        graph.addWire(new Wire(first, 0, second));
+        addCountersForAnalyzer(graph, system, second, 3.3);
+        addCountersForAnalyzer(graph, system, first, 3.3, -0.35);
+      },
+      nameKey,
+      nameKey,
+      defaultInitialState,
+    );
+  }
+
+  /**
+   * Spin filter: SGz with the DOWN exit blocked; UP feeds SGx. Discarded atoms show up in
+   * the "Lost to filters" readout — a blocked path is a measurement that removes probability.
+   */
+  private static spinFilter(): ExperimentDefinition {
+    return new ExperimentDefinition("spinFilter", (graph, system) => {
       const source = new ParticleSource(new Vector2(0.35, 0.3));
-      const first = new Analyzer(new Vector2(1.15, 0.3), firstType);
-      const second = new Analyzer(new Vector2(2.15, 0.7), secondType);
+      const first = new Analyzer(new Vector2(1.15, 0.3), AnalyzerType.Z);
+      first.blockedOutputProperty.value = OUTPUT_DOWN;
+      const second = new Analyzer(new Vector2(2.15, 0.7), AnalyzerType.X);
       graph.addDevice(source);
       graph.addDevice(first);
       graph.addDevice(second);
@@ -119,28 +162,70 @@ export class ExperimentDefinition {
   }
 
   /**
-   * The interferometer: first analyzer's UP output feeds a middle analyzer whose outputs are
-   * ALL recombined into a final analyzer of the first's type. With Watch off the middle
-   * measurement leaves no record, so the final analyzer sees the original state restored.
+   * Three polarizers: SGz → SGx → SGz with collapse at every stage (no recombination).
+   * With |+z⟩ the middle stage is 50/50 and the final SGz on the UP branch is again 50/50 —
+   * the spin analogue of inserting a polarizer between crossed polarizers.
    */
-  private static interferometer(): ExperimentDefinition {
-    return new ExperimentDefinition("interferometer", (graph, system) => {
-      const source = new ParticleSource(new Vector2(0.3, 0.25));
-      const first = new Analyzer(new Vector2(1.0, 0.25), AnalyzerType.Z);
-      const middle = new Analyzer(new Vector2(1.85, 0.55), AnalyzerType.X);
-      const last = new Analyzer(new Vector2(2.7, 0.55), AnalyzerType.Z);
+  private static threePolarizers(): ExperimentDefinition {
+    return new ExperimentDefinition("threePolarizers", (graph, system) => {
+      const source = new ParticleSource(new Vector2(0.25, 0.35));
+      const first = new Analyzer(new Vector2(0.95, 0.35), AnalyzerType.Z);
+      const middle = new Analyzer(new Vector2(1.8, 0.7), AnalyzerType.X);
+      const last = new Analyzer(new Vector2(2.7, 0.95), AnalyzerType.Z);
       graph.addDevice(source);
       graph.addDevice(first);
       graph.addDevice(middle);
       graph.addDevice(last);
       graph.addWire(new Wire(source, 0, first));
       graph.addWire(new Wire(first, 0, middle));
-      for (let outputIndex = 0; outputIndex < middle.outputCount(system); outputIndex++) {
-        graph.addWire(new Wire(middle, outputIndex, last));
-      }
+      graph.addWire(new Wire(middle, 0, last));
       addCountersForAnalyzer(graph, system, last, 3.55);
-      addCountersForAnalyzer(graph, system, first, 3.55, -0.5);
+      addCountersForAnalyzer(graph, system, middle, 3.55, 0.15);
+      addCountersForAnalyzer(graph, system, first, 3.55, -0.55);
     });
+  }
+
+  /**
+   * The interferometer: first analyzer's UP output feeds a middle analyzer whose outputs are
+   * ALL recombined into a final analyzer of the first's type. With Watch off the middle
+   * measurement leaves no record, so the final analyzer sees the original state restored.
+   */
+  private static interferometer(): ExperimentDefinition {
+    return new ExperimentDefinition("interferometer", (graph, system) => {
+      ExperimentDefinition.buildInterferometer(graph, system, false);
+    });
+  }
+
+  /**
+   * Same layout as the interferometer, but one middle-arm exit is blocked. Interference dies
+   * without turning Watch on — a physically removed path is not the same as a which-path record.
+   */
+  private static blockedArm(): ExperimentDefinition {
+    return new ExperimentDefinition("blockedArm", (graph, system) => {
+      ExperimentDefinition.buildInterferometer(graph, system, true);
+    });
+  }
+
+  /** Shared interferometer layout; when `blockMiddleDown` is true, middle DOWN is filtered. */
+  private static buildInterferometer(graph: ExperimentGraph, system: SpinSystem, blockMiddleDown: boolean): void {
+    const source = new ParticleSource(new Vector2(0.3, 0.25));
+    const first = new Analyzer(new Vector2(1.0, 0.25), AnalyzerType.Z);
+    const middle = new Analyzer(new Vector2(1.85, 0.55), AnalyzerType.X);
+    if (blockMiddleDown) {
+      middle.blockedOutputProperty.value = OUTPUT_DOWN;
+    }
+    const last = new Analyzer(new Vector2(2.7, 0.55), AnalyzerType.Z);
+    graph.addDevice(source);
+    graph.addDevice(first);
+    graph.addDevice(middle);
+    graph.addDevice(last);
+    graph.addWire(new Wire(source, 0, first));
+    graph.addWire(new Wire(first, 0, middle));
+    for (let outputIndex = 0; outputIndex < middle.outputCount(system); outputIndex++) {
+      graph.addWire(new Wire(middle, outputIndex, last));
+    }
+    addCountersForAnalyzer(graph, system, last, 3.55);
+    addCountersForAnalyzer(graph, system, first, 3.55, -0.5);
   }
 
   /**
@@ -148,11 +233,12 @@ export class ExperimentDefinition {
    * (dial the field to precess the spin) and into an X analyzer whose counts sweep with the
    * field. The Z analyzer's other outputs are counted directly.
    */
-  private static magnetPrecession(): ExperimentDefinition {
-    return new ExperimentDefinition("magnet", (graph, system) => {
+  private static magnetPrecession(nameKey: string, initialField: number = 0): ExperimentDefinition {
+    return new ExperimentDefinition(nameKey, (graph, system) => {
       const source = new ParticleSource(new Vector2(0.35, 0.3));
       const first = new Analyzer(new Vector2(1.05, 0.3), AnalyzerType.Z);
       const magnet = new Magnet(new Vector2(1.8, 0.6), AnalyzerType.Y);
+      magnet.fieldNumberProperty.value = initialField;
       const last = new Analyzer(new Vector2(2.6, 0.6), AnalyzerType.X);
       graph.addDevice(source);
       graph.addDevice(first);
@@ -200,11 +286,21 @@ export class ExperimentDefinition {
   public static readonly PRESETS: readonly ExperimentDefinition[] = [
     ExperimentDefinition.singleAnalyzer("singleZ", AnalyzerType.Z),
     ExperimentDefinition.singleAnalyzer("singleX", AnalyzerType.X),
+    ExperimentDefinition.singleAnalyzer("singleY", AnalyzerType.Y),
+    ExperimentDefinition.singleAnalyzer("singleN", AnalyzerType.N),
     ExperimentDefinition.chained("zThenX", AnalyzerType.Z, AnalyzerType.X),
+    ExperimentDefinition.chained("zThenY", AnalyzerType.Z, AnalyzerType.Y),
+    ExperimentDefinition.chained("xThenZ", AnalyzerType.X, AnalyzerType.Z),
     ExperimentDefinition.chained("zThenZ", AnalyzerType.Z, AnalyzerType.Z),
+    ExperimentDefinition.spinFilter(),
+    ExperimentDefinition.threePolarizers(),
     ExperimentDefinition.interferometer(),
-    ExperimentDefinition.magnetPrecession(),
+    ExperimentDefinition.blockedArm(),
+    ExperimentDefinition.magnetPrecession("magnet"),
+    ExperimentDefinition.magnetPrecession("magnetIdentity", 72),
     ExperimentDefinition.recombination(),
+    ExperimentDefinition.chained("unknownLab", AnalyzerType.Z, AnalyzerType.X, InitialStateSetting.UNKNOWN_1),
+    ExperimentDefinition.singleAnalyzer("spin1Intro", AnalyzerType.Z),
   ];
 
   /**

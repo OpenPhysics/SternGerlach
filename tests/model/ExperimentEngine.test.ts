@@ -8,7 +8,9 @@ import { describe, expect, it } from "vitest";
 import { AnalyzerType } from "../../src/common/quantum/AnalyzerType.js";
 import { OperatorTable } from "../../src/common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
+import { Analyzer } from "../../src/stern-gerlach-screen/model/devices/Analyzer.js";
 import { Counter } from "../../src/stern-gerlach-screen/model/devices/Counter.js";
+import { ExperimentDefinition } from "../../src/stern-gerlach-screen/model/ExperimentDefinition.js";
 import { ExperimentEngine } from "../../src/stern-gerlach-screen/model/ExperimentEngine.js";
 import { ExperimentGraph } from "../../src/stern-gerlach-screen/model/ExperimentGraph.js";
 import { InitialStateSetting } from "../../src/stern-gerlach-screen/model/InitialStateSetting.js";
@@ -354,5 +356,88 @@ describe("ExperimentEngine Monte-Carlo vs analytic", () => {
     const probs = engine.computeCounterProbabilities(PLUS_Z, { system: SPIN_HALF, watch: false });
     expect(probOf(probs, up)).toBeCloseTo(1, 10);
     expect(probOf(probs, down)).toBeCloseTo(0, 10);
+  });
+});
+
+describe("ExperimentDefinition pedagogical presets", () => {
+  function presetByKey(nameKey: string): ExperimentDefinition {
+    const preset = ExperimentDefinition.PRESETS.find((p) => p.nameKey === nameKey);
+    if (!preset) {
+      throw new Error(`no preset named ${nameKey}`);
+    }
+    return preset;
+  }
+
+  it("spin filter: |+x⟩ loses half to the blocked DOWN exit; surviving beam is |+z⟩ into X", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    presetByKey("spinFilter").buildInto(graph, SPIN_HALF);
+
+    const counters = graph.getCounters();
+    const probs = engine.computeCounterProbabilities(InitialStateSetting.PLUS_X, {
+      system: SPIN_HALF,
+      watch: false,
+    });
+
+    // Detected mass = ½ (UP through the filter); that beam is |+z⟩ so X is 50/50 of total → ¼ each.
+    // The filter's blocked DOWN is still wired to a counter in the preset, but blocked → 0.
+    let detected = 0;
+    for (const counter of counters) {
+      detected += probOf(probs, counter);
+    }
+    expect(detected).toBeCloseTo(0.5, 10);
+
+    const xAnalyzer = graph.devices.find(
+      (d) => d instanceof Analyzer && d.typeProperty.value === AnalyzerType.X,
+    ) as Analyzer;
+    const xUp = graph.getNext(xAnalyzer, 0) as Counter;
+    const xDown = graph.getNext(xAnalyzer, 1) as Counter;
+    expect(probOf(probs, xUp)).toBeCloseTo(0.25, 10);
+    expect(probOf(probs, xDown)).toBeCloseTo(0.25, 10);
+  });
+
+  it("three polarizers: |+z⟩ → Z → X → Z collapses at each stage to (¼, ¼) at the final analyzer", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    presetByKey("threePolarizers").buildInto(graph, SPIN_HALF);
+
+    const analyzers = graph.devices.filter((d) => d instanceof Analyzer) as Analyzer[];
+    const first = analyzers[0] as Analyzer;
+    const middle = analyzers[1] as Analyzer;
+    const last = analyzers[2] as Analyzer;
+    expect(first.typeProperty.value).toBe(AnalyzerType.Z);
+    expect(middle.typeProperty.value).toBe(AnalyzerType.X);
+    expect(last.typeProperty.value).toBe(AnalyzerType.Z);
+
+    const probs = engine.computeCounterProbabilities(InitialStateSetting.PLUS_Z, {
+      system: SPIN_HALF,
+      watch: false,
+    });
+
+    // First Z DOWN is empty; middle X DOWN gets ½; final Z on the UP branch splits ¼ / ¼.
+    expect(probOf(probs, graph.getNext(first, 1) as Counter)).toBeCloseTo(0, 10);
+    expect(probOf(probs, graph.getNext(middle, 1) as Counter)).toBeCloseTo(0.5, 10);
+    expect(probOf(probs, graph.getNext(last, 0) as Counter)).toBeCloseTo(0.25, 10);
+    expect(probOf(probs, graph.getNext(last, 1) as Counter)).toBeCloseTo(0.25, 10);
+  });
+
+  it("blocked-arm interferometer destroys interference without Watch", () => {
+    const graph = new ExperimentGraph();
+    const engine = new ExperimentEngine(graph, new OperatorTable());
+    presetByKey("blockedArm").buildInto(graph, SPIN_HALF);
+
+    const analyzers = graph.devices.filter((d) => d instanceof Analyzer) as Analyzer[];
+    const middle = analyzers[1] as Analyzer;
+    const last = analyzers[2] as Analyzer;
+    expect(middle.blockedOutputProperty.value).toBe(1);
+
+    const probs = engine.computeCounterProbabilities(InitialStateSetting.PLUS_Z, {
+      system: SPIN_HALF,
+      watch: false,
+    });
+    // Only the UP arm of middle reaches the final Z, carrying |+x⟩ → final Z is 50/50 of the
+    // surviving half → ¼ / ¼, not the coherent (1, 0) of the unblocked interferometer.
+    expect(probOf(probs, graph.getNext(last, 0) as Counter)).toBeCloseTo(0.25, 10);
+    expect(probOf(probs, graph.getNext(last, 1) as Counter)).toBeCloseTo(0.25, 10);
   });
 });
