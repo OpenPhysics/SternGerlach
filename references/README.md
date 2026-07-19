@@ -13,8 +13,7 @@ functionality, physics engine, components, and how it maps onto the planned port
 
 | Path | What it is |
 |---|---|
-| `source.zip` | Original source archive, exactly as downloaded (unmodified). |
-| `source/` | Unzipped Java source — 15 `.java` files, `images/`, `mainclass.mf`, `spinhelp.html`. |
+| `source/` | The original Java source as downloaded (unmodified) — 15 `.java` files, `images/`, `mainclass.mf`, `spinhelp.html`. |
 | `spins.jar` | Prebuilt runnable application. Run with `java -jar spins.jar`. |
 | `spinhelp.html` / `spinhelp.pdf` | User documentation (HTML and PDF). |
 | `spinsapplet.html` | Legacy Java-applet launcher page. |

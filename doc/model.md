@@ -35,13 +35,13 @@ in units of ħ (spin-½ analyzers report ±1 rather than ±ħ/2, matching SPINS)
 |---|---|---|
 | Quantum state | \|ψ⟩ | unit vector in ℂ² (spin-½) or ℂ³ (spin-1) |
 | Measured spin component | Sn | eigenvalues +1, −1 (spin-½); +1, 0, −1 (spin-1) |
-| Analyzer direction | n̂(θ, φ) | θ ∈ [0, π], φ ∈ [0, 2π] (one *global* pair shared by all n̂ devices) |
+| Analyzer direction | n̂(θ, φ) | θ ∈ [0, π], φ ∈ [0, 2π] — **each n̂ device owns its own pair** |
 | Magnet field dial | n | integer 0–99; precession angle φ = 2π·n/72 (72 = one full turn) |
 
 ## Governing equations
 
 **Measurement (analyzers).** An analyzer measuring observable A with eigenvectors |aₖ⟩ routes the
-atom out of port k with the Born probability P(k) = |⟨aₖ|ψ⟩|², and the state collapses to |aₖ⟩.
+atom out of port k with Born probability P(k) = |⟨aₖ|ψ⟩|², and the state collapses to |aₖ⟩.
 The counters' green expected-value lines come from an exact analytic path-sum over the apparatus,
 computed alongside the Monte-Carlo sampling.
 
@@ -51,6 +51,9 @@ U = exp(−iHφ) = 1 − i·sin(φ)·H + (cos φ − 1)·H²
 
 which is the closed form of the exponential for any observable H whose eigenvalues lie in
 {−1, 0, +1} — true of every operator in the simulation.
+
+For an n̂-type magnet, H is Sn at **that magnet's own** (θ, φ). Different n̂ devices in one
+apparatus may point in different directions independently.
 
 **Coherent recombination.** When *all* outputs of an analyzer are wired into the same downstream
 device and Watch is off, no record of the intermediate result exists, so the state passes through
@@ -85,12 +88,17 @@ normalized to **detected** atoms, so they converge to each other even when mass 
 - **Spin 1** — 3-dimensional; analyzers split into 3 beams (+1 top, 0 middle, −1 bottom).
   Offered when Preferences → Simulation enables Spin 1 (or via `?spinOne`).
 
+SU(3) spin systems were removed; only spin-½ and spin-1 are supported.
+
 ## Simplifications and assumptions
 
 - **Geometry is schematic.** Atoms travel along drawn wires at a fixed animation speed; distances,
   beam deflection magnitudes, and gradients are not modeled. Only the quantum state matters.
-- **The n̂ direction is global** (SPINS parity): one (θ, φ) pair is shared by every n̂-type
-  analyzer and magnet.
+- **Each n̂ device owns its own direction** — a deliberate departure from SPINS, where one global
+  (θ, φ) pair was shared by every n̂-type analyzer and magnet. Here every analyzer and magnet set
+  to n̂ carries independent angles, so apparatus with several differently-oriented n̂ devices
+  behave correctly. The implementation keeps direction math as pure (θ, φ) lookups with no shared
+  mutable angle state (see implementation notes).
 - **Recombination requires a common upstream device.** All wires into a device must come from the
   same source device — this is what makes the coherent-recombination rule well-defined. (The Java
   original permitted arbitrary merges but computed them incorrectly; this port forbids them.)

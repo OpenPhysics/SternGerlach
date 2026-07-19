@@ -8,7 +8,8 @@ Single-screen SceneryStack simulation of the **Stern–Gerlach experiment**: bui
 apparatus from analyzers, magnets, and counters; fire spin-½ / spin-1 atoms;
 compare Monte Carlo counts with analytic expectations. Model/view separation,
 color profiles, localization, and accessibility are fully wired.
-For multi-screen sims, see `doc/multi-screen.md`.
+Physics for educators: `doc/model.md`. Architecture: `doc/implementation-notes.md`.
+Multi-screen: `doc/multi-screen.md`.
 
 ## Key files
 
@@ -19,7 +20,10 @@ For multi-screen sims, see `doc/multi-screen.md`.
 | `src/SternGerlachNamespace.ts` | Namespace for color property names |
 | `src/i18n/StringManager.ts` | Singleton localized string accessor |
 | `src/stern-gerlach-screen/SternGerlachScreen.ts` | Screen wrapper |
+| `src/common/quantum/` | Pure quantum math (no axon/scenery): complex algebra, `OperatorTable`, `SpinSystem` |
 | `src/stern-gerlach-screen/model/SternGerlachModel.ts` | Simulation state and logic |
+| `src/stern-gerlach-screen/model/ExperimentEngine.ts` | Monte-Carlo + analytic propagation. Direction (n̂) lookups are pure — always pass each device's own (θ, φ); never add shared mutable angle state |
+| `src/stern-gerlach-screen/model/ExperimentGraph.ts` | Device/wire graph with enforced invariants (acyclic, single source) |
 | `src/stern-gerlach-screen/view/SternGerlachScreenView.ts` | Visual nodes, layout, `screenSummaryContent` + `pdomOrder` |
 | `src/stern-gerlach-screen/view/SternGerlachScreenSummaryContent.ts` | Accessible screen summary (reference a11y pattern) |
 | `src/stern-gerlach-screen/view/SternGerlachKeyboardHelpContent.ts` | Keyboard-help dialog content |

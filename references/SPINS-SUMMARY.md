@@ -187,8 +187,7 @@ For the planned rewrite, the clean model/view split maps as follows:
 
 | Path | Description |
 |---|---|
-| `source.zip` | Original source archive as downloaded (unmodified). |
-| `source/` | Unzipped Java source (15 `.java` files, `images/`, `mainclass.mf`, `spinhelp.html`). |
+| `source/` | The original Java source as downloaded (unmodified) — 15 `.java` files, `images/`, `mainclass.mf`, `spinhelp.html`. |
 | `spins.jar` | Prebuilt runnable Java application (`java -jar spins.jar`). |
 | `spinhelp.html` | User documentation (HTML). |
 | `spinhelp.pdf` | User documentation (PDF, 2 pages). |

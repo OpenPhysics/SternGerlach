@@ -1,114 +1,95 @@
 # Implementation Notes - Stern Gerlach
 
+Developer-facing notes on the architecture. The physics itself is documented for educators in
+[model.md](./model.md).
+
 ## Architecture Overview
 
-Stern Gerlach is a single-screen SceneryStack simulation. This framework is the starting scaffold — forked from the single-sim template — providing the Model-View pattern, color profiles, localization, reset behavior, and reusable common components, ready for the Stern–Gerlach experiment physics to be built on top.
-
-### High-Level Architecture
+Stern Gerlach is a single-screen SceneryStack simulation, a TypeScript port of David McIntyre's
+SPINS Java program (`references/source/`). The code separates into three layers:
 
 ```
-main.ts
-  └─ SternGerlachScreen             (Screen<SternGerlachModel, SternGerlachScreenView>)
-       ├─ SternGerlachModel          state + logic  (src/stern-gerlach-screen/model/)
-       └─ SternGerlachScreenView     visuals        (src/stern-gerlach-screen/view/)
-            ├─ SternGerlachScreenSummaryContent     (PDOM overview)
-            └─ SternGerlachKeyboardHelpContent      (keyboard help dialog)
+src/common/quantum/            pure math — no axon/scenery dependencies, fully unit-tested
+  ├─ Complex / ComplexVector / ComplexMatrix   immutable complex arithmetic (ports of the Java classes)
+  ├─ OperatorTable             operators, eigenvectors, unknown states; Sn(θ, φ) lookups are PURE
+  ├─ SpinSystem                spin-½ / spin-1 enumeration (state count, operator indices)
+  └─ StateDisplay              ket/Bloch/probability formatting helpers
 
-src/common/
-  ├─ SimPanel.ts           pre-themed panel (all screens share SternGerlachColors)
-  └─ TimeModel.ts          composable play/pause + elapsed time
+src/stern-gerlach-screen/model/
+  ├─ SternGerlachModel         top-level coordinator: preset/system/state properties, snapshots
+  ├─ ExperimentGraph           devices + wires with enforced invariants (acyclic, single source,
+  │                            one wire per output, same-source recombination)
+  ├─ ExperimentEngine          the physics: Monte-Carlo transit (NextComp port) and the exact
+  │                            analytic path-sum that drives expected-value lines and Do-N
+  ├─ ParticleSystem            spawns and flies animated particles along WireGeometry béziers
+  ├─ ExperimentDefinition      the preset experiment recipes
+  └─ devices/                  ParticleSource, Analyzer, Magnet, Counter (pure state, no physics)
+       Analyzer/Magnet         each n̂ device: thetaProperty, phiProperty (independent angles)
 
-src/preferences/
-  ├─ SternGerlachPreferencesModel   sim-specific pref state
-  ├─ SternGerlachPreferencesNode    pref UI shown in Preferences → Simulation
-  └─ sternGerlachQueryParameters    query-parameter declarations
+src/stern-gerlach-screen/view/
+  ├─ SternGerlachScreenView    layout coordinator + pdomOrder
+  ├─ ExperimentAreaNode        the board: mvt, layers (wires < devices < particles < overlay),
+  │                            builder-mode editing (drag, wire, delete — pointer and keyboard)
+  ├─ ExperimentControlPanel / StatePreparationAreaNode / DeviceToolboxNode
+  ├─ nodes/                    one view node per device type, plus Bloch/direction spheres
+  └─ dialogs/                  AnglesDialog (per-device θ, φ), user state, how-to-use
 ```
 
-Data flows Model → View through AXON `Property` objects. The view observes
-properties via `.link()` or `.lazyLink()` and updates reactively.
+Data flows Model → View through AXON `Property` objects; the view never computes physics and the
+model never touches scenery.
 
-## Model Components
+## Key design decisions
 
-### SternGerlachModel
+- **Per-device n̂ angles.** Java SPINS shared one global (θ, φ) across all n̂ devices; here each
+  analyzer/magnet owns `thetaProperty`/`phiProperty`. `OperatorTable`'s direction operators
+  (indices 6–7) are **pure lookups** — callers pass (θ, φ) explicitly; the table holds no mutable
+  direction state. Results are memoized per operator on the last (θ, φ) queried only. Never
+  reintroduce a shared "current angles" setter: the recursive analytic walk
+  (`computeCounterProbabilities`) visits devices with different angles mid-recursion; a regression
+  bug from shared mutable direction state was fixed in commit `0297df1`.
+- **Two propagation paths, one physics.** `ExperimentEngine.transitDevice` (Monte-Carlo, per
+  particle arrival) and `ExperimentEngine.computeCounterProbabilities` (analytic path-sum) must
+  agree; tests check this statistically at 10k–20k seeded shots, including multi-n̂-device chains.
+- **Configuration changes clear statistics.** Any change to preset, system, initial state, watch,
+  analyzer/magnet settings, or graph structure removes in-flight particles, zeroes counters, and
+  recomputes analytic probabilities (`SternGerlachModel.handleConfigurationChange`) — never mix
+  counts from different configurations (SPINS behavior).
+- **Snapshots retain the custom build.** Leaving the Custom preset serializes the graph
+  (`GraphSnapshot`); restoring sanitizes port-dependent data if the system changed in between.
+- **Injected RNG.** Every random draw flows through an injected `Rng`; production uses
+  `dotRandom`, tests use a seeded mulberry32 (`tests/model/testUtilities.ts`).
 
-An empty coordinator with documented hooks for `step(dt)` and `reset()`.
-Add physics state as `BooleanProperty`, `NumberProperty`, etc. from
-`scenerystack/axon`.
+## Common components
 
-### TimeModel (common)
+- `SimPanel` — pre-themed panel; all control panels use it so projector-mode switching is automatic.
+- `SimDialog` — pre-themed dialog wrapper used by all dialogs.
+- `SimButtonOptions` — flat button/combo-box option bundles (see `CLAUDE.md` for usage rules).
+- `TimeModel` — composable play/pause + elapsed-time model, composed into `SternGerlachModel`.
 
-`src/common/TimeModel.ts` is a reusable play/pause + elapsed-time model for
-animated sims. Compose it into your screen model rather than subclassing:
+## Disposal conventions
 
-```typescript
-export class YourModel implements TModel {
-  public readonly timer = new TimeModel();
+Device and wire view nodes are rebuilt whenever the graph changes, so every such node registers
+its unlinks/listener removals on `disposeEmitter` (or a `dispose...` closure) — see
+`AnalyzerNode`, `CounterNode`, `WireNode`, and the listeners wired in
+`ExperimentAreaNode.createDeviceNode`/`makeEditable`. Screen-lifetime nodes (panels, toolbox,
+chrome) intentionally never dispose.
 
-  public step(dt: number): void {
-    this.timer.step(dt);
-    // physics driven by this.timer.timeProperty.value
-  }
-  public reset(): void { this.timer.reset(); }
-}
-```
+## Testing
 
-## View Components
+`npm test` (vitest, requires Node ≥ 22 — see `.nvmrc`):
 
-### SternGerlachScreenView as Coordinator
-
-The screen view demonstrates layout using `layoutBounds`, background fill from
-`SternGerlachColors.ts`, and a `ResetAllButton` wired to `model.reset()`. Add
-specialized sub-nodes under `src/stern-gerlach-screen/view/`.
-
-### SimPanel (common)
-
-`src/common/SimPanel.ts` wraps SceneryStack's `Panel` with the sim's color
-scheme baked in. All control panels should use `SimPanel` so projector-mode
-switching is automatic:
-
-```typescript
-const panel = new SimPanel(content);            // defaults
-const panel = new SimPanel(content, { xMargin: 20 }); // any PanelOption override
-```
-
-### Color Scheme
-
-`SternGerlachColors.ts` defines `ProfileColorProperty` instances for "default" (dark)
-and "projector" (light) profiles. SceneryStack switches profiles automatically
-when the user toggles Projector Mode in Preferences.
-
-## Forking this template
-
-### Automated rename
-
-```sh
-npm run rename -- --id friction --name "Friction"
-npm run check
-```
-
-`scripts/rename-sim.ts` replaces all template identifiers in file content and
-renames files and folders in one pass.
-
-### Manual fork checklist
-
-- Update `package.json` name, `init.ts` name/version, `brand.ts`
-- Replace placeholder view content with play area and control panels
-- Replace `SternGerlachColors.ts` colors with sim-specific palette
-- Update locale JSON files: title, screen names, a11y strings
-- Regenerate PWA icons (`npm run icons`) after editing `public/icons/icon.svg`
-- Add `doc/implementation-notes.md` describing the new sim's architecture
+- `tests/quantum/` — operator/eigenvector invariants, vector/matrix algebra, Sn lookup purity
+- `tests/model/` — engine physics invariants, preset pedagogy, Monte-Carlo vs analytic
+  agreement ("multiple n̂ devices with different angles"), model configuration/reset/snapshot
+- `tests/memory-leak.test.ts` — fleet-standard WeakRef/GC regression suite
 
 ## Multi-screen simulations
 
-See `doc/multi-screen.md` for a complete guide covering:
-- Independent vs. shared-model architectures
-- File structure for each screen
-- StringManager and locale changes
-- Home-screen icon requirements
-- Per-screen accessibility strings
+This sim is single-screen. If it ever grows screens, see `doc/multi-screen.md` for the fleet
+pattern (per-screen folders, StringManager getters, shared root model).
 
-## Known gaps / TODOs
+## Accessibility reference
 
-- No dispose() calls yet — add them once Properties gain external listeners.
-- `SternGerlachModel.step()` and `reset()` bodies are stubs — fill in with real physics.
-- `SternGerlachScreenView` pdomOrder TODO comment — add interactive nodes as they are created.
+This sim is an OpenPhysics accessibility reference: `SternGerlachScreenSummaryContent` with live
+`currentDetailsContent`, explicit `pdomOrder`, and `SternGerlachKeyboardHelpContent`. See
+`CLAUDE.md` and [Baton/ACCESSIBILITY.md](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).

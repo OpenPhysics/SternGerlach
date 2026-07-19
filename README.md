@@ -16,6 +16,8 @@ predictions.
 
 ## Quick Start
 
+Requires **Node ≥ 22** (see `.nvmrc`; older Node fails at vitest startup).
+
 ```bash
 npm install
 npm run icons    # generate PNG icons from public/icons/icon.svg
@@ -36,6 +38,15 @@ npm start        # dev server → http://localhost:5173
 | `npm run fix` | Lint + auto-fix |
 | `npm run icons` | Regenerate PNG icons from `public/icons/icon.svg` |
 | `npm run clean` | Remove `dist/` |
+
+## Documentation
+
+| Document | Audience |
+|---|---|
+| [doc/model.md](doc/model.md) | Educators — the physics, equations, and pedagogy |
+| [doc/implementation-notes.md](doc/implementation-notes.md) | Developers — architecture and design decisions |
+| [doc/multi-screen.md](doc/multi-screen.md) | Developers — how to add screens if the sim grows |
+| [references/](references/) | The original SPINS Java program this sim ports |
 
 ## Tech Stack
 
