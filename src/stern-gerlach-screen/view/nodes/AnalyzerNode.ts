@@ -20,8 +20,8 @@ import { Circle, LinearGradient, Node, Path, Rectangle, RichText } from "scenery
 import { PhetFont } from "scenerystack/scenery-phet";
 import type { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
+import { MODEL_VIEW_SCALE } from "../../../SternGerlachConstants.js";
 import type { Analyzer } from "../../model/devices/Analyzer.js";
 
 const HOLE_RADIUS = 6;

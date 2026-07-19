@@ -16,10 +16,10 @@ import { PhetFont } from "scenerystack/scenery-phet";
 import { NumberSpinner } from "scenerystack/sun";
 import type { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SimButtonOptions.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SternGerlachButtonOptions.js";
 import { StringManager } from "../../../i18n/StringManager.js";
-import { MAGNET_FIELD_NUMBER_MAX, MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
+import { MAGNET_FIELD_NUMBER_MAX, MODEL_VIEW_SCALE } from "../../../SternGerlachConstants.js";
 import type { Magnet } from "../../model/devices/Magnet.js";
 
 /**

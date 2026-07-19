@@ -61,9 +61,9 @@ model never touches scenery.
 
 ## Common components
 
-- `SimPanel` — pre-themed panel; all control panels use it so projector-mode switching is automatic.
+- `SternGerlachPanel` — pre-themed panel; all control panels use it so projector-mode switching is automatic.
 - `SimDialog` — pre-themed dialog wrapper used by all dialogs.
-- `SimButtonOptions` — flat button/combo-box option bundles (see `CLAUDE.md` for usage rules).
+- `SternGerlachButtonOptions` — flat button/combo-box option bundles (see `CLAUDE.md` for usage rules).
 - `TimeModel` — composable play/pause + elapsed-time model, composed into `SternGerlachModel`.
 
 ## Disposal conventions

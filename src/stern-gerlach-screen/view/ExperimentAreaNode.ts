@@ -31,16 +31,16 @@ import {
 import { PhetFont } from "scenerystack/scenery-phet";
 import { RectangularPushButton, RectangularRadioButtonGroup } from "scenerystack/sun";
 import { AnalyzerType } from "../../common/quantum/AnalyzerType.js";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS, LIGHT_SURFACE_TEXT_FILL } from "../../common/SimButtonOptions.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS, LIGHT_SURFACE_TEXT_FILL } from "../../common/SternGerlachButtonOptions.js";
 import { StringManager } from "../../i18n/StringManager.js";
+import SternGerlachColors from "../../SternGerlachColors.js";
 import {
   EXPERIMENT_AREA_HEIGHT,
   EXPERIMENT_AREA_WIDTH,
   MODEL_ORIGIN_IN_AREA_X,
   MODEL_ORIGIN_IN_AREA_Y,
   MODEL_VIEW_SCALE,
-} from "../../SimConstants.js";
-import SternGerlachColors from "../../SternGerlachColors.js";
+} from "../../SternGerlachConstants.js";
 import { Analyzer, NO_BLOCKED_OUTPUT } from "../model/devices/Analyzer.js";
 import { Counter } from "../model/devices/Counter.js";
 import type { ExperimentDevice } from "../model/devices/ExperimentDevice.js";

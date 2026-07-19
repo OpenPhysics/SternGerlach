@@ -17,7 +17,7 @@
 import { Emitter, type TReadOnlyProperty } from "scenerystack/axon";
 import type { ComplexVector } from "../../common/quantum/ComplexVector.js";
 import type { SpinSystem } from "../../common/quantum/SpinSystem.js";
-import { MAX_LIVE_PARTICLES, PARTICLE_SPEED } from "../../SimConstants.js";
+import { MAX_LIVE_PARTICLES, PARTICLE_SPEED } from "../../SternGerlachConstants.js";
 import { Analyzer } from "./devices/Analyzer.js";
 import { Counter } from "./devices/Counter.js";
 import { SourceMode } from "./devices/ParticleSource.js";

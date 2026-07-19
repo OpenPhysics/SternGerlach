@@ -29,8 +29,8 @@ import {
   computationalProbabilities,
   ketMarkup,
 } from "../../../common/quantum/StateDisplay.js";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SimButtonOptions.js";
 import { SimDialog } from "../../../common/SimDialog.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SternGerlachButtonOptions.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 import type { UserStateModel } from "../../model/UserStateModel.js";

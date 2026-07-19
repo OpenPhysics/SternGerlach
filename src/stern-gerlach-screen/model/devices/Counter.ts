@@ -10,7 +10,7 @@
 import { NumberProperty } from "scenerystack/axon";
 import type { Vector2 } from "scenerystack/dot";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { COUNTER_HALF_HEIGHT, COUNTER_HALF_WIDTH } from "../../../SimConstants.js";
+import { COUNTER_HALF_HEIGHT, COUNTER_HALF_WIDTH } from "../../../SternGerlachConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
 
 /**

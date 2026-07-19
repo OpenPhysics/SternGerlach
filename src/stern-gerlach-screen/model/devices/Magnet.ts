@@ -26,7 +26,7 @@ import {
   type OperatorTable,
 } from "../../../common/quantum/OperatorTable.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { MAGNET_FIELD_NUMBER_MAX, MAGNET_HALF_HEIGHT, MAGNET_HALF_WIDTH } from "../../../SimConstants.js";
+import { MAGNET_FIELD_NUMBER_MAX, MAGNET_HALF_HEIGHT, MAGNET_HALF_WIDTH } from "../../../SternGerlachConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
 
 export class Magnet extends ExperimentDevice {

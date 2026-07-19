@@ -1,5 +1,5 @@
 /**
- * SimConstants.ts
+ * SternGerlachConstants.ts
  *
  * Central repository for every named numeric constant used across the
  * simulation. Bare numbers that carry semantic meaning (sizes, margins,
@@ -76,7 +76,7 @@ export const CONTINUOUS_RATE_RANGE = { min: 0, max: 60, defaultValue: 20 } as co
 /** Maximum magnet field-dial value (two digits, 0-99); φ = 2π·n/72. */
 export const MAGNET_FIELD_NUMBER_MAX = 99;
 
-SternGerlachNamespace.register("SimConstants", {
+SternGerlachNamespace.register("SternGerlachConstants", {
   SCREEN_VIEW_MARGIN,
   PANEL_CORNER_RADIUS,
   EXPERIMENT_AREA_WIDTH,

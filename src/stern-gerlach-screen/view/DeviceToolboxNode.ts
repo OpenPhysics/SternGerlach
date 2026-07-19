@@ -25,8 +25,8 @@ import {
   VBox,
 } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { LIGHT_SURFACE_TEXT_FILL } from "../../common/SimButtonOptions.js";
-import { SimPanel } from "../../common/SimPanel.js";
+import { LIGHT_SURFACE_TEXT_FILL } from "../../common/SternGerlachButtonOptions.js";
+import { SternGerlachPanel } from "../../common/SternGerlachPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 
@@ -104,7 +104,7 @@ function counterIcon(): Node {
   return new Node({ children: [box, bar] });
 }
 
-export class DeviceToolboxNode extends SimPanel {
+export class DeviceToolboxNode extends SternGerlachPanel {
   public constructor(isCustomProperty: TReadOnlyProperty<boolean>, callbacks: ToolboxCallbacks) {
     const strings = StringManager.getInstance();
     const toolbox = strings.getToolbox();

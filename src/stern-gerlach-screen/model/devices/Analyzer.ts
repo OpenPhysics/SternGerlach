@@ -19,7 +19,11 @@ import { Vector2 } from "scenerystack/dot";
 import { AnalyzerType } from "../../../common/quantum/AnalyzerType.js";
 import { DEFAULT_DIRECTION_PHI, DEFAULT_DIRECTION_THETA } from "../../../common/quantum/OperatorTable.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { ANALYZER_HALF_HEIGHT, ANALYZER_HALF_WIDTH, ANALYZER_PORT_SPACING_RATIO } from "../../../SimConstants.js";
+import {
+  ANALYZER_HALF_HEIGHT,
+  ANALYZER_HALF_WIDTH,
+  ANALYZER_PORT_SPACING_RATIO,
+} from "../../../SternGerlachConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
 
 /** Sentinel meaning "no output is blocked". NumberProperty keeps axon wiring simple. */

@@ -13,7 +13,7 @@ import { EnumerationProperty, NumberProperty } from "scenerystack/axon";
 import { Range, Vector2 } from "scenerystack/dot";
 import { Enumeration, EnumerationValue } from "scenerystack/phet-core";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { CONTINUOUS_RATE_RANGE, SOURCE_HALF_HEIGHT, SOURCE_HALF_WIDTH } from "../../../SimConstants.js";
+import { CONTINUOUS_RATE_RANGE, SOURCE_HALF_HEIGHT, SOURCE_HALF_WIDTH } from "../../../SternGerlachConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
 
 export class SourceMode extends EnumerationValue {

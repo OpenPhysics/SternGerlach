@@ -13,8 +13,8 @@
 import { Bounds2 } from "scenerystack/dot";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { CanvasNode } from "scenerystack/scenery";
-import { EXPERIMENT_AREA_HEIGHT, EXPERIMENT_AREA_WIDTH } from "../../SimConstants.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
+import { EXPERIMENT_AREA_HEIGHT, EXPERIMENT_AREA_WIDTH } from "../../SternGerlachConstants.js";
 import type { ParticleSystem } from "../model/ParticleSystem.js";
 
 const DOT_RADIUS = 2.2;

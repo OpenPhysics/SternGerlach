@@ -12,7 +12,7 @@
  */
 
 import { Vector2 } from "scenerystack/dot";
-import { MODEL_VIEW_SCALE } from "../../SimConstants.js";
+import { MODEL_VIEW_SCALE } from "../../SternGerlachConstants.js";
 
 /** Minimum horizontal control-point lead, model units (20 px at the standard view scale). */
 const MIN_LEAD = 20 / MODEL_VIEW_SCALE;

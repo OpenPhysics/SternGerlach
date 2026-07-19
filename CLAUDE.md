@@ -21,7 +21,7 @@ Educator physics: [`doc/model.md`](doc/model.md). Architecture: [`doc/implementa
 | Devices | `src/stern-gerlach-screen/model/devices/` — `Analyzer`, `Magnet`, `Counter`, `ParticleSource` |
 | Animation | `ParticleSystem.ts`, `WireGeometry.ts` |
 | View / a11y | `SternGerlachScreenView.ts`, `SternGerlachScreenSummaryContent.ts`, `SternGerlachKeyboardHelpContent.ts`, `ExperimentAreaNode.ts` |
-| Colors / constants | `SternGerlachColors.ts`, `SimConstants.ts`, `SternGerlachNamespace.ts` |
+| Colors / constants | `SternGerlachColors.ts`, `SternGerlachConstants.ts`, `SternGerlachNamespace.ts` |
 | i18n | `src/i18n/StringManager.ts` |
 
 ## Model

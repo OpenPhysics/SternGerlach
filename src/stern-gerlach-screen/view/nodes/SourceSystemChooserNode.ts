@@ -12,11 +12,11 @@ import { Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup } from "scenerystack/sun";
 import { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { SimPanel } from "../../../common/SimPanel.js";
+import { SternGerlachPanel } from "../../../common/SternGerlachPanel.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 
-export class SourceSystemChooserNode extends SimPanel {
+export class SourceSystemChooserNode extends SternGerlachPanel {
   public constructor(systemProperty: Property<SpinSystem>, spinOneEnabledProperty: TReadOnlyProperty<boolean>) {
     const strings = StringManager.getInstance();
     const systems = strings.getSystems();

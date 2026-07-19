@@ -17,8 +17,8 @@ import {
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
   LIGHT_SURFACE_TEXT_FILL,
   SIM_COMBO_BOX_OPTIONS,
-} from "../../common/SimButtonOptions.js";
-import { SimPanel } from "../../common/SimPanel.js";
+} from "../../common/SternGerlachButtonOptions.js";
+import { SternGerlachPanel } from "../../common/SternGerlachPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 import { ExperimentDefinition } from "../model/ExperimentDefinition.js";
@@ -30,7 +30,7 @@ const GUIDANCE_LINE_WRAP = 190;
 /** The batch sizes offered by the Do-N buttons (Spins.doAction). */
 const DO_N_SIZES = [10, 100, 1000] as const;
 
-export class ExperimentControlPanel extends SimPanel {
+export class ExperimentControlPanel extends SternGerlachPanel {
   /**
    * @param model - the simulation model
    * @param listParent - node the combo box drops its list into (topmost in the screen view)

@@ -24,8 +24,8 @@ import {
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
   LIGHT_SURFACE_TEXT_FILL,
   SIM_COMBO_BOX_OPTIONS,
-} from "../../common/SimButtonOptions.js";
-import { SimPanel } from "../../common/SimPanel.js";
+} from "../../common/SternGerlachButtonOptions.js";
+import { SternGerlachPanel } from "../../common/SternGerlachPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
 import { InitialStateSetting } from "../model/InitialStateSetting.js";
@@ -47,7 +47,7 @@ const INITIAL_STATE_CHOICES = [
   InitialStateSetting.RANDOM,
 ] as const;
 
-export class StatePreparationAreaNode extends SimPanel {
+export class StatePreparationAreaNode extends SternGerlachPanel {
   /**
    * @param model - the simulation model
    * @param listParent - node the combo box drops its list into (topmost in the screen view)

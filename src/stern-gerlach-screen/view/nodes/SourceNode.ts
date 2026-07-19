@@ -21,10 +21,10 @@ import { Dimension2, Range } from "scenerystack/dot";
 import { Circle, LinearGradient, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, HSlider, RoundPushButton } from "scenerystack/sun";
-import { FLAT_BUTTON_APPEARANCE_OPTIONS } from "../../../common/SimButtonOptions.js";
+import { FLAT_BUTTON_APPEARANCE_OPTIONS } from "../../../common/SternGerlachButtonOptions.js";
 import { StringManager } from "../../../i18n/StringManager.js";
-import { CONTINUOUS_RATE_RANGE, MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
+import { CONTINUOUS_RATE_RANGE, MODEL_VIEW_SCALE } from "../../../SternGerlachConstants.js";
 import { type ParticleSource, SourceMode } from "../../model/devices/ParticleSource.js";
 
 export class SourceNode extends Node {

@@ -20,8 +20,8 @@ import type { TColor } from "scenerystack/scenery";
 import { Line, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { StringManager } from "../../../i18n/StringManager.js";
-import { MODEL_VIEW_SCALE } from "../../../SimConstants.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
+import { MODEL_VIEW_SCALE } from "../../../SternGerlachConstants.js";
 import { type Counter, expectedDetectedFraction } from "../../model/devices/Counter.js";
 
 const BAR_WIDTH = 26;
