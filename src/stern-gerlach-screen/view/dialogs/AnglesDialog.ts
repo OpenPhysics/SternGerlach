@@ -14,8 +14,8 @@ import type { NumberProperty, TReadOnlyProperty } from "scenerystack/axon";
 import { Dimension2, Range, roundToInterval } from "scenerystack/dot";
 import { HBox, Text, VBox } from "scenerystack/scenery";
 import { MathSymbols, NumberControl, PhetFont } from "scenerystack/scenery-phet";
-import { SimDialog } from "../../../common/SimDialog.js";
 import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SternGerlachButtonOptions.js";
+import { SternGerlachDialog } from "../../../common/SternGerlachDialog.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 import { DirectionSphereNode } from "../nodes/DirectionSphereNode.js";
@@ -85,7 +85,7 @@ function angleControl(
   });
 }
 
-export class AnglesDialog extends SimDialog {
+export class AnglesDialog extends SternGerlachDialog {
   public constructor(thetaProperty: NumberProperty, phiProperty: NumberProperty) {
     const strings = StringManager.getInstance();
     const controls = strings.getControls();

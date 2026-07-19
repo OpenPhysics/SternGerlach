@@ -9,14 +9,14 @@
 
 import { RichText, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { SimDialog } from "../../../common/SimDialog.js";
+import { SternGerlachDialog } from "../../../common/SternGerlachDialog.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 
 /** Content column width, in screen px — tuned so paragraphs wrap to 2-3 lines. */
 const CONTENT_WIDTH = 380;
 
-export class HowToUseDialog extends SimDialog {
+export class HowToUseDialog extends SternGerlachDialog {
   public constructor() {
     const strings = StringManager.getInstance();
     const dialogs = strings.getDialogs();

@@ -1,5 +1,5 @@
 /**
- * SimDialog.ts
+ * SternGerlachDialog.ts
  *
  * A pre-themed Dialog that uses SternGerlachColors for fill, stroke, and close
  * button so default / projector switching is automatic. Prefer this for every
@@ -13,7 +13,7 @@ import type { DialogOptions } from "scenerystack/sim";
 import { Dialog } from "scenerystack/sim";
 import SternGerlachColors from "../SternGerlachColors.js";
 
-export class SimDialog extends Dialog {
+export class SternGerlachDialog extends Dialog {
   public constructor(content: Node, providedOptions?: DialogOptions) {
     super(content, {
       fill: SternGerlachColors.panelBackgroundColorProperty,

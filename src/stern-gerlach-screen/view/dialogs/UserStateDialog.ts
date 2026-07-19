@@ -16,7 +16,7 @@ import {
   Property,
   type TReadOnlyProperty,
 } from "scenerystack/axon";
-import { Range } from "scenerystack/dot";
+import { Range, toFixed } from "scenerystack/dot";
 import { GridBox, HSeparator, type Node, RichText, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, NumberSpinner } from "scenerystack/sun";
@@ -29,8 +29,8 @@ import {
   computationalProbabilities,
   ketMarkup,
 } from "../../../common/quantum/StateDisplay.js";
-import { SimDialog } from "../../../common/SimDialog.js";
 import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SternGerlachButtonOptions.js";
+import { SternGerlachDialog } from "../../../common/SternGerlachDialog.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
 import type { UserStateModel } from "../../model/UserStateModel.js";
@@ -64,7 +64,7 @@ function amplitudeSpinner(property: NumberProperty, accessibleName: TReadOnlyPro
   });
 }
 
-export class UserStateDialog extends SimDialog {
+export class UserStateDialog extends SternGerlachDialog {
   public constructor(
     userState: UserStateModel,
     systemProperty: TReadOnlyProperty<SpinSystem>,
@@ -199,7 +199,7 @@ export class UserStateDialog extends SimDialog {
         .map((p, i) =>
           stateStrings.probabilityPatternStringProperty.value
             .replace("{{label}}", labels[i] as string)
-            .replace("{{percent}}", (100 * p).toFixed(0)),
+            .replace("{{percent}}", toFixed(100 * p, 0)),
         )
         .join("      ");
     };

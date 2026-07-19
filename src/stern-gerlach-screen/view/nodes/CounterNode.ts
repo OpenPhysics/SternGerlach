@@ -15,6 +15,7 @@
 
 import type { Emitter, TReadOnlyProperty } from "scenerystack/axon";
 import { Multilink } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
 import { StringUtils } from "scenerystack/phetcommon";
 import type { TColor } from "scenerystack/scenery";
 import { Line, Node, Rectangle, Text } from "scenerystack/scenery";
@@ -111,8 +112,7 @@ export class CounterNode extends Node {
       countText.left = halfWidth + 7;
       countText.centerY = -8;
 
-      percentText.string =
-        total > 0 ? StringUtils.fillIn(percentPattern, { percent: (100 * fraction).toFixed(1) }) : "";
+      percentText.string = total > 0 ? StringUtils.fillIn(percentPattern, { percent: toFixed(100 * fraction, 1) }) : "";
       percentText.left = halfWidth + 7;
       percentText.top = countText.bottom + 1;
 

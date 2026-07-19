@@ -8,6 +8,7 @@
  */
 
 import { DerivedProperty, PatternStringProperty, Property, type TReadOnlyProperty } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
 import { StringUtils } from "scenerystack/phetcommon";
 import { HBox, Node, RichText, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
@@ -224,7 +225,7 @@ function formatProbabilities(
     .map((p, i) =>
       StringUtils.fillIn(stateStrings.probabilityPatternStringProperty, {
         label: labels[i] as string,
-        percent: (100 * p).toFixed(0),
+        percent: toFixed(100 * p, 0),
       }),
     )
     .join("      ");
