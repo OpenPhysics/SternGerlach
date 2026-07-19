@@ -30,6 +30,9 @@ export class BeamCanvasNode extends CanvasNode {
     });
     this.particleSystem = particleSystem;
     this.mvt = mvt;
+
+    // Canvas paint samples .value; link so projector toggles repaint an idle beam.
+    SternGerlachColors.particleColorProperty.link(() => this.invalidatePaint());
   }
 
   /** Requests a repaint; call once per frame while visible. */

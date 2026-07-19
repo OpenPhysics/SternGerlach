@@ -100,6 +100,26 @@ const SternGerlachColors = {
     projector: "#dfe7ee",
   }),
 
+  // ── Preferences dialog (always-light framework chrome) ───────────────────────
+  // Preferences content sits on joist's light dialog surface and must stay dark
+  // regardless of the simulation color profile.
+
+  /** Text/checkbox stroke on the Preferences → Simulation panel. */
+  preferencesTextColorProperty: new ProfileColorProperty(SternGerlachNamespace, "preferencesText", {
+    default: "#1a1a1a",
+    projector: "#1a1a1a",
+  }),
+
+  /** Checkbox background fill on the Preferences → Simulation panel. */
+  preferencesControlBackgroundColorProperty: new ProfileColorProperty(
+    SternGerlachNamespace,
+    "preferencesControlBackground",
+    {
+      default: "#ffffff",
+      projector: "#ffffff",
+    },
+  ),
+
   // ── Experiment board ─────────────────────────────────────────────────────────
   // The complete play area changes profile; it is not an invariant light island.
 
