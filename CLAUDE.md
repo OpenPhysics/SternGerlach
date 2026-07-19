@@ -97,6 +97,10 @@ required layers: PDOM names, a `SternGerlachScreenSummaryContent` with a live
 Add `accessibleName`s (preferably live `StringProperty`s) to every interactive
 node. Full convention and checklist: [../Baton/ACCESSIBILITY.md](../Baton/ACCESSIBILITY.md).
 
+## Compliance carve-outs
+
+- **Hardcoded colors:** preferences control surface `#ffffff` / `#1a1a1a` in `SternGerlachPreferencesNode.ts` — light preference chrome that must stay readable in both profiles (same pattern as Template light control surfaces).
+
 ## Testing
 
 Fleet-standard Vitest layout:

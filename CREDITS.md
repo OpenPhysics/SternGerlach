@@ -4,7 +4,7 @@ Interactive Stern–Gerlach experiment: assemble analyzers, magnets, and counter
 
 ## License
 
-GNU Affero General Public License v3.0 or later — see [`LICENSE`](./LICENSE).
+GNU Affero General Public License v3.0 or later — see [org LICENSE](https://github.com/OpenPhysics/.github/blob/main/LICENSE).
 
 ## Acknowledgments
 
