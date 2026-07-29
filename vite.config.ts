@@ -154,8 +154,9 @@ export default defineConfig(({ mode }) => {
             manifest: {
               name: "Stern Gerlach",
               // biome-ignore lint/style/useNamingConvention: Web App Manifest spec requires snake_case keys
-              short_name: "SimTemplate",
-              description: "A single-screen SceneryStack simulation template",
+              short_name: "SternGerlach",
+              description:
+                "Interactive Stern–Gerlach experiment: assemble analyzers, fire spin-½ / spin-1 atoms, compare counts to theory",
               // biome-ignore lint/style/useNamingConvention: Web App Manifest spec requires snake_case keys
               theme_color: "#1a1a2e",
               // biome-ignore lint/style/useNamingConvention: Web App Manifest spec requires snake_case keys
