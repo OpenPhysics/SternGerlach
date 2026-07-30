@@ -51,8 +51,18 @@ describe("OperatorTable", () => {
       for (let k = 0; k < eigenvectorCount(op); k++) {
         const e = eigenvectorOf(table, op, k);
         const he = h.timesVector(e);
-        const scaled = e.components.map((component) => component.timesScalar(EIGENVALUES[k]));
-        const expected = new ComplexVector(scaled[0], scaled[1], scaled[2]);
+        const eigenvalue = EIGENVALUES[k];
+        if (eigenvalue === undefined) {
+          throw new Error(`test fixture: missing eigenvalue at index ${k}`);
+        }
+        const scaled = e.components.map((component) => component.timesScalar(eigenvalue));
+        const c0 = scaled[0];
+        const c1 = scaled[1];
+        const c2 = scaled[2];
+        if (c0 === undefined || c1 === undefined || c2 === undefined) {
+          throw new Error("test fixture: expected 3-component eigenvector");
+        }
+        const expected = new ComplexVector(c0, c1, c2);
         expect(he.equalsEpsilon(expected, 1e-12), `op ${op} eigenvector ${k}`).toBe(true);
       }
     }
@@ -109,8 +119,18 @@ describe("OperatorTable", () => {
       const h = table.getOperator(op, theta, phi);
       for (let k = 0; k < eigenvectorCount(op); k++) {
         const e = table.getEigenvector(op, k, theta, phi);
-        const scaled = e.components.map((component) => component.timesScalar(EIGENVALUES[k]));
-        expect(h.timesVector(e).equalsEpsilon(new ComplexVector(scaled[0], scaled[1], scaled[2]), 1e-12)).toBe(true);
+        const eigenvalue = EIGENVALUES[k];
+        if (eigenvalue === undefined) {
+          throw new Error(`test fixture: missing eigenvalue at index ${k}`);
+        }
+        const scaled = e.components.map((component) => component.timesScalar(eigenvalue));
+        const c0 = scaled[0];
+        const c1 = scaled[1];
+        const c2 = scaled[2];
+        if (c0 === undefined || c1 === undefined || c2 === undefined) {
+          throw new Error("test fixture: expected 3-component eigenvector");
+        }
+        expect(h.timesVector(e).equalsEpsilon(new ComplexVector(c0, c1, c2), 1e-12)).toBe(true);
       }
     }
   });
