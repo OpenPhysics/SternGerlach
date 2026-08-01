@@ -2,7 +2,7 @@
  * Complex.ts
  *
  * Immutable complex number for the quantum math layer. Direct port of the
- * SPINS Java `Complex` class (references/source/Complex.java), trimmed to the
+ * SPINS Java `Complex` class (../Baseline/SG/spins/source/Complex.java), trimmed to the
  * operations the simulation actually uses.
  *
  * All operations return new instances; a Complex never mutates.

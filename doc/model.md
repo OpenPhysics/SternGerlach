@@ -14,7 +14,7 @@ unitary time evolution. Counts accumulate on the counters so students watch prob
 events converge to the quantum-mechanical prediction.
 
 The model is a faithful port of David McIntyre's **SPINS** program (Oregon State University; see
-`references/`), which itself descends from D. V. Schroeder's Macintosh program
+`../Baseline/SG/spins/`), which itself descends from D. V. Schroeder's Macintosh program
 (*Am. J. Phys.* **61**, 798 (1993)). The key ideas a student should take away:
 
 - A measurement along one axis **destroys** prior information about incompatible observables
@@ -111,6 +111,6 @@ SU(3) spin systems were removed; only spin-½ and spin-1 are supported.
   SPINS-based introduction this simulation is designed to accompany.
 - D. V. Schroeder & T. A. Moore, "A computer-simulated Stern-Gerlach laboratory",
   *Am. J. Phys.* **61**, 798 (1993).
-- The original SPINS Java program and documentation: `references/` in this repository.
+- The original SPINS Java program and documentation: `../Baseline/SG/spins/` (OpenPhysics/Baseline).
 - PhET's *Quantum Measurement* simulation (Spin screen) for comparative UI/pedagogy patterns:
-  `references/quantum-measurement/`.
+  `../Baseline/SG/quantum-measurement/`.

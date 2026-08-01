@@ -77,7 +77,7 @@ export class Magnet extends ExperimentDevice {
 
   /**
    * The precession propagator U for the current field number and type. Port of Magnet.ComputeU
-   * (references/source/Magnet.java:223-230). Cached; recomputed when the field number, operator
+   * (../Baseline/SG/spins/source/Magnet.java:223-230). Cached; recomputed when the field number, operator
    * index (type/system), or direction angles change.
    */
   public computeU(operatorTable: OperatorTable, system: SpinSystem): ComplexMatrix {

@@ -2,7 +2,7 @@
  * ComplexVector.ts
  *
  * Immutable 3-component complex vector (a quantum state or eigenvector).
- * Direct port of the SPINS Java `vector` class (references/source/vector.java).
+ * Direct port of the SPINS Java `vector` class (../Baseline/SG/spins/source/vector.java).
  *
  * Vectors always carry 3 components; 2-state (spin-½) systems simply leave the
  * third component at zero, so every operation can safely run over all 3

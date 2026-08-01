@@ -6,7 +6,7 @@ Developer-facing notes on the architecture. The physics itself is documented for
 ## Architecture Overview
 
 Stern Gerlach is a single-screen SceneryStack simulation, a TypeScript port of David McIntyre's
-SPINS Java program (`references/source/`). The code separates into three layers:
+SPINS Java program (`../Baseline/SG/spins/source/`). The code separates into three layers:
 
 ```
 src/common/quantum/            pure math — no axon/scenery dependencies, fully unit-tested

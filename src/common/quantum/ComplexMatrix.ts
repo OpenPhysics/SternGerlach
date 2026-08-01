@@ -2,7 +2,7 @@
  * ComplexMatrix.ts
  *
  * Immutable 3×3 complex matrix (an operator or magnet propagator). Direct port
- * of the SPINS Java `Matrix` class (references/source/Matrix.java).
+ * of the SPINS Java `Matrix` class (../Baseline/SG/spins/source/Matrix.java).
  *
  * As with ComplexVector, matrices always carry 3×3 entries; 2-state (spin-½)
  * operators leave the third row/column at zero, so every operation runs over
