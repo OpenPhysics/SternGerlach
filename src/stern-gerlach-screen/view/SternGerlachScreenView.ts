@@ -7,10 +7,10 @@
  */
 
 import { Vector2 } from "scenerystack/dot";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { Node, Rectangle } from "scenerystack/scenery";
 import { InfoButton, ResetAllButton, SceneryPhetConstants } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { FLAT_BUTTON_APPEARANCE_OPTIONS } from "../../common/SternGerlachButtonOptions.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SternGerlachColors from "../../SternGerlachColors.js";
@@ -29,14 +29,19 @@ import { SternGerlachScreenSummaryContent } from "./SternGerlachScreenSummaryCon
 /** Gap between the control panel and toolbox, and between toolbox and Reset All. */
 const RIGHT_COLUMN_GAP = 6;
 
+export type SternGerlachScreenViewOptions = ScreenViewOptions;
+
 export class SternGerlachScreenView extends ScreenView {
   private readonly experimentAreaNode: ExperimentAreaNode;
 
-  public constructor(model: SternGerlachModel, options?: ScreenViewOptions) {
-    super({
-      screenSummaryContent: new SternGerlachScreenSummaryContent(model),
-      ...options,
-    });
+  public constructor(model: SternGerlachModel, providedOptions?: SternGerlachScreenViewOptions) {
+    const options = optionize<SternGerlachScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {
+        screenSummaryContent: new SternGerlachScreenSummaryContent(model),
+      },
+      providedOptions,
+    );
+    super(options);
 
     // ── Background ────────────────────────────────────────────────────────────
     const backgroundRect = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {

@@ -8,18 +8,23 @@
  * Title Text nodes still need an explicit fill — use textColorProperty.
  */
 
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { Node } from "scenerystack/scenery";
-import type { DialogOptions } from "scenerystack/sim";
-import { Dialog } from "scenerystack/sim";
+import { Dialog, type DialogOptions } from "scenerystack/sim";
 import SternGerlachColors from "../SternGerlachColors.js";
 
+export type SternGerlachDialogOptions = DialogOptions;
+
 export class SternGerlachDialog extends Dialog {
-  public constructor(content: Node, providedOptions?: DialogOptions) {
-    super(content, {
-      fill: SternGerlachColors.panelBackgroundColorProperty,
-      stroke: SternGerlachColors.panelBorderColorProperty,
-      closeButtonColor: SternGerlachColors.textColorProperty,
-      ...providedOptions,
-    });
+  public constructor(content: Node, providedOptions?: SternGerlachDialogOptions) {
+    const options = optionize<SternGerlachDialogOptions, EmptySelfOptions, DialogOptions>()(
+      {
+        fill: SternGerlachColors.panelBackgroundColorProperty,
+        stroke: SternGerlachColors.panelBorderColorProperty,
+        closeButtonColor: SternGerlachColors.textColorProperty,
+      },
+      providedOptions,
+    );
+    super(content, options);
   }
 }

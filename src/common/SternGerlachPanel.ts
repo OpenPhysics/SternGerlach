@@ -25,21 +25,26 @@
  *   const panel = new SternGerlachPanel(content, { fill: "transparent" });
  */
 
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { Node } from "scenerystack/scenery";
-import type { PanelOptions } from "scenerystack/sun";
-import { Panel } from "scenerystack/sun";
+import { Panel, type PanelOptions } from "scenerystack/sun";
 import SternGerlachColors from "../SternGerlachColors.js";
 import { PANEL_CORNER_RADIUS } from "../SternGerlachConstants.js";
 
+export type SternGerlachPanelOptions = PanelOptions;
+
 export class SternGerlachPanel extends Panel {
-  public constructor(content: Node, providedOptions?: PanelOptions) {
-    super(content, {
-      fill: SternGerlachColors.panelBackgroundColorProperty,
-      stroke: SternGerlachColors.panelBorderColorProperty,
-      cornerRadius: PANEL_CORNER_RADIUS,
-      xMargin: 12,
-      yMargin: 10,
-      ...providedOptions,
-    });
+  public constructor(content: Node, providedOptions?: SternGerlachPanelOptions) {
+    const options = optionize<SternGerlachPanelOptions, EmptySelfOptions, PanelOptions>()(
+      {
+        fill: SternGerlachColors.panelBackgroundColorProperty,
+        stroke: SternGerlachColors.panelBorderColorProperty,
+        cornerRadius: PANEL_CORNER_RADIUS,
+        xMargin: 12,
+        yMargin: 10,
+      },
+      providedOptions,
+    );
+    super(content, options);
   }
 }
