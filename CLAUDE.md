@@ -99,6 +99,6 @@ npm run lint && npm run check && npm run build && npm test
 - **`src/common/quantum/`** must stay free of axon/scenery imports — pure math only, fully
   unit-tested under `tests/quantum/`.
 - **Builder mode:** `ExperimentAreaNode` handles drag/wire/delete editing (pointer and keyboard).
-- **SPINS reference:** Java source in `references/source/`; mystery states and preset recipes in
+- **SPINS reference:** Java source in `../Baseline/SG/spins/source/`; mystery states and preset recipes in
   `ExperimentDefinition.ts`.
 - **PWA:** after `npm run build`, installable offline via Workbox (`dist/manifest.webmanifest`).
