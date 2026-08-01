@@ -63,12 +63,6 @@ onReadyToLaunch(() => {
         supportsDynamicLocale: true,
       },
     }),
-
-    // Credits shown in Help → About
-    credits: {
-      leadDesign: "Martin Veillette",
-      softwareDevelopment: "Martin Veillette",
-    },
   });
 
   sim.start();
