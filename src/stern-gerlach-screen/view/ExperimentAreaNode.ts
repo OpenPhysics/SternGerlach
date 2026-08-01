@@ -21,10 +21,10 @@ import type { PressListenerEvent, TColor } from "scenerystack/scenery";
 import {
   DragListener,
   FireListener,
-  KeyboardDragListener,
   Node,
   Path,
   Rectangle,
+  RichDragListener,
   RichText,
   Text,
 } from "scenerystack/scenery";
@@ -323,40 +323,49 @@ export class ExperimentAreaNode extends Node {
     // Drag to move (pointer). Ports sit on top and consume presses, so this only moves the body.
     let modelStart = device.positionProperty.value;
     let pointerStart = Vector2.ZERO;
-    const moveListener = new DragListener({
-      start: (event) => {
-        modelStart = device.positionProperty.value;
-        pointerStart = this.globalToLocalPoint(event.pointer.point);
+    const moveListener = new RichDragListener({
+      dragListenerOptions: {
+        start: (event) => {
+          modelStart = device.positionProperty.value;
+          pointerStart = this.globalToLocalPoint(event.pointer.point);
+        },
+        drag: (event) => {
+          const here = this.globalToLocalPoint(event.pointer.point);
+          device.positionProperty.value = modelStart.plus(this.mvt.viewToModelDelta(here.minus(pointerStart)));
+          this.clampToBoard(device);
+        },
+        end: () => this.snapToGrid(device),
       },
-      drag: (event) => {
-        const here = this.globalToLocalPoint(event.pointer.point);
-        device.positionProperty.value = modelStart.plus(this.mvt.viewToModelDelta(here.minus(pointerStart)));
-        this.clampToBoard(device);
+      keyboardDragListenerOptions: {
+        dragSpeed: 0,
+        dragDelta: KEYBOARD_STEP * MODEL_VIEW_SCALE,
+        drag: (_event, listener) => {
+          const modelDelta = this.mvt.viewToModelDelta(listener.modelDelta);
+          device.positionProperty.value = device.positionProperty.value.plus(modelDelta);
+          this.clampToBoard(device);
+        },
+        end: () => this.snapToGrid(device),
       },
-      end: () => this.snapToGrid(device),
     });
-    visual.addInputListener(moveListener);
+    // The two halves go on different Nodes (RichDragListener exposes them for exactly this).
+    // Pointer drag belongs on `visual` so the ports and blocker radios stacked in `container`
+    // keep consuming their own presses. The keyboard half must go on `container`, which is the
+    // focusable Node — hotkeyManager only activates hotkeys for listeners on Nodes in the focus
+    // trail, and `visual` is a descendant of the focused Node, not an ancestor.
+    visual.addInputListener(moveListener.dragListener);
     visual.cursor = "pointer";
-    container.disposeEmitter.addListener(() => moveListener.dispose());
-    // Remember this listener so a device dragged out of the toolbox can hand its press off to it.
-    this.deviceDragListeners.set(device, { listener: moveListener, visual });
+    container.addInputListener(moveListener.keyboardDragListener);
+    container.disposeEmitter.addListener(() => {
+      visual.removeInputListener(moveListener.dragListener);
+      container.removeInputListener(moveListener.keyboardDragListener);
+      moveListener.dispose();
+    });
+    this.deviceDragListeners.set(device, { listener: moveListener.dragListener, visual });
 
     // Keyboard: focusable, arrow-drag to move, Delete/Backspace to remove.
     container.tagName = "div";
     container.focusable = true;
     container.accessibleName = this.deviceAccessibleName(device);
-    const keyboardDrag = new KeyboardDragListener({
-      dragSpeed: 0,
-      dragDelta: KEYBOARD_STEP * MODEL_VIEW_SCALE,
-      drag: (_event, listener) => {
-        const modelDelta = this.mvt.viewToModelDelta(listener.modelDelta);
-        device.positionProperty.value = device.positionProperty.value.plus(modelDelta);
-        this.clampToBoard(device);
-      },
-      end: () => this.snapToGrid(device),
-    });
-    container.addInputListener(keyboardDrag);
-    container.disposeEmitter.addListener(() => keyboardDrag.dispose());
 
     if (device.isDeletable) {
       container.addInputListener({
