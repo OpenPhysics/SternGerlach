@@ -66,7 +66,8 @@ Fleet-standard Vitest layout (`happy-dom`, `tests/setup.ts`, `execArgv: ["--expo
 | `tests/quantum/OperatorTable.test.ts` | Operators, eigenvectors, pure Sn(θ, φ) lookups |
 | `tests/quantum/StateDisplay.test.ts` | Ket/Bloch formatting |
 | `tests/model/ExperimentEngine.test.ts` | Monte-Carlo + analytic propagation |
-| `tests/model/ExperimentGraph.test.ts` | Graph invariants |
+| `tests/model/ExperimentGraph.test.ts` | Graph invariants + `batch()` change coalescing |
+| `tests/view/ExperimentAreaNode.test.ts` | Board rebuild coalescing + child-disposal leaks (uses `tests/view/simStub.ts`) |
 | `tests/model/SternGerlachModel.test.ts` | Top-level coordinator |
 | `tests/model/UserStateModel.test.ts` | User-prepared states |
 | `tests/model/Magnet.test.ts` | Magnet device |
@@ -77,6 +78,10 @@ Fleet-standard Vitest layout (`happy-dom`, `tests/setup.ts`, `execArgv: ["--expo
 
 Put unit tests only under root `tests/` (never co-locate or use `__tests__/`). Run `npm test`; CI
 runs the suite when a `test` script is present. Use seeded RNG in engine tests for reproducibility.
+
+View nodes that build a `Dialog` need a `phet.joist.sim` global; call `installSimStub()` from
+`tests/view/simStub.ts` before constructing them. The Playwright fuzz smoke (`npm run test:fuzz`)
+runs as its own CI job, since it needs a browser.
 
 ## Commands
 

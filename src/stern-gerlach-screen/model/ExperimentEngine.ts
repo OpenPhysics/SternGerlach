@@ -210,7 +210,9 @@ export class ExperimentEngine {
 
     let newState: ComplexVector;
     let outputIndex: number;
-    if (rand < prob) {
+    // The k branch also absorbs a state that lies (numerically) entirely along eigenvector k:
+    // projecting it out would leave a zero vector with no direction to normalize.
+    if (rand < prob || 1 - prob < PROBABILITY_EPSILON) {
       newState = eigenK;
       outputIndex = k;
     } else if (twoTheSame) {

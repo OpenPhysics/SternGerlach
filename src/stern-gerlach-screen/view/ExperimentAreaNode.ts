@@ -131,10 +131,10 @@ export class ExperimentAreaNode extends Node {
     this.addChild(this.systemChooser);
 
     // Devices and wires rebuild independently so a wiring drag never disposes its own port node.
-    model.graph.devices.elementAddedEmitter.addListener(() => this.rebuildDevices());
-    model.graph.devices.elementRemovedEmitter.addListener(() => this.rebuildDevices());
-    model.graph.wires.elementAddedEmitter.addListener(() => this.rebuildWires());
-    model.graph.wires.elementRemovedEmitter.addListener(() => this.rebuildWires());
+    // Both signals are coalesced per graph.batch(), so a preset switch rebuilds each layer once
+    // instead of once per device/wire added and removed.
+    model.graph.devicesChangedEmitter.addListener(() => this.rebuildDevices());
+    model.graph.wiresChangedEmitter.addListener(() => this.rebuildWires());
     model.isCustomProperty.link(() => this.rebuildDevices());
     // A system switch changes analyzer output counts and valid types; refresh ports and selectors.
     model.systemProperty.lazyLink(() => {
@@ -180,6 +180,17 @@ export class ExperimentAreaNode extends Node {
     this.model.graph.addDevice(device);
     const entry = this.deviceDragListeners.get(device);
     entry?.listener.press(event, entry.visual);
+  }
+
+  /**
+   * Adds a child that must be disposed with its parent. Scenery's Node.dispose() only calls
+   * removeAllChildren() — it does not dispose children — so any child holding links to
+   * long-lived Properties (a localized accessibleName, a PatternStringProperty) would stay
+   * registered on them forever across device-layer rebuilds.
+   */
+  private static addDisposableChild(parent: Node, child: Node): void {
+    parent.addChild(child);
+    parent.disposeEmitter.addListener(() => child.dispose());
   }
 
   /** Recreates all device nodes from the current graph. */
@@ -284,8 +295,7 @@ export class ExperimentAreaNode extends Node {
       const wireListener = () => {
         barFillProperty.value = this.counterBarFill(device);
       };
-      this.model.graph.wires.elementAddedEmitter.addListener(wireListener);
-      this.model.graph.wires.elementRemovedEmitter.addListener(wireListener);
+      this.model.graph.wiresChangedEmitter.addListener(wireListener);
       const counterNode = new CounterNode(
         device,
         this.model.totalDetectedProperty,
@@ -295,8 +305,7 @@ export class ExperimentAreaNode extends Node {
         this.model.particleSystem.particleDetectedEmitter,
       );
       counterNode.disposeEmitter.addListener(() => {
-        this.model.graph.wires.elementAddedEmitter.removeListener(wireListener);
-        this.model.graph.wires.elementRemovedEmitter.removeListener(wireListener);
+        this.model.graph.wiresChangedEmitter.removeListener(wireListener);
       });
       this.counterNodes.push(counterNode);
       return counterNode;
@@ -381,12 +390,12 @@ export class ExperimentAreaNode extends Node {
           }
         },
       });
-      container.addChild(this.createDeleteButton(device, visual));
+      ExperimentAreaNode.addDisposableChild(container, this.createDeleteButton(device, visual));
     }
 
     // Output ports: draggable wiring sources.
     for (let outputIndex = 0; outputIndex < device.outputCount(system()); outputIndex++) {
-      container.addChild(this.createOutputPort(device, outputIndex));
+      ExperimentAreaNode.addDisposableChild(container, this.createOutputPort(device, outputIndex));
     }
 
     // Input port: a highlightable drop target.
@@ -394,7 +403,7 @@ export class ExperimentAreaNode extends Node {
       const offset = device.getInputPortOffset();
       const port = new PortNode(offset.x * MODEL_VIEW_SCALE, -offset.y * MODEL_VIEW_SCALE, false);
       this.inputPorts.set(device, port);
-      container.addChild(port);
+      ExperimentAreaNode.addDisposableChild(container, port);
     }
 
     // Type selector for analyzers and magnets (the valid types depend on the system).
@@ -560,11 +569,14 @@ export class ExperimentAreaNode extends Node {
     label.center = new Vector2(9, 9);
     button.right = visual.right + 6;
     button.bottom = visual.top - 2;
-    button.addInputListener(
-      new FireListener({
-        fire: () => this.model.graph.removeDevice(device),
-      }),
-    );
+    const fireListener = new FireListener({
+      fire: () => this.model.graph.removeDevice(device),
+    });
+    button.addInputListener(fireListener);
+    button.disposeEmitter.addListener(() => {
+      button.removeInputListener(fireListener);
+      fireListener.dispose();
+    });
     return button;
   }
 
@@ -578,9 +590,11 @@ export class ExperimentAreaNode extends Node {
     const port = new PortNode(offset.x * MODEL_VIEW_SCALE, -offset.y * MODEL_VIEW_SCALE, true);
     port.tagName = "div";
     port.focusable = true;
-    port.accessibleName = new PatternStringProperty(a11y.builder.outputPortPatternStringProperty, {
+    // Derived from a locale-lived string property, so it must be disposed with the port.
+    const accessibleName = new PatternStringProperty(a11y.builder.outputPortPatternStringProperty, {
       index: outputIndex + 1,
     });
+    port.accessibleName = accessibleName;
 
     // Keyboard wiring: each activation re-routes this output to the next legal target.
     port.addInputListener({
@@ -629,6 +643,13 @@ export class ExperimentAreaNode extends Node {
       },
     });
     port.addInputListener(listener);
+    // Node.dispose() emits disposeEmitter after it has unlinked accessibleName, so the
+    // PatternStringProperty is safe to dispose here.
+    port.disposeEmitter.addListener(() => {
+      port.removeInputListener(listener);
+      listener.dispose();
+      accessibleName.dispose();
+    });
     return port;
   }
 
@@ -638,21 +659,24 @@ export class ExperimentAreaNode extends Node {
    * presses cycle through every possible connection.
    */
   private cycleWireTarget(source: ExperimentDevice, outputIndex: number): void {
-    const existing = this.model.graph.getWireFrom(source, outputIndex);
-    const currentTarget = existing?.target ?? null;
-    if (existing) {
-      this.model.graph.removeWire(existing);
-    }
-    const candidates = this.model.graph.devices.filter(
-      (device) =>
-        device !== source && device.hasInput && this.model.graph.canAddWire(new Wire(source, outputIndex, device)),
-    );
-    // Cycle order: candidate 0 … n−1, then unwired, then back to candidate 0.
-    const currentIndex = currentTarget === null ? -1 : candidates.indexOf(currentTarget);
-    const next = currentIndex === -1 ? candidates[0] : candidates[currentIndex + 1];
-    if (next) {
-      this.model.graph.addWire(new Wire(source, outputIndex, next));
-    }
+    // One structural edit: the detach and the re-attach must not be seen as two separate changes.
+    this.model.graph.batch(() => {
+      const existing = this.model.graph.getWireFrom(source, outputIndex);
+      const currentTarget = existing?.target ?? null;
+      if (existing) {
+        this.model.graph.removeWire(existing);
+      }
+      const candidates = this.model.graph.devices.filter(
+        (device) =>
+          device !== source && device.hasInput && this.model.graph.canAddWire(new Wire(source, outputIndex, device)),
+      );
+      // Cycle order: candidate 0 … n−1, then unwired, then back to candidate 0.
+      const currentIndex = currentTarget === null ? -1 : candidates.indexOf(currentTarget);
+      const next = currentIndex === -1 ? candidates[0] : candidates[currentIndex + 1];
+      if (next) {
+        this.model.graph.addWire(new Wire(source, outputIndex, next));
+      }
+    });
   }
 
   /** The device whose input port is closest to a point (within threshold), excluding the source. */
@@ -681,17 +705,20 @@ export class ExperimentAreaNode extends Node {
 
   /** Wires an output to a target input, re-routing (replacing) any wire already on that output. */
   private connect(source: ExperimentDevice, outputIndex: number, target: ExperimentDevice): void {
-    const existing = this.model.graph.getWireFrom(source, outputIndex);
-    const wire = new Wire(source, outputIndex, target);
-    if (existing) {
-      this.model.graph.removeWire(existing);
-    }
-    if (this.model.graph.canAddWire(wire)) {
-      this.model.graph.addWire(wire);
-    } else if (existing) {
-      // The new connection is illegal; restore the previous wire.
-      this.model.graph.addWire(existing);
-    }
+    // One structural edit: a re-route must not surface as a disconnect followed by a connect.
+    this.model.graph.batch(() => {
+      const existing = this.model.graph.getWireFrom(source, outputIndex);
+      const wire = new Wire(source, outputIndex, target);
+      if (existing) {
+        this.model.graph.removeWire(existing);
+      }
+      if (this.model.graph.canAddWire(wire)) {
+        this.model.graph.addWire(wire);
+      } else if (existing) {
+        // The new connection is illegal; restore the previous wire.
+        this.model.graph.addWire(existing);
+      }
+    });
   }
 
   /** Snaps a device to the coarse builder grid, then keeps it on the board. */

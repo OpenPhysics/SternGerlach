@@ -6,6 +6,8 @@
 
 import { describe, expect, it } from "vitest";
 import { AnalyzerType } from "../../src/common/quantum/AnalyzerType.js";
+import { Complex } from "../../src/common/quantum/Complex.js";
+import { ComplexVector } from "../../src/common/quantum/ComplexVector.js";
 import { OperatorTable } from "../../src/common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
 import { Analyzer } from "../../src/stern-gerlach-screen/model/devices/Analyzer.js";
@@ -312,6 +314,39 @@ describe("ExperimentEngine Monte-Carlo vs analytic", () => {
     expect(result.newState.equalsEpsilon(expected, 1e-12)).toBe(true);
     expect(result.newState.magnitudeSquared()).toBeCloseTo(1, 12);
     expect(result.next).toBe(target);
+  });
+
+  it("a merged branch with no residual amplitude to renormalize stays finite", () => {
+    // A state exactly parallel to the distinct output's eigenvector leaves nothing behind when
+    // that component is projected out. If unitary drift has nudged its norm a hair below 1, the
+    // Born weight is a hair below 1 too, so a large rand can fall through to the merged branch —
+    // where normalizing the (exactly zero) residual would yield NaN. The engine must take the
+    // distinct branch instead.
+    const graph = new ExperimentGraph();
+    const table = new OperatorTable();
+    const engine = new ExperimentEngine(graph, table);
+    const source = addSource(graph);
+    const zAnalyzer = addAnalyzer(graph, AnalyzerType.Z);
+    const target = addAnalyzer(graph, AnalyzerType.Y);
+    const noneCounter = addCounter(graph);
+    wire(graph, source, 0, zAnalyzer);
+    wire(graph, zAnalyzer, 0, target);
+    wire(graph, zAnalyzer, 1, target);
+    wire(graph, zAnalyzer, 2, noneCounter);
+
+    // |0⟩ with a one-ulp-short norm: parallel to eigenvector 2, Born weight just under 1.
+    const drifted = new ComplexVector(Complex.ZERO, new Complex(1 - Number.EPSILON, 0), Complex.ZERO);
+    const probability = table.getEigenvector(3, 2).dotProdSquared(drifted);
+    expect(probability).toBeLessThan(1);
+
+    const result = engine.transitDevice(zAnalyzer, drifted, { system: SPIN_ONE, watch: false }, () => 1 - 1e-17);
+    for (const component of result.newState.components) {
+      expect(Number.isFinite(component.re)).toBe(true);
+      expect(Number.isFinite(component.im)).toBe(true);
+    }
+    expect(result.newState.magnitudeSquared()).toBeCloseTo(1, 12);
+    expect(result.outputIndex).toBe(2);
+    expect(result.next).toBe(noneCounter);
   });
 
   it("blocking the UP exit discards that probability even when the port is wired", () => {

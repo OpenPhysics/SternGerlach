@@ -73,4 +73,84 @@ describe("ExperimentGraph invariants", () => {
     expect(graph.wires.length).toBe(0);
     expect(graph.getNext(source, 0)).toBeNull();
   });
+
+  it("coalesces a batch into one change signal per collection", () => {
+    const graph = new ExperimentGraph();
+    let devicesChanged = 0;
+    let wiresChanged = 0;
+    let anyChanged = 0;
+    graph.devicesChangedEmitter.addListener(() => devicesChanged++);
+    graph.wiresChangedEmitter.addListener(() => wiresChanged++);
+    graph.changedEmitter.addListener(() => anyChanged++);
+
+    graph.batch(() => {
+      const source = addSource(graph);
+      const analyzer = addAnalyzer(graph, AnalyzerType.Z);
+      const counter = addCounter(graph);
+      wire(graph, source, 0, analyzer);
+      wire(graph, analyzer, 0, counter);
+    });
+
+    expect(devicesChanged).toBe(1);
+    expect(wiresChanged).toBe(1);
+    expect(anyChanged).toBe(1);
+  });
+
+  it("emits per edit when not batched", () => {
+    const graph = new ExperimentGraph();
+    let devicesChanged = 0;
+    graph.devicesChangedEmitter.addListener(() => devicesChanged++);
+    addSource(graph);
+    addAnalyzer(graph, AnalyzerType.Z);
+    expect(devicesChanged).toBe(2);
+  });
+
+  it("nests batches, emitting only when the outermost one closes", () => {
+    const graph = new ExperimentGraph();
+    let devicesChanged = 0;
+    graph.devicesChangedEmitter.addListener(() => devicesChanged++);
+
+    graph.batch(() => {
+      addSource(graph);
+      graph.batch(() => {
+        addAnalyzer(graph, AnalyzerType.Z);
+      });
+      expect(devicesChanged).toBe(0);
+      addCounter(graph);
+    });
+    expect(devicesChanged).toBe(1);
+  });
+
+  it("still flushes pending changes when the batched work throws", () => {
+    const graph = new ExperimentGraph();
+    let devicesChanged = 0;
+    graph.devicesChangedEmitter.addListener(() => devicesChanged++);
+
+    expect(() =>
+      graph.batch(() => {
+        addSource(graph);
+        throw new Error("boom");
+      }),
+    ).toThrow(/boom/);
+    expect(devicesChanged).toBe(1);
+    expect(graph.devices.length).toBe(1);
+  });
+
+  it("reports a device removal and its cascading wire removals as one edit", () => {
+    const graph = new ExperimentGraph();
+    const source = addSource(graph);
+    const analyzer = addAnalyzer(graph, AnalyzerType.Z);
+    const counter = addCounter(graph);
+    wire(graph, source, 0, analyzer);
+    wire(graph, analyzer, 0, counter);
+
+    let devicesChanged = 0;
+    let wiresChanged = 0;
+    graph.devicesChangedEmitter.addListener(() => devicesChanged++);
+    graph.wiresChangedEmitter.addListener(() => wiresChanged++);
+
+    graph.removeDevice(analyzer);
+    expect(devicesChanged).toBe(1);
+    expect(wiresChanged).toBe(1);
+  });
 });

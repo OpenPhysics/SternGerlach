@@ -66,7 +66,8 @@ export class UserStateModel {
       stateCount === 3 ? new Complex(this.re[2].value, this.im[2].value) : Complex.ZERO,
     );
 
-    // A zero input has no valid direction; fall back to |0⟩ eigenstate index (component 0).
+    // A zero input has no valid direction; fall back to the first basis state (component 0),
+    // i.e. |+z⟩ for spin-½ and |+1⟩ for spin-1.
     if (raw.magnitudeSquared() === 0) {
       return new ComplexVector(Complex.ONE, Complex.ZERO, Complex.ZERO);
     }

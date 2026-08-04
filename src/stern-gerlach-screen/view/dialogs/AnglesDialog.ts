@@ -11,13 +11,14 @@
  */
 
 import type { NumberProperty, TReadOnlyProperty } from "scenerystack/axon";
-import { Dimension2, Range, roundToInterval } from "scenerystack/dot";
+import { Dimension2, type Range, roundToInterval } from "scenerystack/dot";
 import { HBox, Text, VBox } from "scenerystack/scenery";
 import { MathSymbols, NumberControl, PhetFont } from "scenerystack/scenery-phet";
 import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../../common/SternGerlachButtonOptions.js";
 import { SternGerlachDialog } from "../../../common/SternGerlachDialog.js";
 import { StringManager } from "../../../i18n/StringManager.js";
 import SternGerlachColors from "../../../SternGerlachColors.js";
+import { DIRECTION_PHI_RANGE, DIRECTION_THETA_RANGE } from "../../../SternGerlachConstants.js";
 import { DirectionSphereNode } from "../nodes/DirectionSphereNode.js";
 
 /** Arrow-button / keyboard fine step, radians (5°). */
@@ -28,8 +29,6 @@ const SLIDER_STEP = Math.PI / 12;
 const MINOR_TICK_SPACING = Math.PI / 4;
 
 const TICK_FONT = new PhetFont(12);
-const THETA_RANGE = new Range(0, Math.PI);
-const PHI_RANGE = new Range(0, 2 * Math.PI);
 
 function tickLabel(markup: string): Text {
   return new Text(markup, {
@@ -104,7 +103,7 @@ export class AnglesDialog extends SternGerlachDialog {
             angleControl(
               controls.thetaStringProperty,
               thetaProperty,
-              THETA_RANGE,
+              DIRECTION_THETA_RANGE,
               [
                 { value: 0, label: tickLabel("0") },
                 { value: Math.PI / 2, label: tickLabel(`${MathSymbols.PI}/2`) },
@@ -115,7 +114,7 @@ export class AnglesDialog extends SternGerlachDialog {
             angleControl(
               controls.phiStringProperty,
               phiProperty,
-              PHI_RANGE,
+              DIRECTION_PHI_RANGE,
               [
                 { value: 0, label: tickLabel("0") },
                 { value: Math.PI / 2, label: tickLabel(`${MathSymbols.PI}/2`) },

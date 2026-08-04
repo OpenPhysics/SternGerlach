@@ -15,6 +15,7 @@
  *  - Computed expressions (e.g. `2 * Math.PI`) may stay inline.
  */
 
+import { Range } from "scenerystack/dot";
 import SternGerlachNamespace from "./SternGerlachNamespace.js";
 
 // ── Layout / chrome (screen pixels) ───────────────────────────────────────────
@@ -76,6 +77,18 @@ export const CONTINUOUS_RATE_RANGE = { min: 0, max: 60, defaultValue: 20 } as co
 /** Maximum magnet field-dial value (two digits, 0-99); φ = 2π·n/72. */
 export const MAGNET_FIELD_NUMBER_MAX = 99;
 
+// ── n̂ direction angles ────────────────────────────────────────────────────────
+
+/**
+ * Valid range of an analyzer's/magnet's own n̂ polar angle θ, radians. Shared by the device
+ * Properties (which validate against it) and AnglesDialog's slider, so the control can never
+ * drive a device outside the range its Property accepts.
+ */
+export const DIRECTION_THETA_RANGE = new Range(0, Math.PI);
+
+/** Valid range of an analyzer's/magnet's own n̂ azimuthal angle φ, radians. See θ above. */
+export const DIRECTION_PHI_RANGE = new Range(0, 2 * Math.PI);
+
 SternGerlachNamespace.register("SternGerlachConstants", {
   SCREEN_VIEW_MARGIN,
   PANEL_CORNER_RADIUS,
@@ -97,4 +110,6 @@ SternGerlachNamespace.register("SternGerlachConstants", {
   MAX_LIVE_PARTICLES,
   CONTINUOUS_RATE_RANGE,
   MAGNET_FIELD_NUMBER_MAX,
+  DIRECTION_THETA_RANGE,
+  DIRECTION_PHI_RANGE,
 });

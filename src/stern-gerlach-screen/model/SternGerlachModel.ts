@@ -36,11 +36,23 @@ import { ParticleSystem } from "./ParticleSystem.js";
 import { UserStateModel } from "./UserStateModel.js";
 import { Wire } from "./Wire.js";
 
+/**
+ * The n̂ direction a device was carrying, captured so a custom build restores the exact
+ * measurement/precession axis the user dialed in — not the default (θ, φ).
+ */
+type DirectionSnapshot = { theta: number; phi: number };
+
 /** A serializable snapshot of one device, used to retain the custom build across preset switches. */
 type DeviceSnapshot =
   | { kind: "source"; position: Vector2 }
-  | { kind: "analyzer"; position: Vector2; type: AnalyzerType; blockedOutput: number }
-  | { kind: "magnet"; position: Vector2; type: AnalyzerType; field: number }
+  | {
+      kind: "analyzer";
+      position: Vector2;
+      type: AnalyzerType;
+      blockedOutput: number;
+      direction: DirectionSnapshot;
+    }
+  | { kind: "magnet"; position: Vector2; type: AnalyzerType; field: number; direction: DirectionSnapshot }
   | { kind: "counter"; position: Vector2 };
 
 /** A serializable snapshot of the whole custom graph (device descriptors + wires by index). */
@@ -50,6 +62,23 @@ type GraphSnapshot = {
   devices: DeviceSnapshot[];
   wires: { sourceIndex: number; outputIndex: number; targetIndex: number }[];
 };
+
+/** Reads a device's own n̂ angles for a snapshot. */
+function captureDirection(device: Analyzer | Magnet): DirectionSnapshot {
+  return { theta: device.thetaProperty.value, phi: device.phiProperty.value };
+}
+
+/**
+ * Restores a device's own n̂ angles from a snapshot. Older snapshots (captured before angles
+ * were retained) carry no direction, in which case the device keeps its constructor defaults.
+ */
+function restoreDirection(device: Analyzer | Magnet, direction: DirectionSnapshot | undefined): void {
+  if (direction === undefined) {
+    return;
+  }
+  device.thetaProperty.value = direction.theta;
+  device.phiProperty.value = direction.phi;
+}
 
 /** The graph the builder starts from the first time Custom is chosen: a lone source. */
 const DEFAULT_CUSTOM_SNAPSHOT: GraphSnapshot = {
@@ -354,15 +383,17 @@ export class SternGerlachModel implements TModel {
     }
     this.rebuildingGraph = true;
     try {
-      for (const wire of this.graph.wires.filter((w) => w.outputIndex === 2)) {
-        this.graph.removeWire(wire);
-      }
-      // A blocker on the (now absent) third output would be unrepresentable in the UI.
-      for (const device of this.graph.devices) {
-        if (device instanceof Analyzer && device.blockedOutputProperty.value >= system.stateCount) {
-          device.blockedOutputProperty.value = NO_BLOCKED_OUTPUT;
+      this.graph.batch(() => {
+        for (const wire of this.graph.wires.filter((w) => w.outputIndex === 2)) {
+          this.graph.removeWire(wire);
         }
-      }
+        // A blocker on the (now absent) third output would be unrepresentable in the UI.
+        for (const device of this.graph.devices) {
+          if (device instanceof Analyzer && device.blockedOutputProperty.value >= system.stateCount) {
+            device.blockedOutputProperty.value = NO_BLOCKED_OUTPUT;
+          }
+        }
+      });
     } finally {
       this.rebuildingGraph = false;
     }
@@ -382,6 +413,7 @@ export class SternGerlachModel implements TModel {
           position: device.positionProperty.value.copy(),
           type: device.typeProperty.value,
           blockedOutput: device.blockedOutputProperty.value,
+          direction: captureDirection(device),
         };
       }
       if (device instanceof Magnet) {
@@ -390,6 +422,7 @@ export class SternGerlachModel implements TModel {
           position: device.positionProperty.value.copy(),
           type: device.typeProperty.value,
           field: device.fieldNumberProperty.value,
+          direction: captureDirection(device),
         };
       }
       return { kind: "counter", position: device.positionProperty.value.copy() };
@@ -410,18 +443,20 @@ export class SternGerlachModel implements TModel {
    */
   private restoreSnapshot(snapshot: GraphSnapshot): void {
     const system = this.systemProperty.value;
-    this.graph.clear();
-    const devices = snapshot.devices.map((snap): ExperimentDevice => this.deviceFromSnapshot(snap, system));
-    for (const device of devices) {
-      this.graph.addDevice(device);
-    }
-    for (const wire of snapshot.wires) {
-      const source = devices[wire.sourceIndex];
-      const target = devices[wire.targetIndex];
-      if (source && target && wire.outputIndex < source.outputCount(system)) {
-        this.graph.addWire(new Wire(source, wire.outputIndex, target));
+    this.graph.batch(() => {
+      this.graph.clear();
+      const devices = snapshot.devices.map((snap): ExperimentDevice => this.deviceFromSnapshot(snap, system));
+      for (const device of devices) {
+        this.graph.addDevice(device);
       }
-    }
+      for (const wire of snapshot.wires) {
+        const source = devices[wire.sourceIndex];
+        const target = devices[wire.targetIndex];
+        if (source && target && wire.outputIndex < source.outputCount(system)) {
+          this.graph.addWire(new Wire(source, wire.outputIndex, target));
+        }
+      }
+    });
   }
 
   /** Reconstructs a single device from its snapshot; clears blockers on ports the system lacks. */
@@ -433,11 +468,13 @@ export class SternGerlachModel implements TModel {
       const analyzer = new Analyzer(snap.position.copy(), snap.type);
       const blocked = snap.blockedOutput ?? NO_BLOCKED_OUTPUT;
       analyzer.blockedOutputProperty.value = blocked < system.stateCount ? blocked : NO_BLOCKED_OUTPUT;
+      restoreDirection(analyzer, snap.direction);
       return analyzer;
     }
     if (snap.kind === "magnet") {
       const magnet = new Magnet(snap.position.copy(), snap.type);
       magnet.fieldNumberProperty.value = snap.field;
+      restoreDirection(magnet, snap.direction);
       return magnet;
     }
     return new Counter(snap.position.copy());

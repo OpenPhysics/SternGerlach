@@ -288,6 +288,45 @@ describe("SternGerlachModel", () => {
     expect(model.totalDetectedProperty.value).toBe(0);
   });
 
+  it("custom build retains each device's own n̂ angles across a preset round-trip", () => {
+    const model = new SternGerlachModel(seededRng(51));
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+    const source = model.graph.getSource();
+    if (!source) {
+      throw new Error("no source");
+    }
+
+    const analyzer = new Analyzer(new Vector2(1.5, 0), AnalyzerType.N);
+    const magnet = new Magnet(new Vector2(2.2, 0), AnalyzerType.N);
+    model.graph.addDevice(analyzer);
+    model.graph.addDevice(magnet);
+    model.graph.addWire(new Wire(source, 0, analyzer));
+    model.graph.addWire(new Wire(analyzer, 0, magnet));
+    const counter = new Counter(new Vector2(3.0, 0));
+    model.graph.addDevice(counter);
+    model.graph.addWire(new Wire(magnet, 0, counter));
+
+    analyzer.thetaProperty.value = 1;
+    analyzer.phiProperty.value = 2;
+    magnet.thetaProperty.value = 0.5;
+    magnet.phiProperty.value = 3;
+    const probabilityBefore = counter.probabilityProperty.value;
+
+    model.experimentProperty.value = ExperimentDefinition.DEFAULT;
+    model.experimentProperty.value = ExperimentDefinition.CUSTOM;
+
+    const restoredAnalyzer = model.graph.devices.find((d) => d instanceof Analyzer) as Analyzer;
+    const restoredMagnet = model.graph.devices.find((d) => d instanceof Magnet) as Magnet;
+    expect(restoredAnalyzer.thetaProperty.value).toBe(1);
+    expect(restoredAnalyzer.phiProperty.value).toBe(2);
+    expect(restoredMagnet.thetaProperty.value).toBe(0.5);
+    expect(restoredMagnet.phiProperty.value).toBe(3);
+
+    // The physics the user built must come back unchanged, not reset to the default n̂.
+    const restoredCounter = model.graph.getCounters()[0];
+    expect(restoredCounter?.probabilityProperty.value).toBeCloseTo(probabilityBefore, 12);
+  });
+
   it("reset restores defaults and rebuilds fresh devices", () => {
     const model = new SternGerlachModel(seededRng(29));
     const originalCounters = model.graph.getCounters();
