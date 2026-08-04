@@ -23,6 +23,8 @@ import {
   ANALYZER_HALF_HEIGHT,
   ANALYZER_HALF_WIDTH,
   ANALYZER_PORT_SPACING_RATIO,
+  DIRECTION_PHI_RANGE,
+  DIRECTION_THETA_RANGE,
 } from "../../../SternGerlachConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
 
@@ -49,8 +51,8 @@ export class Analyzer extends ExperimentDevice {
     super("analyzer", position, true);
     this.typeProperty = new Property(initialType);
     this.blockedOutputProperty = new NumberProperty(NO_BLOCKED_OUTPUT, { numberType: "Integer" });
-    this.thetaProperty = new NumberProperty(DEFAULT_DIRECTION_THETA);
-    this.phiProperty = new NumberProperty(DEFAULT_DIRECTION_PHI);
+    this.thetaProperty = new NumberProperty(DEFAULT_DIRECTION_THETA, { range: DIRECTION_THETA_RANGE });
+    this.phiProperty = new NumberProperty(DEFAULT_DIRECTION_PHI, { range: DIRECTION_PHI_RANGE });
   }
 
   public override get halfWidth(): number {

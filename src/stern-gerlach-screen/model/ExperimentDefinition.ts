@@ -96,10 +96,12 @@ export class ExperimentDefinition {
     this.builder = builder;
   }
 
-  /** Clears the graph and rebuilds it as this preset under the given system. */
+  /** Clears the graph and rebuilds it as this preset under the given system, as one edit. */
   public buildInto(graph: ExperimentGraph, system: SpinSystem): void {
-    graph.clear();
-    this.builder(graph, system);
+    graph.batch(() => {
+      graph.clear();
+      this.builder(graph, system);
+    });
   }
 
   /** Source → one analyzer of the given type → a counter per output. */

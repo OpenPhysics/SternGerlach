@@ -26,7 +26,13 @@ import {
   type OperatorTable,
 } from "../../../common/quantum/OperatorTable.js";
 import type { SpinSystem } from "../../../common/quantum/SpinSystem.js";
-import { MAGNET_FIELD_NUMBER_MAX, MAGNET_HALF_HEIGHT, MAGNET_HALF_WIDTH } from "../../../SternGerlachConstants.js";
+import {
+  DIRECTION_PHI_RANGE,
+  DIRECTION_THETA_RANGE,
+  MAGNET_FIELD_NUMBER_MAX,
+  MAGNET_HALF_HEIGHT,
+  MAGNET_HALF_WIDTH,
+} from "../../../SternGerlachConstants.js";
 import { ExperimentDevice } from "./ExperimentDevice.js";
 
 export class Magnet extends ExperimentDevice {
@@ -53,8 +59,8 @@ export class Magnet extends ExperimentDevice {
       numberType: "Integer",
       range: new Range(0, MAGNET_FIELD_NUMBER_MAX),
     });
-    this.thetaProperty = new NumberProperty(DEFAULT_DIRECTION_THETA);
-    this.phiProperty = new NumberProperty(DEFAULT_DIRECTION_PHI);
+    this.thetaProperty = new NumberProperty(DEFAULT_DIRECTION_THETA, { range: DIRECTION_THETA_RANGE });
+    this.phiProperty = new NumberProperty(DEFAULT_DIRECTION_PHI, { range: DIRECTION_PHI_RANGE });
     this.cachedU = null;
     this.cachedKey = "";
   }

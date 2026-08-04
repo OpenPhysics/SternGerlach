@@ -13,6 +13,10 @@
  *     what makes coherent recombination well-defined)
  *   - no cycles
  *   - at most one ParticleSource, and it cannot be wired into
+ *
+ * Structural changes are announced through coalesced emitters
+ * (devicesChangedEmitter / wiresChangedEmitter / changedEmitter). Multi-step edits should be
+ * wrapped in batch() so listeners rebuild once per edit rather than once per element.
  */
 
 import { createObservableArray, Emitter, type ObservableArray } from "scenerystack/axon";
@@ -28,19 +32,87 @@ export class ExperimentGraph {
   /** All wires connecting output ports to input ports. */
   public readonly wires: ObservableArray<Wire>;
 
-  /** Fires after any structural change (device or wire added/removed). */
+  /** Fires after any structural change (device or wire added/removed). Coalesced per batch. */
   public readonly changedEmitter: Emitter;
+
+  /**
+   * Fires when the device collection changed. Coalesced per batch, so a bulk rebuild emits once
+   * instead of once per device — views rebuilding their device layer should listen here rather
+   * than to `devices.elementAddedEmitter` / `elementRemovedEmitter`.
+   */
+  public readonly devicesChangedEmitter: Emitter;
+
+  /**
+   * Fires when the wire collection changed. Coalesced per batch, and kept separate from
+   * `devicesChangedEmitter` so adding a wire never forces a device-layer rebuild — that would
+   * dispose the very output port an in-progress wiring drag started from.
+   */
+  public readonly wiresChangedEmitter: Emitter;
+
+  // Depth of nested batch() calls; change signals are held until this returns to zero.
+  private batchDepth: number;
+  private devicesDirty: boolean;
+  private wiresDirty: boolean;
 
   public constructor() {
     this.devices = createObservableArray();
     this.wires = createObservableArray();
     this.changedEmitter = new Emitter();
+    this.devicesChangedEmitter = new Emitter();
+    this.wiresChangedEmitter = new Emitter();
+    this.batchDepth = 0;
+    this.devicesDirty = false;
+    this.wiresDirty = false;
 
-    const notify = () => this.changedEmitter.emit();
-    this.devices.elementAddedEmitter.addListener(notify);
-    this.devices.elementRemovedEmitter.addListener(notify);
-    this.wires.elementAddedEmitter.addListener(notify);
-    this.wires.elementRemovedEmitter.addListener(notify);
+    const markDevices = () => {
+      this.devicesDirty = true;
+      this.flush();
+    };
+    const markWires = () => {
+      this.wiresDirty = true;
+      this.flush();
+    };
+    this.devices.elementAddedEmitter.addListener(markDevices);
+    this.devices.elementRemovedEmitter.addListener(markDevices);
+    this.wires.elementAddedEmitter.addListener(markWires);
+    this.wires.elementRemovedEmitter.addListener(markWires);
+  }
+
+  /**
+   * Runs `work` as one structural edit: change signals raised inside it are coalesced and emitted
+   * once, after it returns. Nests safely, and still flushes if `work` throws. Without this, a
+   * multi-device rebuild emits per element and listeners do O(n) full rebuilds for one edit.
+   */
+  public batch<T>(work: () => T): T {
+    this.batchDepth++;
+    try {
+      return work();
+    } finally {
+      this.batchDepth--;
+      this.flush();
+    }
+  }
+
+  /** Emits any pending change signals, unless a batch is still open. */
+  private flush(): void {
+    if (this.batchDepth > 0) {
+      return;
+    }
+    const devicesChanged = this.devicesDirty;
+    const wiresChanged = this.wiresDirty;
+    this.devicesDirty = false;
+    this.wiresDirty = false;
+
+    // Clear the flags before emitting: a listener may edit the graph re-entrantly.
+    if (devicesChanged) {
+      this.devicesChangedEmitter.emit();
+    }
+    if (wiresChanged) {
+      this.wiresChangedEmitter.emit();
+    }
+    if (devicesChanged || wiresChanged) {
+      this.changedEmitter.emit();
+    }
   }
 
   /** Adds a device. At most one ParticleSource may exist. */
@@ -54,12 +126,14 @@ export class ExperimentGraph {
     this.devices.push(device);
   }
 
-  /** Removes a device and every wire attached to it. */
+  /** Removes a device and every wire attached to it, as one structural edit. */
   public removeDevice(device: ExperimentDevice): void {
-    for (const wire of this.wires.filter((w) => w.source === device || w.target === device)) {
-      this.wires.remove(wire);
-    }
-    this.devices.remove(device);
+    this.batch(() => {
+      for (const wire of this.wires.filter((w) => w.source === device || w.target === device)) {
+        this.wires.remove(wire);
+      }
+      this.devices.remove(device);
+    });
   }
 
   /**
@@ -84,15 +158,17 @@ export class ExperimentGraph {
     this.wires.remove(wire);
   }
 
-  /** Removes every device and wire. */
+  /** Removes every device and wire, as one structural edit. */
   public clear(): void {
-    // Copy before iterating: removal mutates the observable arrays.
-    for (const wire of this.wires.slice()) {
-      this.wires.remove(wire);
-    }
-    for (const device of this.devices.slice()) {
-      this.devices.remove(device);
-    }
+    this.batch(() => {
+      // Copy before iterating: removal mutates the observable arrays.
+      for (const wire of this.wires.slice()) {
+        this.wires.remove(wire);
+      }
+      for (const device of this.devices.slice()) {
+        this.devices.remove(device);
+      }
+    });
   }
 
   /** The device wired to the given output port, or null if the port is unwired (Java getNextComponent). */

@@ -35,3 +35,34 @@ jobs:
 
   codeql:
     uses: OpenPhysics/Baton/.github/workflows/shared-codeql.yml@main
+
+  # The Playwright fuzz smoke needs a browser, so it runs here rather than in the shared
+  # vitest job. It drives the built sim with the fuzz query parameters and fails on any
+  # console error or assertion.
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Fuzz the simulation
+        run: npm run test:fuzz
+        env:
+          FUZZ_DURATION: 30
+
+      - name: Upload fuzz report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-report
+          path: playwright-report/
+          retention-days: 7

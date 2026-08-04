@@ -3,12 +3,14 @@
  * φ = 2π·fieldNumber/72 (Magnet.ComputeU).
  */
 
-import { Vector2 } from "scenerystack/dot";
+import { roundToInterval, Vector2 } from "scenerystack/dot";
 import { describe, expect, it } from "vitest";
 import { AnalyzerType } from "../../src/common/quantum/AnalyzerType.js";
 import { ComplexMatrix } from "../../src/common/quantum/ComplexMatrix.js";
 import { OperatorTable } from "../../src/common/quantum/OperatorTable.js";
 import { SpinSystem } from "../../src/common/quantum/SpinSystem.js";
+import { DIRECTION_PHI_RANGE, DIRECTION_THETA_RANGE } from "../../src/SternGerlachConstants.js";
+import { Analyzer } from "../../src/stern-gerlach-screen/model/devices/Analyzer.js";
 import { Magnet } from "../../src/stern-gerlach-screen/model/devices/Magnet.js";
 
 const { SPIN_HALF, SPIN_ONE }: typeof SpinSystem = SpinSystem;
@@ -69,5 +71,38 @@ describe("Magnet.computeU", () => {
     const second = magnet.computeU(table, SPIN_HALF);
     expect(second).not.toBe(first);
     expect(second.equalsEpsilon(first, 1e-12)).toBe(false);
+  });
+});
+
+describe("n̂ direction angle ranges", () => {
+  it("constrain θ to [0, π] and φ to [0, 2π] on analyzers and magnets", () => {
+    const magnet = new Magnet(new Vector2(0, 0), AnalyzerType.N);
+    const analyzer = new Analyzer(new Vector2(0, 0), AnalyzerType.N);
+
+    // The AnglesDialog sliders share these ranges, so the endpoints must be accepted.
+    for (const device of [magnet, analyzer]) {
+      device.thetaProperty.value = 0;
+      device.thetaProperty.value = Math.PI;
+      device.phiProperty.value = 0;
+      device.phiProperty.value = 2 * Math.PI;
+      expect(device.thetaProperty.range).toEqual(DIRECTION_THETA_RANGE);
+      expect(device.phiProperty.range).toEqual(DIRECTION_PHI_RANGE);
+    }
+  });
+
+  it("accepts the exact slider endpoints AnglesDialog can produce", () => {
+    // The dialog snaps to π/12; rounding must not overshoot the range and trip validation
+    // in assertion-enabled builds.
+    const analyzer = new Analyzer(new Vector2(0, 0), AnalyzerType.N);
+    for (let step = 0; step * (Math.PI / 12) <= Math.PI + 1e-12; step++) {
+      const theta = roundToInterval(step * (Math.PI / 12), Math.PI / 12);
+      expect(DIRECTION_THETA_RANGE.contains(theta)).toBe(true);
+      analyzer.thetaProperty.value = theta;
+    }
+    for (let step = 0; step * (Math.PI / 12) <= 2 * Math.PI + 1e-12; step++) {
+      const phi = roundToInterval(step * (Math.PI / 12), Math.PI / 12);
+      expect(DIRECTION_PHI_RANGE.contains(phi)).toBe(true);
+      analyzer.phiProperty.value = phi;
+    }
   });
 });
