@@ -1,5 +1,7 @@
 # Stern Gerlach
 
+[![CI](https://github.com/OpenPhysics/SternGerlach/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenPhysics/SternGerlach/actions/workflows/ci.yml)
+
 An interactive simulation of the Stern–Gerlach experiment built with
 [SceneryStack](https://scenerystack.org/). Assemble analyzers, magnets, and counters;
 fire spin-½ or spin-1 atoms; and compare Monte Carlo counts with analytic quantum
