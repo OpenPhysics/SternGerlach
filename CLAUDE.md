@@ -94,8 +94,7 @@ Put unit tests only under root `tests/` (never co-locate or use `__tests__/`). R
 runs the suite when a `test` script is present. Use seeded RNG in engine tests for reproducibility.
 
 View nodes that build a `Dialog` need a `phet.joist.sim` global; call `installSimStub()` from
-`tests/view/simStub.ts` before constructing them. The Playwright fuzz smoke (`npm run test:fuzz`)
-runs as its own CI job, since it needs a browser.
+`tests/view/simStub.ts` before constructing them.
 
 ## Commands
 
