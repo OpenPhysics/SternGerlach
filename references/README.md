@@ -1,7 +1,7 @@
 # references/
 
 Upstream ground truth for Stern–Gerlach now lives in the sibling
-[`Baseline`](https://github.com/OpenPhysics/Baseline) repo:
+[`Baseline`](https://github.com/OpenLyceum/Baseline) repo:
 
 | What | Path |
 |---|---|

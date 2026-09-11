@@ -90,6 +90,6 @@ pattern (per-screen folders, StringManager getters, shared root model).
 
 ## Accessibility reference
 
-This sim is an OpenPhysics accessibility reference: `SternGerlachScreenSummaryContent` with live
+This sim is an OpenLyceum accessibility reference: `SternGerlachScreenSummaryContent` with live
 `currentDetailsContent`, explicit `pdomOrder`, and `SternGerlachKeyboardHelpContent`. See
-`CLAUDE.md` and [Baton/ACCESSIBILITY.md](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).
+`CLAUDE.md` and [Baton/ACCESSIBILITY.md](https://github.com/OpenLyceum/Baton/blob/main/ACCESSIBILITY.md).

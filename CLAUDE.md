@@ -1,6 +1,6 @@
 # CLAUDE.md — Stern Gerlach
 
-Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhysics/.github/CLAUDE.md](https://github.com/OpenPhysics/.github/blob/main/CLAUDE.md).
+Sim-specific context for AI assistants. General SceneryStack guidance: [OpenLyceum/.github/CLAUDE.md](https://github.com/OpenLyceum/.github/blob/main/CLAUDE.md).
 
 ## Project
 
@@ -41,12 +41,12 @@ Educator physics: [`doc/model.md`](doc/model.md). Architecture: [`doc/implementa
 
 ## Accessibility
 
-This sim is an OpenPhysics accessibility reference. It ships the three required layers: PDOM names,
+This sim is an OpenLyceum accessibility reference. It ships the three required layers: PDOM names,
 `SternGerlachScreenSummaryContent` with live `currentDetailsContent` as a `DerivedProperty` over
 model state, and explicit `pdomOrder` + `SternGerlachKeyboardHelpContent`. A11y strings live under
 the `a11y` key in each locale JSON, via `StringManager.getA11yStrings()`. Prefer live
 `StringProperty`s for `accessibleName` on interactive nodes. Full convention:
-[Baton/ACCESSIBILITY.md](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).
+[Baton/ACCESSIBILITY.md](https://github.com/OpenLyceum/Baton/blob/main/ACCESSIBILITY.md).
 
 ## Compliance carve-outs
 

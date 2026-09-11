@@ -111,6 +111,6 @@ SU(3) spin systems were removed; only spin-½ and spin-1 are supported.
   SPINS-based introduction this simulation is designed to accompany.
 - D. V. Schroeder & T. A. Moore, "A computer-simulated Stern-Gerlach laboratory",
   *Am. J. Phys.* **61**, 798 (1993).
-- The original SPINS Java program and documentation: `../Baseline/SG/spins/` (OpenPhysics/Baseline).
+- The original SPINS Java program and documentation: `../Baseline/SG/spins/` (OpenLyceum/Baseline).
 - PhET's *Quantum Measurement* simulation (Spin screen) for comparative UI/pedagogy patterns:
   `../Baseline/SG/quantum-measurement/`.
